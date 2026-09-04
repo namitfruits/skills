@@ -1,126 +1,211 @@
 ---
 name: write-plan
-description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo skeleton "Vấn đề" → "Sau plan này có gì" → phase (Goal · Actions · Gate) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Tự đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) rồi viết theo convention đó.
+description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Decisions · Design · Phases · Risks) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**.
 ---
 
 # Viết doc plan
 
 ## Mental model
 
-Plan doc là **nơi quyết định thiết kế sống trong lúc còn có thể đổi**. Spec đã chốt của project (gọi
-chung là **doc nguồn**: PRD, kiến trúc, backlog…) chỉ nhận thay đổi **sau khi plan được duyệt** — ghi
-sớm thì mỗi lần đổi hướng là viết lại doc nguồn một lượt, và doc nguồn biến thành nơi lưu quá trình
-tranh luận.
+Plan doc là **nơi quyết định thiết kế sống trong lúc còn có thể đổi**. **Doc nguồn** (PRD, kiến trúc,
+backlog…) chỉ nhận thay đổi **sau khi plan được duyệt** — ghi sớm thì mỗi lần đổi hướng là viết lại doc
+nguồn một lượt, và doc nguồn biến thành nơi lưu tranh luận.
 
 ```
 bàn trong chat → plan doc (draft) → 👤 duyệt → phase 0 ghi doc nguồn → implement, tick tới đâu xong tới đó
 ```
 
 Ngoại lệ **duy nhất** được chạm doc nguồn trước khi duyệt: **thêm ID công việc mới** vào backlog — không
-có ID thì plan mồ côi, không ai biết nó thuộc việc gì.
+có ID thì plan mồ côi.
 
-## Bước 0 — đọc đấu nối của project (làm trước mọi thứ)
+Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§7 cho người làm**.
 
-Skill này **không giả định** cấu trúc doc của project. Lấy các giá trị dưới theo thứ tự ưu tiên:
+## Bước 0 — đọc **binding** của project (làm trước mọi thứ)
 
-1. **`CLAUDE.md` / `AGENTS.md`** của project — mục nói về doc/plan. Đây là nguồn ưu tiên nhất.
-2. **Thư mục docs sẵn có** — `ls` ra, mở **plan gần nhất** làm mẫu, copy convention của nó (front
-   matter, cách đánh số, cách chia phase).
-3. **Hỏi user** nếu hai đường trên không trả lời được, hoặc dùng default ở cột phải.
+Skill quy định **hình dạng doc**; project quy định **chỗ cắm**. Thứ tự ưu tiên: `CLAUDE.md` / `AGENTS.md`
+→ thư mục doc sẵn có (`ls -d .docs .plans docs`, mở plan gần nhất) → hỏi user → default.
 
-| Cần biết                                            | Default nếu project không quy định                                           |
+| Binding cần biết                                    | Default nếu project không quy định                                           |
 | --------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Thư mục + cách đặt tên doc plan                     | `docs/plans/NNN-slug.md`, slug lowercase-kebab, `NNN` = số kế tiếp           |
-| Front matter bắt buộc                               | `title` · `status` · `updated` · `implements`                                |
+| Thư mục + cách đặt tên doc plan                     | `.docs/NNN-slug.md` — không có thì `.plans/NNN-slug.md`; slug lowercase-kebab, `NNN` = số kế tiếp |
+| Front matter thêm ngoài bộ chuẩn                    | không có ⇒ dùng đúng bộ ở skeleton                                           |
 | **Doc nguồn** nào phải ghi ở phase 0                | không có ⇒ phase 0 rút còn "chốt scope + gate duyệt"                         |
 | **Hệ ID công việc** (backlog/issue/ticket)          | không có ⇒ bỏ bước ID, plan tự mô tả scope                                   |
 | Lệnh kiểm để đưa vào checklist                      | `npm test` · `npm run build`; đọc `package.json`/`Makefile` để lấy đúng lệnh |
 | Doc design/UI phải tuân theo                        | không có ⇒ bỏ                                                                |
 | Việc kèm theo khi deploy (bump version, migration…) | không có ⇒ bỏ                                                                |
 
-Ghi lại các giá trị này trong đầu rồi mới viết — **không** copy nguyên skeleton dưới nếu project đã có
-convention khác.
+⚠️ Plan cũ chỉ cho **binding** (thư mục, cách đánh số, hệ ID, doc nguồn). **Không** lấy hình dạng — thứ
+tự section, tên section, cách đánh số heading: plan cũ thường là fork của skill này ở version trước,
+copy nó là nhân bản drift.
 
-## Quy trình — 10 luật
+Project có `CLAUDE.md`/`AGENTS.md` **chép lại luật viết plan** ⇒ nói user rút nó về binding + trỏ tới
+skill này, đừng giữ hai bản luật.
+
+## Quy trình — 15 luật
 
 > Đánh số ổn định: doc cũ trích `luật 2`, `luật 10`… là trỏ tới danh sách này.
 
-1. **Không tự lưu plan khi chưa được yêu cầu** — trình bày plan trong chat để review; user nói "lưu lại
-   plan" mới ghi file.
-2. **Plan phải được duyệt trước khi ghi vào doc nguồn.** Đang thiết kế thì quyết định nằm **trong plan
-   doc**. Plan có **phase 0 = "ghi doc nguồn"**, gate của nó là `👤 plan được duyệt`. Ngoại lệ duy
-   nhất: thêm **ID công việc mới** (luật 3).
-3. Chốt các **ID công việc** plan này phủ. Chưa có ID ⇒ dừng, thêm vào backlog trước.
-4. Tạo file theo convention đã đọc ở bước 0, front matter `type: plan` + `implements: [...]`.
-5. Hai section mở đầu body, **đúng thứ tự này**:
-   - **"Vấn đề"** (bắt buộc, đứng trước): 2–4 dòng — ai đang đau vì cái gì, hiện tại phải xoay xở thế
-     nào, hỏng ở đâu. Kể **hiện trạng**, chưa nói giải pháp. Có số đo/ví dụ thật thì đưa vào ("build
-     40′", "mỗi tuần 3 lần phải sửa tay") — người đọc phải thấy _vì sao đáng làm_ trước khi thấy _làm
-     gì_.
-   - **"Sau plan này có gì"** (bắt buộc): 3–5 bullet mô tả **kết quả dùng được**, góc nhìn người
-     dùng/dev: chạy được lệnh nào, mở được trang nào, gọi được endpoint nào, thấy gì trên UI. Viết cái
-     _có_, không viết cái _làm_ — "chạy `npx foo` lên được server ở :4000" thay vì "implement HTTP
-     server". Kèm 1 dòng **ngoài scope** nếu dễ bị hiểu lầm là có.
-6. Ngay trên phần Phase: dòng **ký hiệu** `🤖` = agent tự kiểm được (chạy lệnh, test, grep) · `👤` = cần
-   người kiểm (số đo thật, hạ tầng, UI, quyết định) — đặt sát checklist mà nó chú giải, không để ở đầu doc.
-7. Chia **phase**, mỗi phase gồm đúng 3 phần:
-   - **Goal** — 1 dòng: sau phase này _dùng được_ cái gì (cùng giọng với "Sau plan này có gì").
-   - **Actions** — checklist việc phải làm: file/hàm cụ thể, test, doc.
-   - **Gate** — checklist **bằng chứng** phase xong: lệnh xanh, số đo, người xác nhận. Chưa tick đủ Gate
-     thì không sang phase sau.
+1. **Chưa được yêu cầu thì không lưu file** — trình bày plan trong chat để review; user nói "lưu lại
+   plan" mới ghi.
+2. **Duyệt xong mới ghi doc nguồn.** Tới lúc đó quyết định nằm **trong plan doc**. Plan có **phase 0 =
+   "ghi doc nguồn"**, gate của nó là `👤 plan được duyệt`. Ngoại lệ duy nhất: luật 3.
+3. **Chốt ID công việc** plan này phủ. Chưa có ID ⇒ dừng, thêm vào backlog trước.
+4. **Tạo file** theo binding bước 0, front matter `type: plan` + `implements: [...]`.
+5. **`## 1. Problem` đứng trước `## 2. Goal`**, cả hai bắt buộc:
+   - **Problem** — 2–4 dòng **hiện trạng**: ai đau, đau vì gì, hỏng ở đâu, số đo thật nếu có ("build
+     40′", "71 lượt load skill trên 347 transcript"). Chưa nói giải pháp.
+   - **Goal** — 3–5 bullet **trạng thái quan sát được** sau khi xong: mở được trang nào, chạy được lệnh
+     nào, endpoint trả gì. Viết cái **có**, không viết cái **muốn** — "chạy `npx foo` lên được server ở
+     :4000", **không** "cải thiện observability". Thêm `**Ngoài scope:**` nếu dễ bị hiểu lầm là có.
+6. **Legend** `🤖` = agent tự kiểm được (lệnh, test, grep) · `👤` = cần người kiểm (số đo thật, hạ tầng,
+   UI, quyết định) — đặt **ngay dưới heading `## 6. Phases`**, không để đầu doc, không thành section riêng.
+7. **Mỗi phase đúng 3 phần, đủ nhãn:**
+   - **Goal** — 1 dòng: sau phase này _dùng được_ cái gì (cùng giọng với §2).
+   - **Actions** — checklist file/hàm/test/doc cụ thể. Action thực thi một quyết định ⇒ ghi `(D<n>)` cuối
+     dòng: sợi dây §4 → §6.
+   - **Gate** — checklist **bằng chứng** phase xong: lệnh xanh, số đo, người xác nhận. Chưa đủ Gate thì
+     không sang phase sau.
 
-   Mọi item ở Actions và Gate đều gắn `🤖` hoặc `👤`.
+   Mọi item ở Actions và Gate gắn `🤖` hoặc `👤`.
 
-8. Item phải **kiểm được** (`npm pack` → tarball < 2MB), không phải "đã làm xong X".
-9. Backlog: thêm link tới plan mới ở nhóm ID tương ứng — plan và backlog trỏ được về nhau hai chiều.
-10. **Khi thực thi: làm tới đâu tick checklist tới đó** — xong item nào sửa `[ ]` → `[x]` **ngay trong
-    cùng lần làm việc**, không dồn tick cuối phase, không báo "xong" khi file plan còn `[ ]`. Item `👤`
-    chưa có người xác nhận thì để nguyên `[ ]` và nói rõ đang chờ ai kiểm cái gì.
+8. **Item phải kiểm được** (`npm pack` → tarball < 2MB), không phải "đã làm xong X".
+9. **Backlog trỏ ngược lại**: thêm link tới plan mới ở nhóm ID tương ứng.
+10. **Làm tới đâu tick tới đó** — `[ ]` → `[x]` **ngay trong cùng lần làm việc**, không dồn cuối phase,
+    không báo "xong" khi plan còn `[ ]`.
+    - **Bằng chứng ghi cạnh ô tick**: `- [x] 🤖 pnpm test xanh — 1311 passed / 463 skipped`,
+      `- [x] 👤 plan này được duyệt — 2026-09-03`. `[x]` trơ không số/ngày chỉ là lời khai.
+    - Item `👤` chưa ai xác nhận ⇒ để `[ ]`, nói rõ đang chờ ai kiểm cái gì.
+    - Item không làm được ⇒ để `[ ]` + một dòng lý do ngay dưới (chặn ở đâu, phase sau có bị chặn theo
+      không). **Không xoá** — xoá là mất dấu vết phần chưa đạt.
+11. **Heading `##` đánh số cứng 1–7 và luôn đủ 7** ⇒ `§4` luôn là Decisions, `§6` luôn là Phases, trích
+    chéo liên doc không trượt.
+12. **Lead-in chỉ viết khi có quan hệ với plan khác**, dùng đúng 3 nhãn đóng (§Lead-in).
+13. **Mỗi quyết định có ID `D0`…`Dn` và ≤5 dòng.** Dài hơn ⇒ chi tiết xuống `§5.x`, `D` trỏ tới.
+14. **`D-ID` append-only** — không đánh số lại, không tái dùng. Bỏ một quyết định ⇒ giữ heading, sửa thành
+    `### ~~D4~~ — bỏ (YYYY-MM-DD): <lý do>`. Đánh số lại là làm hỏng mọi trích dẫn đã có.
+15. **`status` đi một chiều, đúng 3 giá trị**, đổi tới đâu bump `updated`: `draft` → `approved` (ô
+    `👤 plan được duyệt` được tick) → `done` (mọi Gate đã tick). Plan bị plan khác lật thì **không** đổi
+    status — dấu vết nằm ở `supersedes` + lead-in `**Lật:**` của plan mới.
+
+## Khung cố định — 7 section, không thêm không bớt
+
+| §   | Tên              | Vai                                                                    |
+| --- | ---------------- | ---------------------------------------------------------------------- |
+| 1   | **Problem**      | đau gì, số đo thật, chưa nói giải pháp                                 |
+| 2   | **Goal**         | trạng thái quan sát được sau khi xong + Ngoài scope                    |
+| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–7)                   |
+| 3   | **Mental model** | 2–4 dòng **lời** → sơ đồ mermaid                                       |
+| 4   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng — **cái được duyệt, cái plan sau lật**        |
+| 5   | **Design**       | `5.1`, `5.2`… cơ chế · contract · schema · API · cách đo               |
+| 6   | **Phases**       | Legend → `### Phase 0…n` (Goal · Actions · Gate)                       |
+| 7   | **Risks**        | bảng `Bẫy \| Chặn bằng`                                                |
+
+**Decisions trước Design** vì §4 là **mục lục lựa chọn** — thứ người duyệt gật, thứ lead-in plan sau trỏ
+vào; §5 là **chỗ khai triển** cho người implement.
+
+**Ranh giới cần plan doc:** không có §4 lẫn §5 ⇒ việc không đủ lớn để cần plan doc, làm thẳng.
+
+## Lead-in — optional, 3 nhãn đóng
+
+Blockquote 2–4 dòng ngay dưới front matter. **Chỉ viết khi** `sources:` chứa một **doc plan khác** (không
+tính PRD/SAD/backlog), hoặc plan này đổi hành vi mà một plan cũ đã định nghĩa. Không có quan hệ ⇒ vào
+thẳng `## 1. Problem`.
+
+| Nhãn                       | Nội dung                                                    |
+| -------------------------- | ----------------------------------------------------------- |
+| `**Nối tiếp:**`            | plan cũ làm xong phần nào, plan này giải cái nó để hở       |
+| `**Lật:**` + `**Giữ:**`    | D nào của plan cũ bị bác, D nào còn hiệu lực                |
+| `**Phụ thuộc:**`           | plan nào phải chạy trước, và vì sao                         |
+
+- Nhãn không có quan hệ ⇒ **bỏ dòng đó**, không viết "không có". Mỗi nhãn ≤1 ý; dài hơn ⇒ nó thuộc §1 hoặc §4.
+- **Không** nhét `status` (đã ở front matter) hay phạm vi/ngoài scope (đã ở §2).
+- `supersedes: [024]` là **mức doc** cho máy; `**Lật:** D3 · D6 của 024. **Giữ:** D1 · D2` là **mức quyết
+  định** cho người — chỉ có field YAML thì người đọc tưởng 024 chết hẳn.
 
 ## Skeleton
 
-Thay `<…>` bằng giá trị lấy ở bước 0. Bỏ hẳn phần nào project không có (doc nguồn, ID, design doc).
-Heading `##` **không đánh số** — thêm/bớt section không phải sửa số. `---` chia phần người duyệt cần đọc
-(Vấn đề + Sau plan này có gì) với phần chi tiết cho người làm.
+Thay `<…>` bằng giá trị lấy ở bước 0. Bỏ hẳn thứ project không có (doc nguồn, ID, design doc) — nhưng
+**không bỏ section nào trong 7 section**.
 
 ````markdown
 ---
-doc: NNN # doc · version · sources: chỉ khi project dùng
+doc: NNN # doc · version: chỉ khi project dùng
 type: plan
-title: <tiêu đề> (<ID1>, <ID2>)
-status: draft
+title: <tiêu đề> (<ID1> · <ID2>)
+status: draft # draft → approved → done
 version: 0.1
 updated: YYYY-MM-DD
 implements: [ID1, ID2]
-sources: [<doc nguồn>]
+sources: [<doc nguồn>, <plan liên quan>]
+supersedes: [] # doc plan bị lật một phần hoặc toàn bộ
 ---
 
-# <Tiêu đề>
+> **Nối tiếp:** [NNN](NNN-slug.md) — <plan đó làm được gì>. Plan này giải cái nó để hở: <cái gì>.
+> **Lật:** D3 · D6 của [NNN](NNN-slug.md). **Giữ:** D1 · D2.
+> **Phụ thuộc:** [NNN](NNN-slug.md) chạy trước — <vì sao>.
 
-## Vấn đề
+## 1. Problem
 
 2–4 dòng hiện trạng đang đau (luật 5): ai đau, đau vì gì, số đo thật nếu có. Chưa nói giải pháp.
 
-## Sau plan này có gì
+## 2. Goal
 
-3–5 bullet **kết quả dùng được** (luật 5).
+3–5 bullet **trạng thái quan sát được** sau khi plan xong (luật 5).
 
 **Ngoài scope:** <1 dòng, nếu dễ bị hiểu lầm là có>
 
 ---
 
-## Mental model
+## 3. Mental model
 
-Hệ thống chạy thế nào sau khi có, nối lại với "Vấn đề" ở trên. Sơ đồ = ```mermaid, không ASCII art.
+2–4 dòng **lời**: hệ thống chạy thế nào sau khi có, nối lại với §1. Lời là nguồn — đọc một mình
+phải hiểu, vì mermaid không render ở terminal / diff / một số viewer.
 
-## Cơ chế / Contract / Quyết định
+```mermaid
+flowchart LR
+  A[<đầu vào>] --> B[<xử lý>] --> C[(<nơi lưu>)]
+```
 
-Bảng · bullet · schema · endpoint. Quyết định + lý do = 1 dòng. Hai phương án ⇒ bảng 2 cột.
-Số đo thật ghi kèm điều kiện đo (version, ngày, cách đo).
+## 4. Decisions
 
-## Phase
+### D0 — <câu quyết định, 1 dòng>
 
-**Ký hiệu:** 🤖 = agent tự kiểm được (chạy lệnh, test, grep) · 👤 = cần người kiểm (số đo thật, UI, hạ tầng).
+**Lý do:** <1 dòng>
+**Phương án đã loại:** <1 dòng — cái gì, vì sao loại> _(bỏ dòng này nếu không có)_
+
+### D1 — <…>
+
+_(mỗi D ≤5 dòng — luật 13. Chi tiết dài hơn xuống §5.x, D trỏ tới)_
+
+### ~~D2~~ — bỏ (YYYY-MM-DD): <lý do>
+
+_(luật 14 — giữ heading, không đánh số lại)_
+
+## 5. Design
+
+### 5.1 <Cơ chế / Contract>
+
+Bảng · bullet · schema · endpoint. Số đo thật ghi kèm điều kiện đo (version, ngày, cách đo).
+
+### 5.2 <API / Data model>
+
+### 5.3 Cách đo _(chỉ khi plan có baseline chạy lại được)_
+
+| File                | Vai                        |
+| ------------------- | -------------------------- |
+| `<fixture>`         | <dựng ca gì>               |
+| `<script chấm>`     | <chấm theo tiêu chí gì>    |
+
+```bash
+<lệnh chạy lại>
+```
+
+**Baseline:** <số đo + ngày + version>
+
+## 6. Phases
+
+**Legend:** 🤖 = agent tự kiểm được (chạy lệnh, test, grep) · 👤 = cần người kiểm (số đo thật, UI, hạ tầng).
 
 ### Phase 0 — ghi doc nguồn
 
@@ -143,21 +228,21 @@ Số đo thật ghi kèm điều kiện đo (version, ngày, cách đo).
 
 **Actions:**
 
-- [ ] 🤖 <file/hàm cụ thể>: <hành vi>
+- [ ] 🤖 <file/hàm cụ thể>: <hành vi> (D1)
 - [ ] 🤖 Test <tên file>: <ca số một — ca mà nếu sai thì cả feature vô nghĩa>
 
 **Gate:**
 
-- [ ] 🤖 `<lệnh test>` xanh · `<lệnh typecheck/build>` xanh
-- [ ] 👤 <số đo thật / xem trên UI / deploy>
+- [ ] 🤖 `<lệnh test>` xanh · `<lệnh typecheck/build>` xanh — <số passed/failed khi tick>
+- [ ] 👤 <số đo thật / xem trên UI / deploy> — <ngày + ai xác nhận khi tick>
 
 ### Phase 2 — … (ID2)
 
-## Rủi ro / Bẫy
+## 7. Risks
 
-| Bẫy              | Chặn bằng          |
-| ---------------- | ------------------ |
-| <sai lầm dễ mắc> | <gate/test cụ thể> |
+| Bẫy              | Chặn bằng                        |
+| ---------------- | -------------------------------- |
+| <sai lầm dễ mắc> | <gate/test/phase/§ cụ thể>       |
 ````
 
 ## Luật viết
@@ -173,16 +258,18 @@ trước không được phụ thuộc phase sau.
 | Test dedupe: 3 lượt trong 5′ ⇒ **1 row**; lượt thứ 4 sau 16′ ⇒ **2 row** | có test cho dedupe    |
 | `git diff --stat` chứng minh `lease.ts` không đổi dòng nào               | không ảnh hưởng lease |
 
-**Văn phong** — plan được dài hơn spec, nhưng cùng luật:
+**§7 Risks là phép kiểm chéo, không phải chỗ liệt kê lo lắng.** Cột phải bắt buộc trỏ tới **một gate /
+test / phase / § cụ thể**. Điền không được cột phải ⇒ plan chưa có chỗ nào bắt được rủi ro đó, phải thêm gate.
 
-- **Không narrative**: câu khẳng định trạng thái, không kể quá trình ("endpoint trả 409 khi trùng key",
-  không "đầu tiên ta kiểm tra key, sau đó nếu trùng thì...").
-- **Ngắn gọn nhưng đọc là hiểu ngay** — cắt chữ đệm, không cắt thông tin. Viết đủ tên thật: tên file,
-  tên hàm, tên field, tên lệnh. Không viết tắt tự nghĩ ra, không rút gọn tới mức người đọc phải đoán
-  ("`POST /orders` trả 409" thay vì "trả lỗi", thay vì "409" trơ trọi).
-- Ưu tiên bảng · bullet · mermaid hơn đoạn văn. Một ý một dòng.
-- Đổi quyết định giữa chừng: **một dòng** `**Đổi (YYYY-MM-DD):** <cái mới> — <lý do ngắn>` ngay tại chỗ,
-  không viết lại lịch sử tranh luận.
+**Văn phong:**
+
+- **Không narrative**: câu khẳng định trạng thái ("endpoint trả 409 khi trùng key"), không kể quá trình
+  ("đầu tiên ta kiểm tra key, sau đó…").
+- **Ngắn nhưng đọc là hiểu ngay** — cắt chữ đệm, không cắt thông tin. Tên file/hàm/field/lệnh viết đủ,
+  không viết tắt tự nghĩ ("`POST /orders` trả 409", không "trả lỗi", không "409" trơ trọi).
+- Ưu tiên bảng · bullet · mermaid hơn đoạn văn. Một ý một dòng. Sơ đồ dùng ```mermaid, không ASCII art.
+- Đổi quyết định giữa chừng: **một dòng** `**Đổi (YYYY-MM-DD):** <cái mới> — <lý do ngắn>` ngay trong `D`
+  tương ứng, không viết lại lịch sử tranh luận.
 - Không section changelog — git history là changelog. Chỉ bump `version` + `updated`.
 
 **Chạm UI / deploy / migration** ⇒ đưa vào checklist đúng ràng buộc project đã khai ở bước 0 (doc design,
@@ -190,15 +277,15 @@ bump version, chạy migration…). Không có ràng buộc nào thì thôi, đ�
 
 ## Bẫy hay gặp
 
-| Bẫy                                                                          | Chặn bằng                                                   |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Viết plan theo convention của skill trong khi project đã có convention riêng | bước 0 — đọc mẫu plan gần nhất trước                        |
-| Ghi vào doc nguồn ngay khi có ý tưởng                                        | gate 👤 của phase 0                                         |
-| Tự tạo file plan khi user mới chỉ hỏi ý kiến                                 | luật 1 — trình bày trong chat trước                         |
-| Vào thẳng giải pháp, người đọc không biết đang chữa cái đau nào              | luật 5 — section **Vấn đề** đứng trước "Sau plan này có gì" |
-| Plan mồ côi (không map về ID công việc nào)                                  | luật 3 — thêm ID vào backlog trước                          |
-| Xoá dòng cũ trong backlog khi bỏ scope                                       | đánh dấu bỏ, ID không tái sử dụng                           |
-| Dồn tick checklist cuối phase, hoặc tick `👤` hộ người                       | luật 10                                                     |
-| Phase chỉ có danh sách việc, không có Gate ⇒ không biết lúc nào xong         | luật 7 — mỗi phase đủ Goal · Actions · Gate                 |
-| Đánh "xong" khi mới viết xong chưa chạy                                      | chỉ đánh xong khi **chạy được và có bằng chứng**            |
-| Doc plan lỗi thời bị xoá                                                     | đánh `superseded` + trỏ tới doc thay thế, không xoá         |
+| Bẫy                                                                            | Chặn bằng                                                       |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Copy hình dạng doc từ plan cũ của project (thường là fork cũ của skill này)    | bước 0 — plan cũ chỉ cho **binding**, không cho hình dạng        |
+| Ghi vào doc nguồn ngay khi có ý tưởng                                          | gate 👤 của phase 0                                              |
+| Tự tạo file plan khi user mới chỉ hỏi ý kiến                                   | luật 1 — trình bày trong chat trước                              |
+| Quyết định rải trong prose cơ chế, không có D-ID ⇒ plan sau không trích được   | luật 13 — mọi quyết định vào §4 với ID                           |
+| `D` phình thành cả cơ chế ⇒ §4 dài 60 dòng không skim được, §5 rỗng            | luật 13 — D ≤5 dòng, chi tiết xuống §5.x                         |
+| Lead-in phình thành tóm tắt plan / chép `status` / chép Ngoài scope            | luật 12 — 3 nhãn đóng, không có quan hệ thì không viết           |
+| Mermaid có mà không có lời ⇒ đọc ở diff/terminal là mù                         | §3 — 2–4 dòng lời là nguồn, sơ đồ là minh hoạ                    |
+| Xoá dòng cũ trong backlog khi bỏ scope                                         | đánh dấu bỏ, ID không tái sử dụng                                |
+| Đánh "xong" khi mới viết xong chưa chạy                                        | chỉ đánh xong khi **chạy được và có bằng chứng**                 |
+| Doc plan lỗi thời bị xoá                                                       | luật 14 — plan mới ghi `supersedes: [NNN]` + lead-in `**Lật:**`, doc cũ giữ nguyên |
