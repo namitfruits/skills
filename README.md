@@ -24,7 +24,7 @@ npx skills add namitfruits/skills --skill '*' -g -a claude-code -y
 
 | Skill | Mô tả |
 | --- | --- |
-| [`write-plan`](skills/write-plan/SKILL.md) | Viết plan doc cho một feature — trình bày trong chat trước, chốt ID công việc, rồi dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Decisions · Design · Phases · Risks), phase có Goal · Actions · Gate với ký hiệu 🤖/👤, tick tới đâu làm tới đó. Đọc convention của project để lấy binding (thư mục, hệ ID, doc nguồn, lệnh kiểm). |
+| [`write-plan`](skills/write-plan/SKILL.md) | Viết plan doc cho một feature — trình bày trong chat trước, chốt ID công việc, rồi dựng file theo khung cố định 8 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases · Risks — Probe optional), phase có Goal · Actions · Gate với ký hiệu 🤖/👤, tick tới đâu làm tới đó. Đọc convention của project để lấy binding (thư mục, hệ ID, doc nguồn, lệnh kiểm). Kèm `verify.py` lint khung + sợi dây ID + phủ thiết kế. |
 | [`estimate-effort`](skills/estimate-effort/SKILL.md) | Ước lượng effort dự án bằng man-day từ functional requirements + techstack. Quy trình 3 bước: Sizing FE/BE → Manday Build → Full SDLC. |
 | [`mermaid-diagram-design`](skills/mermaid-diagram-design/SKILL.md) | Style spec cho mermaid diagram — "zone-tinted flowchart": subgraph tô nền per vùng, classDef palette, shape có nghĩa. Kèm [`verify.py`](skills/mermaid-diagram-design/verify.py) lint + render 2 nền sáng/tối. |
 

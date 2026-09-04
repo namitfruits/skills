@@ -1,6 +1,6 @@
 ---
 name: write-plan
-description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Decisions · Design · Phases · Risks) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**.
+description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 8 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases · Risks — Probe optional) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**. Kèm `verify.py` — lint khung section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
 ---
 
 # Viết doc plan
@@ -18,7 +18,7 @@ bàn trong chat → plan doc (draft) → 👤 duyệt → phase 0 ghi doc nguồ
 Ngoại lệ **duy nhất** được chạm doc nguồn trước khi duyệt: **thêm ID công việc mới** vào backlog — không
 có ID thì plan mồ côi.
 
-Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§7 cho người làm**.
+Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§8 cho người làm**.
 
 ## Bước 0 — đọc **binding** của project (làm trước mọi thứ)
 
@@ -42,7 +42,7 @@ copy nó là nhân bản drift.
 Project có `CLAUDE.md`/`AGENTS.md` **chép lại luật viết plan** ⇒ nói user rút nó về binding + trỏ tới
 skill này, đừng giữ hai bản luật.
 
-## Quy trình — 15 luật
+## Quy trình — 18 luật
 
 > Đánh số ổn định: doc cũ trích `luật 2`, `luật 10`… là trỏ tới danh sách này.
 
@@ -59,11 +59,13 @@ skill này, đừng giữ hai bản luật.
      nào, endpoint trả gì. Viết cái **có**, không viết cái **muốn** — "chạy `npx foo` lên được server ở
      :4000", **không** "cải thiện observability". Thêm `**Ngoài scope:**` nếu dễ bị hiểu lầm là có.
 6. **Legend** `🤖` = agent tự kiểm được (lệnh, test, grep) · `👤` = cần người kiểm (số đo thật, hạ tầng,
-   UI, quyết định) — đặt **ngay dưới heading `## 6. Phases`**, không để đầu doc, không thành section riêng.
-7. **Mỗi phase đúng 3 phần, đủ nhãn:**
+   UI, quyết định) — đặt **ngay dưới heading `## 7. Phases`**, không để đầu doc, không thành section riêng.
+7. **Mỗi phase đúng 4 phần, đủ nhãn:**
    - **Goal** — 1 dòng: sau phase này _dùng được_ cái gì (cùng giọng với §2).
+   - **Cover** — 1 dòng `6.x` phase này hiện thực (luật 17).
    - **Actions** — checklist file/hàm/test/doc cụ thể. Action thực thi một quyết định ⇒ ghi `(D<n>)` cuối
-     dòng: sợi dây §4 → §6.
+     dòng — **chú giải "vì sao dòng này viết thế"**, không phải sổ phủ: `D` không sinh action thì thôi,
+     không cần đánh dấu gì (luật 17).
    - **Gate** — checklist **bằng chứng** phase xong: lệnh xanh, số đo, người xác nhận. Chưa đủ Gate thì
      không sang phase sau.
 
@@ -78,33 +80,117 @@ skill này, đừng giữ hai bản luật.
     - Item `👤` chưa ai xác nhận ⇒ để `[ ]`, nói rõ đang chờ ai kiểm cái gì.
     - Item không làm được ⇒ để `[ ]` + một dòng lý do ngay dưới (chặn ở đâu, phase sau có bị chặn theo
       không). **Không xoá** — xoá là mất dấu vết phần chưa đạt.
-11. **Heading `##` đánh số cứng 1–7 và luôn đủ 7** ⇒ `§4` luôn là Decisions, `§6` luôn là Phases, trích
-    chéo liên doc không trượt.
+11. **Heading `##` đánh số cứng 1–8** ⇒ `§5` luôn là Decisions, `§7` luôn là Phases, trích chéo liên doc
+    không trượt. Bắt buộc đủ 7 section; **`§4 Probe` là section duy nhất được vắng** — vắng thì bỏ hẳn
+    heading, không section nào được dồn lên chiếm số 4.
 12. **Lead-in chỉ viết khi có quan hệ với plan khác**, dùng đúng 3 nhãn đóng (§Lead-in).
-13. **Mỗi quyết định có ID `D0`…`Dn` và ≤5 dòng.** Dài hơn ⇒ chi tiết xuống `§5.x`, `D` trỏ tới.
-14. **`D-ID` append-only** — không đánh số lại, không tái dùng. Bỏ một quyết định ⇒ giữ heading, sửa thành
-    `### ~~D4~~ — bỏ (YYYY-MM-DD): <lý do>`. Đánh số lại là làm hỏng mọi trích dẫn đã có.
+13. **Mỗi quyết định có ID `D0`…`Dn` và ≤5 dòng.** Dài hơn ⇒ chi tiết xuống §6, và `D` **trỏ bằng ID**:
+    `→ DS4`, không viết "xem phần thiết kế bên dưới".
+14. **`D-ID` · `P-ID` · `DS-ID` đều append-only** — không đánh số lại, không tái dùng. Bỏ đi ⇒ giữ
+    heading/dòng, sửa thành `### ~~D4~~ — bỏ (YYYY-MM-DD): <lý do>` (`DS` cũng vậy). ID **không phải số
+    thứ tự**: §6 sắp xếp lại thoải mái cho dễ đọc, `DS3` vẫn là `DS3`.
 15. **`status` đi một chiều, đúng 3 giá trị**, đổi tới đâu bump `updated`: `draft` → `approved` (ô
     `👤 plan được duyệt` được tick) → `done` (mọi Gate đã tick). Plan bị plan khác lật thì **không** đổi
     status — dấu vết nằm ở `supersedes` + lead-in `**Lật:**` của plan mới.
+16. **Khả thi kỹ thuật còn là câu hỏi ⇒ probe trước, quyết sau.** Kết quả thăm dò có thể lật một `D` ⇒
+    chạy **trước khi viết plan**, ghi vào `§4` với ID `P1`…`Pn`. Duyệt plan mà nền của nó chưa biết đúng
+    sai là duyệt giả định. Không probe trước được ⇒ để `P` ở trạng thái **chưa chạy** + ghi `chặn D<n>`.
+    Không có câu hỏi kiểu đó ⇒ **bỏ hẳn §4** (luật 11).
+17. **Phase phải phủ hết §6** (chỉ §6 — xem vế cuối). Mỗi phase khai dòng `Cover:` ngay dưới Goal, liệt kê
+    `DS` mà phase **hoàn thành**; làm dở ghi `DS3 (một phần)`. Ba phép kiểm chéo:
+    - **Mỗi `DS` phải có đúng một phase cover trọn.** Không phase nào ⇒ thiết kế chết: cắt `DS` đó hoặc
+      thêm phase. Nhiều phase cùng nhận trọn ⇒ contract chưa cắt xong, tách `DS` ra.
+    - **Phase không cover `DS` nào** chỉ hợp lệ với phase 0. Còn lại ⇒ đang implement thứ §6 chưa chốt,
+      quay về viết §6 trước.
+    - **Gate phải có ít nhất một item chứng minh đúng contract vừa cover** — "gửi trùng key → 409, DB còn
+      1 row — DS2", không phải "test xanh" trơn.
 
-## Khung cố định — 7 section, không thêm không bớt
+    **`D` không có nghĩa vụ phủ — bất đối xứng này là cố ý.** `DS` là **vật giao được**: có trạng thái
+    xong/dở, nên "phase nào nhận trọn" có nghĩa. `D` là **ràng buộc**: không có trạng thái xong, được tuân
+    ở nhiều phase hoặc chẳng ở đâu cả — `D0 — chọn Postgres`, `D3 — không hỗ trợ multi-tenant v1` là
+    quyết định thật mà không action nào "thực thi". Ép `D` phủ như `DS` là ép một nửa số `D` bịa ra việc.
+    Sợi dây §5 → §7 vẫn còn, nhưng **một chiều**: action nào có `(D<n>)` thì `D` đó phải tồn tại và chưa
+    bị gạch bỏ; chiều ngược lại không bắt buộc.
+
+18. **Chạm plan doc ⇒ chạy `verify.py` rồi mới báo xong.** Sửa file, tick ô, đổi `status` — lần nào cũng
+    chạy. ERROR là lỗi **ngữ nghĩa**: sửa **doc**, không sửa linter, không bỏ qua check. Hướng sửa thường
+    là một quyết định (cắt `DS` hay thêm phase?) ⇒ nói cho user chọn, đừng tự chọn im lặng.
+
+## Khung cố định — 8 section (§4 optional), không thêm không bớt
 
 | §   | Tên              | Vai                                                                    |
 | --- | ---------------- | ---------------------------------------------------------------------- |
 | 1   | **Problem**      | đau gì, số đo thật, chưa nói giải pháp                                 |
 | 2   | **Goal**         | trạng thái quan sát được sau khi xong + Ngoài scope                    |
-| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–7)                   |
+| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–8)                   |
 | 3   | **Mental model** | 2–4 dòng **lời** → sơ đồ mermaid                                       |
-| 4   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng — **cái được duyệt, cái plan sau lật**        |
-| 5   | **Design**       | `5.1`, `5.2`… cơ chế · contract · schema · API · cách đo               |
-| 6   | **Phases**       | Legend → `### Phase 0…n` (Goal · Actions · Gate)                       |
-| 7   | **Risks**        | bảng `Bẫy \| Chặn bằng`                                                |
+| 4   | **Probe** _(optional)_ | `P1`…`Pn` — thăm dò khả thi: câu hỏi · cách chạy · kết quả · ⇒ `D` nào |
+| 5   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng — **cái được duyệt, cái plan sau lật**        |
+| 6   | **Design**       | `DS1`…`DSn` append-only — contract đối chiếu được; **số & tên tùy bài toán**  |
+| 7   | **Phases**       | Legend → `### Phase 0…n` (Goal · **Cover** · Actions · Gate)           |
+| 8   | **Risks**        | bảng `Bẫy \| Chặn bằng`                                                |
 
-**Decisions trước Design** vì §4 là **mục lục lựa chọn** — thứ người duyệt gật, thứ lead-in plan sau trỏ
-vào; §5 là **chỗ khai triển** cho người implement.
+**Probe → Decisions → Design** là thứ tự bằng chứng → quyết định → khai triển: §4 là **cái đo được**,
+§5 là **mục lục lựa chọn** (thứ người duyệt gật, thứ lead-in plan sau trỏ vào), §6 là **chỗ khai triển**
+cho người implement.
 
-**Ranh giới cần plan doc:** không có §4 lẫn §5 ⇒ việc không đủ lớn để cần plan doc, làm thẳng.
+**Ranh giới cần plan doc:** không có §5 lẫn §6 ⇒ việc không đủ lớn để cần plan doc, làm thẳng. Ngược lại,
+chưa viết được §5 vì thiếu dữ kiện ⇒ chưa tới lúc viết plan, đi probe đã (luật 16).
+
+## §4 Probe — optional, chỉ khi khả thi kỹ thuật còn là câu hỏi
+
+Probe = **thăm dò để biết thiết kế có đứng được không**, chạy trước khi chốt `D` (luật 16). Câu trả lời
+đã có sẵn từ doc/kinh nghiệm ⇒ không probe, **bỏ hẳn §4**.
+
+Mỗi thăm dò một `P`, một dòng bảng:
+
+| P    | Câu hỏi chưa biết                            | Cách thăm dò                          | Kết quả (ngày · version)             | ⇒        |
+| ---- | -------------------------------------------- | ------------------------------------- | ------------------------------------ | -------- |
+| `P1` | Pooler có giữ được `LISTEN/NOTIFY` 30′ không? | `scripts/probe-notify.mjs`, 200 event | rớt 3/200 sau 6′ — 2026-09-04, pg15.4 | `D2`     |
+| `P2` | <câu hỏi>                                    | <lệnh sẽ chạy>                        | **chưa chạy**                        | chặn `D5` |
+
+- **Câu hỏi phải trả được bằng có/không hoặc bằng số.** "Tìm hiểu về queue" không phải câu hỏi.
+- **Cột `⇒` bắt buộc trỏ tới `D`** — probe không đổi được quyết định nào là probe thừa, cắt.
+- **Cách thăm dò ghi đủ để chạy lại** (script · lệnh · commit), không phải "đã thử tay thấy được".
+- `P` chưa chạy vẫn **để nguyên dòng** + `chặn D<n>`: `D` đứng trên probe chưa chạy là `D` chưa có nền,
+  người duyệt phải nhìn thấy.
+- `P-ID` append-only như `D` (luật 14).
+
+**Khác `DS Test Strategy`:** `P` hỏi *có làm được không* — trước khi quyết. Test Strategy đo *đã làm tới
+đâu* — sau khi quyết, dùng lại ở Gate §7. Cùng một script phục vụ cả hai thì `DS` đó **trỏ về `P1`**, không chép lại.
+
+## §6 Design — hình dạng tùy bài toán
+
+§6 trả đúng một câu: **người implement cần chốt sẵn cái gì để không phải đoán?** Cái đó khác nhau theo
+bài toán, nên §6 **không có bộ subsection cố định** — chỉ có 4 luật chung:
+
+1. **Một hạng mục cần chốt = một `### DS<n> — <tên hạng mục>`** — `DS1 — Database Schema`,
+   `DS2 — API Design`, `DS3 — Test Strategy`. Heading nói **loại contract** để skim được; instance cụ thể
+   (`order`, `POST /orders`) nằm trong thân section. Cấm nhãn rỗng không nói loại gì: "Cơ chế", "Chi tiết".
+2. **Viết ở dạng đối chiếu được**: bảng field/kiểu/bắt buộc, chữ ký hàm, mẫu request–response, bảng
+   state → transition, cây thư mục, bảng ánh xạ cũ → mới. Đoạn văn kể cách hoạt động là §3, không phải §6.
+3. **Chỉ giữ `DS` có phase cover.** `DS` không xuất hiện ở dòng `Cover:` nào ⇒ không ai build theo, cắt
+   (luật 17 — đây là chỗ grep ra được, không phải lời khuyên suông).
+4. **Số đo thật ghi kèm điều kiện đo** (version, ngày, cách đo).
+5. **`DS-ID` append-only** (luật 14): hạng mục mới lấy số kế tiếp, bỏ thì gạch
+   `### ~~DS2~~ — bỏ (ngày)`. ID rời khỏi vị trí nên **sắp xếp lại §6 không phá `Cover:`**.
+
+Skeleton bên dưới điền sẵn §6 bằng ví dụ của **một** bài (bảng field + endpoint + test strategy) — đọc để
+lấy **dạng trình bày**, không copy tên section.
+
+Gợi ý thứ thường phải chốt — chọn đúng bài, **không điền cho đủ bảng**:
+
+| Bài toán              | Hạng mục `DS` thường có — dùng thẳng làm tên heading                               |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| API / service         | `API Design` (endpoint · payload · mã lỗi) · `Idempotency & Retry`                 |
+| Dữ liệu / storage     | `Database Schema` (bảng · index) · `Migration` (cách backfill)                     |
+| UI / màn hình         | `State Machine` (state + transition) · `Empty–Loading–Error` (dữ liệu mỗi state)   |
+| CLI / tool            | `CLI Surface` (lệnh + flag · exit code) · `Output Format` (stdout/stderr)          |
+| Pipeline / job        | `Trigger` · `Đơn vị xử lý & trạng thái` · `Chạy lại` (retry, dedupe)               |
+| Thư viện / SDK        | `Public API` (chữ ký) · `Compatibility` (cái gì tính là breaking)                  |
+| Doc / skill / prompt  | `Cấu trúc file` · `Trigger` · `Ví dụ vào–ra`                                       |
+| Refactor / migration  | `Ánh xạ cũ → mới` · `Kế hoạch tương thích` (giữ gì, xoá khi nào)                   |
+| Bài nào có baseline   | `Test Strategy` (fixture · script chấm · lệnh chạy lại · baseline + ngày)          |
 
 ## Lead-in — optional, 3 nhãn đóng
 
@@ -118,7 +204,7 @@ thẳng `## 1. Problem`.
 | `**Lật:**` + `**Giữ:**`    | D nào của plan cũ bị bác, D nào còn hiệu lực                |
 | `**Phụ thuộc:**`           | plan nào phải chạy trước, và vì sao                         |
 
-- Nhãn không có quan hệ ⇒ **bỏ dòng đó**, không viết "không có". Mỗi nhãn ≤1 ý; dài hơn ⇒ nó thuộc §1 hoặc §4.
+- Nhãn không có quan hệ ⇒ **bỏ dòng đó**, không viết "không có". Mỗi nhãn ≤1 ý; dài hơn ⇒ nó thuộc §1 hoặc §5.
 - **Không** nhét `status` (đã ở front matter) hay phạm vi/ngoài scope (đã ở §2).
 - `supersedes: [024]` là **mức doc** cho máy; `**Lật:** D3 · D6 của 024. **Giữ:** D1 · D2` là **mức quyết
   định** cho người — chỉ có field YAML thì người đọc tưởng 024 chết hẳn.
@@ -167,49 +253,76 @@ flowchart LR
   A[<đầu vào>] --> B[<xử lý>] --> C[(<nơi lưu>)]
 ```
 
-## 4. Decisions
+## 4. Probe
+
+_(optional — bỏ hẳn section này nếu khả thi kỹ thuật không phải câu hỏi; không section nào dồn lên số 4)_
+
+| P    | Câu hỏi chưa biết | Cách thăm dò   | Kết quả (ngày · version) | ⇒         |
+| ---- | ----------------- | -------------- | ------------------------ | --------- |
+| `P1` | <có/không · số>   | `<lệnh chạy>`  | <số đo + ngày + version> | `D0`      |
+| `P2` | <câu hỏi>         | `<lệnh sẽ chạy>` | **chưa chạy**          | chặn `D1` |
+
+## 5. Decisions
 
 ### D0 — <câu quyết định, 1 dòng>
 
-**Lý do:** <1 dòng>
+**Lý do:** <1 dòng — dựa vào `P1` nếu có probe>
 **Phương án đã loại:** <1 dòng — cái gì, vì sao loại> _(bỏ dòng này nếu không có)_
 
 ### D1 — <…>
 
-_(mỗi D ≤5 dòng — luật 13. Chi tiết dài hơn xuống §5.x, D trỏ tới)_
+_(mỗi D ≤5 dòng — luật 13. Chi tiết dài hơn xuống `DS<n>` ở §6, D trỏ tới)_
 
 ### ~~D2~~ — bỏ (YYYY-MM-DD): <lý do>
 
 _(luật 14 — giữ heading, không đánh số lại)_
 
-## 5. Design
+## 6. Design
 
-### 5.1 <Cơ chế / Contract>
+> ⚠️ **Ba mục dưới đây là ví dụ của _một_ bài toán (đặt hàng: có bảng dữ liệu + endpoint + baseline) —
+> không phải khuôn phải theo.** Bài khác ⇒ tên và số `DS` khác hẳn. Giữ lại **dạng trình bày** (đối
+> chiếu được), thay sạch nội dung. Bảng gợi ý theo loại bài: §"§6 Design — hình dạng tùy bài toán".
+> Nhãn `_(ví dụ — …)_` chỉ sống trong skeleton này; plan thật viết heading trơn: `### DS1 — Database Schema`.
 
-Bảng · bullet · schema · endpoint. Số đo thật ghi kèm điều kiện đo (version, ngày, cách đo).
+### DS1 — Database Schema _(ví dụ — dạng bảng field)_
 
-### 5.2 <API / Data model>
+Bảng `order`:
 
-### 5.3 Cách đo _(chỉ khi plan có baseline chạy lại được)_
+| field      | kiểu   | bắt buộc | ghi chú                                |
+| ---------- | ------ | -------- | -------------------------------------- |
+| `id`       | `uuid` | ✓        | PK                                     |
+| `idem_key` | `text` | ✓        | unique — chặn tạo trùng trong 24h (D1) |
+| `state`    | `enum` | ✓        | `new` → `paid` → `shipped`             |
 
-| File                | Vai                        |
-| ------------------- | -------------------------- |
-| `<fixture>`         | <dựng ca gì>               |
-| `<script chấm>`     | <chấm theo tiêu chí gì>    |
+### DS2 — API Design _(ví dụ — dạng contract request–response)_
 
-```bash
-<lệnh chạy lại>
+```http
+POST /orders   { idem_key, items[] }
+201 → { id, state: "new" }
+409 → { error: "duplicate_idem_key" }   # cùng idem_key trong 24h
 ```
 
-**Baseline:** <số đo + ngày + version>
+### DS3 — Test Strategy _(ví dụ — chỉ khi plan có baseline chạy lại được)_
 
-## 6. Phases
+| File                    | Vai                                        |
+| ----------------------- | ------------------------------------------ |
+| `fixtures/orders/*.json` | 12 ca gửi trùng `idem_key` ở các mốc thời gian |
+| `scripts/score.mjs`     | đếm row `order` tạo ra vs số mong đợi mỗi ca |
+
+```bash
+node scripts/score.mjs fixtures/orders
+```
+
+**Baseline:** 9/12 ca đúng — 2026-09-04, `v0.3.1`
+
+## 7. Phases
 
 **Legend:** 🤖 = agent tự kiểm được (chạy lệnh, test, grep) · 👤 = cần người kiểm (số đo thật, UI, hạ tầng).
 
 ### Phase 0 — ghi doc nguồn
 
 **Goal:** doc nguồn khớp thiết kế đã duyệt; backlog trỏ về plan này.
+**Cover:** — _(phase 0 là phase duy nhất được để trống — luật 17)_
 
 **Actions** — chỉ làm sau khi item đầu được tick (luật 2):
 
@@ -221,24 +334,38 @@ Bảng · bullet · schema · endpoint. Số đo thật ghi kèm điều kiện 
 **Gate:**
 
 - [ ] 🤖 grep `<câu/contract vừa thêm>` ra trong <doc nguồn> · backlog có link doc này
+- [ ] 🤖 `python3 .claude/skills/write-plan/verify.py <doc này>` — 0 ERROR
 
 ### Phase 1 — <cái dùng được trước> (ID1)
 
 **Goal:** <1 dòng — cái dùng được sau phase này, vd "chạy `npx foo` lên server ở :4000">
+**Cover:** DS1 · DS2 · DS3 (một phần)
 
 **Actions:**
 
-- [ ] 🤖 <file/hàm cụ thể>: <hành vi> (D1)
-- [ ] 🤖 Test <tên file>: <ca số một — ca mà nếu sai thì cả feature vô nghĩa>
+- [ ] 🤖 <file/hàm cụ thể>: <hành vi> (D0)
+- [ ] 🤖 Test <tên file>: <ca số một — ca mà nếu sai thì cả feature vô nghĩa> (D1)
 
 **Gate:**
 
+- [ ] 🤖 <bằng chứng đúng contract vừa cover, vd "gửi trùng `idem_key` → 409, DB còn 1 row"> — DS1 · DS2
 - [ ] 🤖 `<lệnh test>` xanh · `<lệnh typecheck/build>` xanh — <số passed/failed khi tick>
 - [ ] 👤 <số đo thật / xem trên UI / deploy> — <ngày + ai xác nhận khi tick>
 
 ### Phase 2 — … (ID2)
 
-## 7. Risks
+**Goal:** <1 dòng>
+**Cover:** DS3 — _(phase 1 mới làm một phần; đúng một phase nhận trọn — luật 17)_
+
+**Actions:**
+
+- [ ] 🤖 <…>
+
+**Gate:**
+
+- [ ] 🤖 <bằng chứng> — DS3
+
+## 8. Risks
 
 | Bẫy              | Chặn bằng                        |
 | ---------------- | -------------------------------- |
@@ -258,7 +385,7 @@ trước không được phụ thuộc phase sau.
 | Test dedupe: 3 lượt trong 5′ ⇒ **1 row**; lượt thứ 4 sau 16′ ⇒ **2 row** | có test cho dedupe    |
 | `git diff --stat` chứng minh `lease.ts` không đổi dòng nào               | không ảnh hưởng lease |
 
-**§7 Risks là phép kiểm chéo, không phải chỗ liệt kê lo lắng.** Cột phải bắt buộc trỏ tới **một gate /
+**§8 Risks là phép kiểm chéo, không phải chỗ liệt kê lo lắng.** Cột phải bắt buộc trỏ tới **một gate /
 test / phase / § cụ thể**. Điền không được cột phải ⇒ plan chưa có chỗ nào bắt được rủi ro đó, phải thêm gate.
 
 **Văn phong:**
@@ -275,17 +402,43 @@ test / phase / § cụ thể**. Điền không được cột phải ⇒ plan ch
 **Chạm UI / deploy / migration** ⇒ đưa vào checklist đúng ràng buộc project đã khai ở bước 0 (doc design,
 bump version, chạy migration…). Không có ràng buộc nào thì thôi, đừng bịa.
 
-## Bẫy hay gặp
+## Kiểm doc — `verify.py`
 
-| Bẫy                                                                            | Chặn bằng                                                       |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Copy hình dạng doc từ plan cũ của project (thường là fork cũ của skill này)    | bước 0 — plan cũ chỉ cho **binding**, không cho hình dạng        |
-| Ghi vào doc nguồn ngay khi có ý tưởng                                          | gate 👤 của phase 0                                              |
-| Tự tạo file plan khi user mới chỉ hỏi ý kiến                                   | luật 1 — trình bày trong chat trước                              |
-| Quyết định rải trong prose cơ chế, không có D-ID ⇒ plan sau không trích được   | luật 13 — mọi quyết định vào §4 với ID                           |
-| `D` phình thành cả cơ chế ⇒ §4 dài 60 dòng không skim được, §5 rỗng            | luật 13 — D ≤5 dòng, chi tiết xuống §5.x                         |
-| Lead-in phình thành tóm tắt plan / chép `status` / chép Ngoài scope            | luật 12 — 3 nhãn đóng, không có quan hệ thì không viết           |
-| Mermaid có mà không có lời ⇒ đọc ở diff/terminal là mù                         | §3 — 2–4 dòng lời là nguồn, sơ đồ là minh hoạ                    |
-| Xoá dòng cũ trong backlog khi bỏ scope                                         | đánh dấu bỏ, ID không tái sử dụng                                |
-| Đánh "xong" khi mới viết xong chưa chạy                                        | chỉ đánh xong khi **chạy được và có bằng chứng**                 |
-| Doc plan lỗi thời bị xoá                                                       | luật 14 — plan mới ghi `supersedes: [NNN]` + lead-in `**Lật:**`, doc cũ giữ nguyên |
+```bash
+python3 .claude/skills/write-plan/verify.py .docs/042-slug.md   # exit 1 nếu có ERROR
+```
+
+| Mức       | Bắt gì                                                                                                                                                                                                                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ERROR** | khung section thiếu · sai tên · sai thứ tự · `Cover:` / `(D<n>)` / `→ DS<n>` / `chặn D<n>` trỏ vào ID không tồn tại hoặc đã gạch · `DS` không phase nào nhận trọn (hoặc ≥2 phase cùng nhận) · phase ≠ 0 không cover `DS` nào · phase thiếu Actions/Gate · `status: done` mà còn `[ ]` · `status: approved` mà ô duyệt chưa tick · duyệt khi còn `P` **chưa chạy** |
+| **WARN**  | `D` dài >5 dòng · `[x]` không có số/ngày làm bằng chứng · item thiếu 🤖/👤 · phase nhận trọn `DSn` mà Gate không nhắc `DSn`                                                                                                                                                                              |
+| **INFO**  | bảng phủ `DS → phase` · `P` chưa chạy đang chặn `D` nào · `D` không action nào trích — **không phải lỗi** (luật 17)                                                                                                                                                                                     |
+
+**Có ERROR thì làm gì** — `verify.py` không tự sửa doc (`--fix` sẽ luôn đoán sai, vì mỗi ERROR có ít nhất
+hai hướng sửa lệch nhau về scope):
+
+| ERROR                                       | Hai hướng sửa                                              | Ai quyết                          |
+| ------------------------------------------- | ---------------------------------------------------------- | --------------------------------- |
+| `DS4` không phase nào cover trọn            | cắt `DS4` (thiết kế thừa) · thêm/đổi phase để nhận nó      | **user** — đây là đổi scope       |
+| `Cover:` / `(D<n>)` trỏ ID không tồn tại    | sửa số cho đúng · viết nốt mục còn thiếu                   | agent, nếu rõ ràng là gõ nhầm     |
+| phase ≠ 0 không cover `DS` nào              | viết `DS` còn thiếu ở §6 · gộp vào phase khác              | **user** — nội dung §6 phải gật   |
+| `status: done` mà còn `[ ]`                 | hạ `status` · làm nốt rồi tick                             | agent hạ status; làm nốt thì hỏi  |
+| duyệt khi còn `P` **chưa chạy**             | chạy probe rồi điền kết quả · hạ `status` về `draft`       | **user** (luật 16)                |
+
+**Không bắt được, phải tự đọc:** item có kiểm được thật không · Gate có đúng bằng chứng cho contract không ·
+phase chia theo "cái dùng được trước" hay theo tầng · `DS` có phải contract đối chiếu được hay chỉ là văn xuôi.
+Lint sạch ≠ plan tốt.
+
+## Bẫy hành vi — thứ `verify.py` không bắt
+
+Lỗi **hình dạng doc** đã có luật + linter lo. Bảng này chỉ giữ lỗi **hành vi**: thứ agent làm _quanh_ cái
+doc, không nằm trong doc, nên không grep ra được.
+
+| Bẫy                                                             | Chặn bằng                                                        |
+| --------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Tự tạo file plan khi user mới chỉ hỏi ý kiến                    | luật 1 — trình bày trong chat trước, user nói "lưu" mới ghi      |
+| Copy hình dạng doc từ plan cũ của project                       | bước 0 — plan cũ chỉ cho **binding**; nó thường là fork cũ của skill này |
+| Ghi vào doc nguồn ngay khi vừa có ý tưởng                       | luật 2 — gate `👤 plan được duyệt` của phase 0                    |
+| Probe chạy rồi nhưng chỉ kể trong chat, doc không có số         | luật 16 — mỗi `P` một dòng §4: cách chạy lại + kết quả + ngày · version |
+| Đánh "xong" khi mới viết xong, chưa chạy                        | luật 10 — chỉ tick khi **chạy được và có bằng chứng** cạnh ô tick |
+| Xoá dòng cũ trong backlog khi bỏ scope                          | luật 9 + 14 — backlog trỏ ngược lại; ID append-only, đánh dấu bỏ chứ không xoá |
