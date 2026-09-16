@@ -19,6 +19,37 @@ Một sơ đồ đáng vẽ khi câu trả lời có **nhiều tầng**, **nhi�
 đó viết bằng văn xuôi thì người đọc phải tự dựng hình trong đầu. Còn một danh sách phẳng, một bảng
 so sánh, hay ba dòng tuần tự thì **đừng vẽ** — bảng đọc nhanh hơn.
 
+**Phạm vi:** sơ đồ **trả lời trong chat** — nền tối cứng, kèm link mở được ngay. Hình để dán vào
+tài liệu là việc khác: ở đó hình phải đọc được trên **cả** nền sáng lẫn nền tối, nên dùng palette
+pastel + chữ đậm chứ không phải bộ dưới đây.
+
+## Chọn loại sơ đồ
+
+Chọn theo **câu hỏi người đọc đang hỏi**, không theo cái nào nhìn ngầu hơn.
+
+| Người đọc đang hỏi | Loại |
+| --- | --- |
+| *"gồm những gì, nối nhau ra sao"* · *"luật nào quyết định"* · *"đi đường nào"* · *"xếp tầng thế nào"* | **`flowchart` — mặc định** |
+| *"ai gọi ai, theo thứ tự nào"* — N bên **trao đổi qua lại**, tên từng bên là một phần câu trả lời | `sequenceDiagram` |
+| *"đi từ trạng thái nào sang trạng thái nào, do event gì"* — transition có tên, có vòng lặp | `stateDiagram-v2` |
+| *"bảng nào khoá vào bảng nào, một-nhiều hay nhiều-nhiều"* | `erDiagram` |
+| *"việc nào trước việc nào, dài bao lâu"* — có **ngày thật** | `gantt` |
+| nhánh · merge của git | `gitGraph` |
+| còn lại (`mindmap` · `journey` · `timeline` · `classDiagram` · `quadrantChart`…) | đừng dùng trừ khi user xin — bảng thường đọc nhanh hơn |
+| `C4Context` · `C4Container` | **cấm** — dùng `flowchart` có vùng |
+
+**`flowchart` là mặc định** vì nó cho overview tốt nhất: có shape mang nghĩa, có `subgraph` để phân
+vùng, sơn được nền tối, và đọc được cả khi người ta chỉ liếc qua. Ba loại dưới nó là **ngoại lệ có
+lý do**, không phải lựa chọn ngang hàng.
+
+Hai câu gỡ khi phân vân:
+
+- **flowchart hay sequence?** Bỏ tên các bên đi — hình còn đúng không? Còn đúng ⇒ `flowchart`.
+  Một trục thời gian một chiều mà không ai trả lời ai thì vẫn là `flowchart` dọc.
+- **flowchart hay state?** Câu hỏi là *"đang ở ô nào"* (⇒ state) hay *"cái gì quyết định ra ô đó"*
+  (⇒ flowchart)? Ví dụ: 8 ô trạng thái agent nhưng câu hỏi là thứ tự ưu tiên của luật suy ra ô ⇒
+  `flowchart`, không phải `stateDiagram`.
+
 ## Khuôn câu trả lời
 
 Mỗi sơ đồ là **một section**, đúng **ba** phần, đúng thứ tự này:
@@ -62,7 +93,7 @@ giải. Viết được khối 3 thành một câu sắc thì sơ đồ mới c�
 ❌ Không diễn lại nhãn đã có trên hình (*"ô A hỏi inflight > 0, nếu đúng thì sang ô B"*) — user đọc
 được rồi.
 
-## Nguồn sơ đồ — bốn luật cứng
+## Nguồn sơ đồ — năm luật cứng
 
 ### 1· Nền phải tối thật
 
@@ -112,7 +143,21 @@ trong nguồn; `A --> B & C` là **hai** cạnh. Đếm sai chỉ tô nhầm c�
 
 Không `subgraph "Ghi chú"`, không node legend. Chú giải sống trong câu trả lời (khối 1–3 ở trên).
 
-### 4· Nhãn ngắn, `<br/>` để xuống dòng
+### 4· Một chủ đề = **một** loại sơ đồ, giữ nguyên qua các lượt
+
+Vẽ lại cùng một thứ ở lượt sau thì **giữ nguyên loại sơ đồ, thứ tự node, tên section**. Người đọc đã
+dựng bản đồ trong đầu từ lượt trước; đổi hình là bắt họ học lại từ đầu, và họ sẽ tưởng nội dung đã
+đổi chứ không phải chỉ cái vỏ.
+
+Buộc phải đổi (ràng buộc kỹ thuật, phát hiện hình cũ sai) ⇒ **nói ra một câu ngay dưới hình**: đổi
+cái gì, vì sao. Đổi im lặng là lỗi.
+
+⚠️ Bẫy đã dính: `sequenceDiagram` **không có `subgraph`**, nên không sơn được nền tối bằng khối
+`ALL` — canvas của nó trong suốt, theo nền site. Đừng vì thế mà lặng lẽ đổi sang `flowchart`: loại
+sơ đồ chọn theo **câu hỏi** (xem *Chọn loại sơ đồ*), chọn xong thì giữ, và nếu `sequenceDiagram` là
+đúng loại thì **chấp nhận canvas trong suốt + nói ra một câu**.
+
+### 5· Nhãn ngắn, `<br/>` để xuống dòng
 
 Một node quá 3 dòng là dấu hiệu nó đang ôm hai ý — tách ra, hoặc đẩy phần thừa xuống phần chữ.
 
