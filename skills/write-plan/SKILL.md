@@ -42,7 +42,7 @@ copy nó là nhân bản drift.
 Project có `CLAUDE.md`/`AGENTS.md` **chép lại luật viết plan** ⇒ nói user rút nó về binding + trỏ tới
 skill này, đừng giữ hai bản luật.
 
-## Quy trình — 19 luật
+## Quy trình — 20 luật
 
 > Đánh số ổn định: doc cũ trích `luật 2`, `luật 10`… là trỏ tới danh sách này.
 
@@ -123,6 +123,21 @@ skill này, đừng giữ hai bản luật.
     chạy. ERROR là lỗi **ngữ nghĩa**: sửa **doc**, không sửa linter, không bỏ qua check. Hướng sửa thường
     là một quyết định (cắt `DS` hay thêm phase?) ⇒ nói cho user chọn, đừng tự chọn im lặng.
 
+20. **Chọn cách nhỏ nhất giải được §1, và viết sao cho người khác đọc một lượt là hiểu.**
+    - **Không dựng thứ chưa có người dùng thứ hai**: interface một implement, config không ai đổi, lớp
+      bọc chỉ gọi xuyên qua, hàng đợi cho hai hàm gọi nhau, cache khi chưa đo được chậm. Cần thật ⇒ phải
+      có `P` đo được hoặc một dòng trong `D` chỉ ra ca thứ hai đang nằm trong §2.
+    - **Tổng quát hoá khi đã có ≥2 ca thật trong scope.** Một ca thì viết thẳng ca đó; ca thứ hai tới thì
+      lúc đó mới tách.
+    - `D` nào thêm một tầng · một dependency · một bảng ⇒ dòng **Phương án đã loại** phải nói vì sao cách
+      thẳng tay không đủ ("ghi thẳng vào bảng `order` không đủ vì cần đọc chéo 3 service"). **"để sau này
+      dễ mở rộng" không phải lý do** — sau này chưa có trong §2.
+    - **§3 viết cho người chưa mở repo**: đi một đường thật, tên file/hàm/field thật, không tự đúc thuật
+      ngữ lai ghép — gọi tên bằng câu nói việc gì xảy ra. Đọc §3 xong không kể lại được luồng bằng một
+      câu ⇒ viết lại §3, đừng thêm sơ đồ để bù.
+    - Dấu hiệu quá tay, thấy thì cắt: `DS` không phase nào cần (luật 17) · phase "dựng nền" mà xong chẳng
+      ai dùng được gì (luật 7 Goal) · plan sinh ra thứ §2 không đòi.
+
 ## Khung cố định — 7 section (§4 optional), không thêm không bớt
 
 | §   | Tên              | Vai                                                                    |
@@ -130,7 +145,7 @@ skill này, đừng giữ hai bản luật.
 | 1   | **Problem**      | đau gì, số đo thật, chưa nói giải pháp                                 |
 | 2   | **Goal**         | trạng thái quan sát được sau khi xong + Ngoài scope                    |
 | —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–7)                   |
-| 3   | **Mental model** | lời: chạy thế nào · **ta đụng vào đâu** · không đụng — sơ đồ khi cần rõ |
+| 3   | **Mental model** | lời: chạy thế nào · **ta đụng vào đâu** · không đụng — người chưa mở repo đọc là hiểu (luật 20) |
 | 4   | **Probe** _(optional)_ | `P1`…`Pn` — thăm dò khả thi: câu hỏi · cách chạy · kết quả · ⇒ `D` nào |
 | 5   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng — **cái được duyệt, cái plan sau lật**        |
 | 6   | **Design**       | `DS1`…`DSn` append-only — contract đối chiếu được; **số & tên tùy bài toán**  |
@@ -253,7 +268,8 @@ supersedes: [] # doc plan bị lật một phần hoặc toàn bộ
 
 **Chạy thế nào** — <3–6 dòng lời: đi theo **một** đường thật (một request, một job, một lần đồng bộ)
 từ đầu vào tới nơi lưu, nối lại với §1. Lời là nguồn: mermaid không render ở terminal / diff / một số
-viewer, nên đọc riêng phần lời phải hiểu được.>
+viewer, nên đọc riêng phần lời phải hiểu được. Tên file/hàm/field thật, không thuật ngữ tự đúc —
+luật 20.>
 
 <Sơ đồ **tuỳ** — vẽ khi luồng có nhiều nhánh / nhiều tầng / nhiều trạng thái, đọc chữ không nắm nổi.
 Thẳng một mạch 3 bước thì bỏ, lời đã đủ. Có vẽ thì theo `explain-with-diagrams`, và trong file **dán
@@ -440,7 +456,8 @@ hai hướng sửa lệch nhau về scope):
 | duyệt khi còn `P` **chưa chạy**             | chạy probe rồi điền kết quả · hạ `status` về `draft`       | **user** (luật 16)                |
 
 **Không bắt được, phải tự đọc:** item có kiểm được thật không · Gate có đúng bằng chứng cho contract không ·
-phase chia theo "cái dùng được trước" hay theo tầng · `DS` có phải contract đối chiếu được hay chỉ là văn xuôi.
+phase chia theo "cái dùng được trước" hay theo tầng · `DS` có phải contract đối chiếu được hay chỉ là văn xuôi ·
+giải pháp có phải cách nhỏ nhất giải được §1 · §3 đọc xong có kể lại được luồng không (luật 20).
 Lint sạch ≠ plan tốt.
 
 ## Bẫy hành vi — thứ `verify.py` không bắt
@@ -456,3 +473,5 @@ doc, không nằm trong doc, nên không grep ra được.
 | Probe chạy rồi nhưng chỉ kể trong chat, doc không có số         | luật 16 — mỗi `P` một dòng §4: cách chạy lại + kết quả + ngày · version |
 | Đánh "xong" khi mới viết xong, chưa chạy                        | luật 10 — chỉ tick khi **chạy được và có bằng chứng** cạnh ô tick |
 | Xoá dòng cũ trong backlog khi bỏ scope                          | luật 9 + 14 — backlog trỏ ngược lại; ID append-only, đánh dấu bỏ chứ không xoá |
+| Thêm tầng trừu tượng / config / chỗ cắm "cho sau này" mà §2 không đòi | luật 20 — `D` phải nói vì sao cách thẳng tay không đủ; ≥2 ca thật mới tổng quát hoá |
+| §3 viết bằng chữ nghe kêu, người chưa mở repo đọc không ra luồng | luật 20 — một đường thật, tên thật; kể lại được bằng một câu |
