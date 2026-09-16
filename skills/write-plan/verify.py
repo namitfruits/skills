@@ -3,7 +3,7 @@
 
     python3 .claude/skills/write-plan/verify.py <plan.md>
 
-Bắt được: khung 8 section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
+Bắt được: khung 7 section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
 KHÔNG bắt được: item có kiểm được thật không, Gate có đúng bằng chứng không,
 phase chia theo "cái dùng được trước" hay theo tầng — mấy cái đó phải đọc.
 
@@ -23,7 +23,6 @@ SECTIONS = [
     (5, "Decisions", True),
     (6, "Design", True),
     (7, "Phases", True),
-    (8, "Risks", True),
 ]
 STATUS_OK = ("draft", "approved", "done")
 
@@ -126,7 +125,7 @@ def lint(text):
             err.append(f"`## {num}. {got}` — số {num} phải là **{name}** (luật 11)")
     for num in sec:
         if num not in [s[0] for s in SECTIONS]:
-            err.append(f"`## {num}.` ngoài khung 1–8 (luật 11)")
+            err.append(f"`## {num}.` ngoài khung 1–7 (luật 11)")
 
     # --- §5 Decisions (parse trước để §4 kiểm được `chặn D<n>`)
     decisions = {d["id"]: d for d in blocks(sec.get(5, ("", []))[1], "D")}

@@ -1,6 +1,6 @@
 ---
 name: write-plan
-description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 8 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases · Risks — Probe optional) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**. Kèm `verify.py` — lint khung section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
+description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases — Probe optional) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**. Kèm `verify.py` — lint khung section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
 ---
 
 # Viết doc plan
@@ -18,7 +18,7 @@ bàn trong chat → plan doc (draft) → 👤 duyệt → phase 0 ghi doc nguồ
 Ngoại lệ **duy nhất** được chạm doc nguồn trước khi duyệt: **thêm ID công việc mới** vào backlog — không
 có ID thì plan mồ côi.
 
-Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§8 cho người làm**.
+Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§7 cho người làm**.
 
 ## Bước 0 — đọc **binding** của project (làm trước mọi thứ)
 
@@ -42,12 +42,13 @@ copy nó là nhân bản drift.
 Project có `CLAUDE.md`/`AGENTS.md` **chép lại luật viết plan** ⇒ nói user rút nó về binding + trỏ tới
 skill này, đừng giữ hai bản luật.
 
-## Quy trình — 18 luật
+## Quy trình — 19 luật
 
 > Đánh số ổn định: doc cũ trích `luật 2`, `luật 10`… là trỏ tới danh sách này.
 
 1. **Chưa được yêu cầu thì không lưu file** — trình bày plan trong chat để review; user nói "lưu lại
-   plan" mới ghi.
+   plan" mới ghi. Chỗ nào nhiều nhánh / nhiều tầng thì **dùng skill `explain-with-diagrams`** để bàn —
+   nó cho link `mermaid.live` mở được ngay, user nhìn hình gật nhanh hơn đọc 20 dòng mô tả.
 2. **Duyệt xong mới ghi doc nguồn.** Tới lúc đó quyết định nằm **trong plan doc**. Plan có **phase 0 =
    "ghi doc nguồn"**, gate của nó là `👤 plan được duyệt`. Ngoại lệ duy nhất: luật 3.
 3. **Chốt ID công việc** plan này phủ. Chưa có ID ⇒ dừng, thêm vào backlog trước.
@@ -80,8 +81,8 @@ skill này, đừng giữ hai bản luật.
     - Item `👤` chưa ai xác nhận ⇒ để `[ ]`, nói rõ đang chờ ai kiểm cái gì.
     - Item không làm được ⇒ để `[ ]` + một dòng lý do ngay dưới (chặn ở đâu, phase sau có bị chặn theo
       không). **Không xoá** — xoá là mất dấu vết phần chưa đạt.
-11. **Heading `##` đánh số cứng 1–8** ⇒ `§5` luôn là Decisions, `§7` luôn là Phases, trích chéo liên doc
-    không trượt. Bắt buộc đủ 7 section; **`§4 Probe` là section duy nhất được vắng** — vắng thì bỏ hẳn
+11. **Heading `##` đánh số cứng 1–7** ⇒ `§5` luôn là Decisions, `§7` luôn là Phases, trích chéo liên doc
+    không trượt. Bắt buộc đủ 6 section; **`§4 Probe` là section duy nhất được vắng** — vắng thì bỏ hẳn
     heading, không section nào được dồn lên chiếm số 4.
 12. **Lead-in chỉ viết khi có quan hệ với plan khác**, dùng đúng 3 nhãn đóng (§Lead-in).
 13. **Mỗi quyết định có ID `D0`…`Dn` và ≤5 dòng.** Dài hơn ⇒ chi tiết xuống §6, và `D` **trỏ bằng ID**:
@@ -112,23 +113,28 @@ skill này, đừng giữ hai bản luật.
     Sợi dây §5 → §7 vẫn còn, nhưng **một chiều**: action nào có `(D<n>)` thì `D` đó phải tồn tại và chưa
     bị gạch bỏ; chiều ngược lại không bắt buộc.
 
-18. **Chạm plan doc ⇒ chạy `verify.py` rồi mới báo xong.** Sửa file, tick ô, đổi `status` — lần nào cũng
+18. **Trước khi chốt §7: rà bẫy, nhưng không ghi bẫy vào doc.** Liệt kê ra ngoài doc những chỗ dễ hỏng
+    (làm sai thứ tự, quên migrate dữ liệu cũ, đụng module không được đụng…). Mỗi cái phải chỉ được **một
+    Gate cụ thể** bắt được nó; chỉ không được ⇒ §7 thiếu gate, thêm gate rồi rà lại. Rà xong **vứt danh
+    sách** — cái đọng lại là Gate, không phải bảng rủi ro. Rủi ro đã quyết định chấp nhận thì thuộc `D`
+    (`D3 — không hỗ trợ multi-tenant v1`), không phải chỗ này.
+
+19. **Chạm plan doc ⇒ chạy `verify.py` rồi mới báo xong.** Sửa file, tick ô, đổi `status` — lần nào cũng
     chạy. ERROR là lỗi **ngữ nghĩa**: sửa **doc**, không sửa linter, không bỏ qua check. Hướng sửa thường
     là một quyết định (cắt `DS` hay thêm phase?) ⇒ nói cho user chọn, đừng tự chọn im lặng.
 
-## Khung cố định — 8 section (§4 optional), không thêm không bớt
+## Khung cố định — 7 section (§4 optional), không thêm không bớt
 
 | §   | Tên              | Vai                                                                    |
 | --- | ---------------- | ---------------------------------------------------------------------- |
 | 1   | **Problem**      | đau gì, số đo thật, chưa nói giải pháp                                 |
 | 2   | **Goal**         | trạng thái quan sát được sau khi xong + Ngoài scope                    |
-| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–8)                   |
-| 3   | **Mental model** | 2–4 dòng **lời** → sơ đồ mermaid                                       |
+| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–7)                   |
+| 3   | **Mental model** | lời: chạy thế nào · **ta đụng vào đâu** · không đụng — sơ đồ khi cần rõ |
 | 4   | **Probe** _(optional)_ | `P1`…`Pn` — thăm dò khả thi: câu hỏi · cách chạy · kết quả · ⇒ `D` nào |
 | 5   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng — **cái được duyệt, cái plan sau lật**        |
 | 6   | **Design**       | `DS1`…`DSn` append-only — contract đối chiếu được; **số & tên tùy bài toán**  |
 | 7   | **Phases**       | Legend → `### Phase 0…n` (Goal · **Cover** · Actions · Gate)           |
-| 8   | **Risks**        | bảng `Bẫy \| Chặn bằng`                                                |
 
 **Probe → Decisions → Design** là thứ tự bằng chứng → quyết định → khai triển: §4 là **cái đo được**,
 §5 là **mục lục lựa chọn** (thứ người duyệt gật, thứ lead-in plan sau trỏ vào), §6 là **chỗ khai triển**
@@ -245,13 +251,27 @@ supersedes: [] # doc plan bị lật một phần hoặc toàn bộ
 
 ## 3. Mental model
 
-2–4 dòng **lời**: hệ thống chạy thế nào sau khi có, nối lại với §1. Lời là nguồn — đọc một mình
-phải hiểu, vì mermaid không render ở terminal / diff / một số viewer.
+**Chạy thế nào** — <3–6 dòng lời: đi theo **một** đường thật (một request, một job, một lần đồng bộ)
+từ đầu vào tới nơi lưu, nối lại với §1. Lời là nguồn: mermaid không render ở terminal / diff / một số
+viewer, nên đọc riêng phần lời phải hiểu được.>
+
+<Sơ đồ **tuỳ** — vẽ khi luồng có nhiều nhánh / nhiều tầng / nhiều trạng thái, đọc chữ không nắm nổi.
+Thẳng một mạch 3 bước thì bỏ, lời đã đủ. Có vẽ thì theo `explain-with-diagrams`, và trong file **dán
+code**, không dán link `mermaid.live`.>
 
 ```mermaid
 flowchart LR
   A[<đầu vào>] --> B[<xử lý>] --> C[(<nơi lưu>)]
 ```
+
+**Ta đụng vào đâu:**
+
+| Thành phần        | Bây giờ            | Sau plan                    |
+| ----------------- | ------------------ | --------------------------- |
+| `<file/module>`   | <hành vi hiện tại> | <hành vi mới>               |
+| `<file/module>`   | — (chưa có)        | <thêm mới, làm gì>          |
+
+**Không đụng:** <1 dòng — thứ người đọc dễ tưởng là có đổi; trỏ được về Gate `git diff --stat` thì càng tốt>
 
 ## 4. Probe
 
@@ -364,12 +384,6 @@ node scripts/score.mjs fixtures/orders
 **Gate:**
 
 - [ ] 🤖 <bằng chứng> — DS3
-
-## 8. Risks
-
-| Bẫy              | Chặn bằng                        |
-| ---------------- | -------------------------------- |
-| <sai lầm dễ mắc> | <gate/test/phase/§ cụ thể>       |
 ````
 
 ## Luật viết
@@ -385,9 +399,6 @@ trước không được phụ thuộc phase sau.
 | Test dedupe: 3 lượt trong 5′ ⇒ **1 row**; lượt thứ 4 sau 16′ ⇒ **2 row** | có test cho dedupe    |
 | `git diff --stat` chứng minh `lease.ts` không đổi dòng nào               | không ảnh hưởng lease |
 
-**§8 Risks là phép kiểm chéo, không phải chỗ liệt kê lo lắng.** Cột phải bắt buộc trỏ tới **một gate /
-test / phase / § cụ thể**. Điền không được cột phải ⇒ plan chưa có chỗ nào bắt được rủi ro đó, phải thêm gate.
-
 **Văn phong:**
 
 - **Không narrative**: câu khẳng định trạng thái ("endpoint trả 409 khi trùng key"), không kể quá trình
@@ -395,6 +406,9 @@ test / phase / § cụ thể**. Điền không được cột phải ⇒ plan ch
 - **Ngắn nhưng đọc là hiểu ngay** — cắt chữ đệm, không cắt thông tin. Tên file/hàm/field/lệnh viết đủ,
   không viết tắt tự nghĩ ("`POST /orders` trả 409", không "trả lỗi", không "409" trơ trọi).
 - Ưu tiên bảng · bullet · mermaid hơn đoạn văn. Một ý một dòng. Sơ đồ dùng ```mermaid, không ASCII art.
+- **Vẽ sơ đồ ⇒ theo `explain-with-diagrams`** (nền tối, màu theo ngữ nghĩa, chú giải nằm ngoài hình).
+  Khác một chỗ: trong file **dán code** ```mermaid, link `mermaid.live` chỉ dùng lúc bàn trong chat
+  (luật 1).
 - Đổi quyết định giữa chừng: **một dòng** `**Đổi (YYYY-MM-DD):** <cái mới> — <lý do ngắn>` ngay trong `D`
   tương ứng, không viết lại lịch sử tranh luận.
 - Không section changelog — git history là changelog. Chỉ bump `version` + `updated`.
