@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mỗi sơ đồ một section, link trước, giải thích sau. Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mỗi sơ đồ một section theo thứ tự code → link → giải thích. Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -21,20 +21,30 @@ so sánh, hay ba dòng tuần tự thì **đừng vẽ** — bảng đọc nhanh
 
 ## Khuôn câu trả lời
 
-Mỗi sơ đồ là **một section**, đúng thứ tự này:
+Mỗi sơ đồ là **một section**, đúng **ba** phần, đúng thứ tự này:
 
-```
+````
 # Section 1 — <tên sơ đồ, nói nó trả lời câu gì>
 
-**[▶ Mở sơ đồ](https://mermaid.live/edit#pako:…)**
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': {'background':'#0d1117'}}}%%
+…nguồn sơ đồ…
+```
+
+**[▶ Mở trên mermaid.live](https://mermaid.live/edit#pako:…)**
 
 <mô tả / giải thích / cách hiểu — 3 khối, xem dưới>
 
 # Section 2 — …
-```
+````
 
-⚠️ **Đã có link thì KHÔNG dán khối ```mermaid nữa.** Dán cả hai là bắt user cuộn qua 40 dòng code để
-tới câu tiếp theo. Chỉ dán code khi user xin code, hoặc khi đang sửa sơ đồ trong repo.
+Ba phần, ba việc khác nhau — thiếu phần nào cũng mất một đường dùng:
+
+| Phần | Nó cho cái gì |
+| --- | --- |
+| **Khối ```mermaid** | render inline ngay trong chat, thấy hình không cần rời màn hình; copy được vào doc/PR/issue |
+| **Link `/edit`** | phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG |
+| **Phần chữ** | lời giải — thứ hình không nói được |
 
 ### Ba khối của phần giải thích
 
@@ -128,10 +138,9 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 
 ## Checklist trước khi gửi
 
-- [ ] Mỗi sơ đồ một `# Section`, link đứng **trước** phần chữ
+- [ ] Mỗi sơ đồ một `# Section`, đủ ba phần đúng thứ tự: khối ```mermaid → link → phần chữ
 - [ ] `roundtrip_ok=true` cho mọi link
 - [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
 - [ ] Màu khai bằng `classDef`, mỗi vai một màu, có `color:`
-- [ ] Không còn khối ```mermaid nào trong câu trả lời
-- [ ] Mỗi section có đủ 3 khối, **khối 3 nói được một điều không đọc ra từ hình**
+- [ ] Phần chữ có đủ 3 khối, **khối 3 nói được một điều không đọc ra từ hình**
 - [ ] Không có chú thích/legend nhét trong hình
