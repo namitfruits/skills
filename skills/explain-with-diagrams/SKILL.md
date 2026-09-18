@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mở đầu bằng bối cảnh · hiện tượng · nguyên nhân, rồi mỗi sơ đồ một section theo thứ tự link → giải thích (nguồn mermaid mặc định ẩn, `--code` để kèm). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mở đầu bằng bối cảnh · hiện tượng · nguyên nhân, rồi mỗi sơ đồ một section gồm link → giải thích (không dán nguồn mermaid vào chat). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -73,7 +73,7 @@ Hai phần, hai việc khác nhau — thiếu phần nào cũng mất một đư
 
 | Phần | Nó cho cái gì |
 | --- | --- |
-| **Link `/edit`** | thấy hình, phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG |
+| **Link `/edit`** | thấy hình, phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG, copy nguồn |
 | **Phần chữ** | lời giải — thứ hình không nói được |
 
 ### Ba đoạn mở đầu
@@ -96,27 +96,14 @@ nhân để nói: giữ **bối cảnh**, thay hai đoạn kia bằng một câu
 
 ❌ Đừng mở bằng *"Dưới đây là sơ đồ giải thích…"* — đó là mô tả việc mình vừa làm, không phải bối cảnh.
 
-### Nguồn sơ đồ: mặc định ẩn
+### Không dán nguồn sơ đồ vào câu trả lời
 
-Khối ```mermaid dài hơn cả phần chữ và chiếm hết màn hình, nên **mặc định không dán vào câu trả
-lời** — chỉ link + chữ. Đổi lại thì mất render inline: user phải mở link mới thấy hình.
+Khối ```mermaid dài hơn cả phần chữ, chiếm hết màn hình, và **không cho thêm gì** — mở link ra là có
+hình đầy đủ, phóng to được, export được, copy nguồn được ngay trong editor. Câu trả lời chỉ có link
++ chữ.
 
-Dán khối ```mermaid vào khi user xin — `/explain-with-diagrams --code`, hoặc nói *"kèm code"* ·
-*"cho xem nguồn mermaid"* · *"để dán vào doc"*. Khi bật thì nó đứng **trên** link:
-
-````
-# Section 1 — …
-
-```mermaid
-%%{init: {'theme':'dark', 'themeVariables': {'background':'#0d1117'}}}%%
-…nguồn sơ đồ…
-```
-
-**[▶ Mở trên mermaid.live](https://mermaid.live/edit#pako:…)**
-````
-
-Bật/tắt giữ nguyên trong cả cuộc trò chuyện: user xin một lần thì các sơ đồ sau cũng kèm code, không
-cần xin lại.
+User xin nguồn để dán vào doc/PR ⇒ đưa **file `.mmd`** đã sinh sẵn cho `mermaid-link.mjs`, hoặc chỉ
+sang tab *Code* trên mermaid.live. Đừng dán lại vào chat.
 
 ### Ba khối của phần giải thích
 
@@ -249,7 +236,7 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 ## Checklist trước khi gửi
 
 - [ ] Mở đầu có bối cảnh · hiện tượng · nguyên nhân (không phải bug ⇒ bối cảnh + câu hỏi sơ đồ trả lời)
-- [ ] Mỗi sơ đồ một `# Section`: link → phần chữ (kèm khối ```mermaid trên link nếu user đã xin)
+- [ ] Mỗi sơ đồ một `# Section`: link → phần chữ, **không** có khối ```mermaid trong câu trả lời
 - [ ] `roundtrip_ok=true` cho mọi link
 - [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
 - [ ] Chuỗi chính quá 7–8 node ⇒ `LR` ở **cả** dòng `flowchart` lẫn `direction` trong `subgraph ALL`
