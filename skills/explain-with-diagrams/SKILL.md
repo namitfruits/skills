@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — dựng vấn đề bằng `Context` · `Problem` · `Root cause` ở cả đầu bài lẫn trong từng section, rồi link → giải thích (không dán nguồn mermaid vào chat). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — dựng vấn đề bằng `Context` · `Problem` · `Root cause` viết bằng ngôn ngữ thường (bớt mã số, không đếm ký hiệu), mặc định một section, rồi link → giải thích (không dán nguồn mermaid vào chat). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -52,17 +52,10 @@ Hai câu gỡ khi phân vân:
 
 ## Khuôn câu trả lời
 
-Mỗi vấn đề dựng bằng bộ ba **`Context` · `Problem` · `Root cause`**, và bộ này xuất hiện **hai
-tầng**: một lần ở đầu câu trả lời cho cả bài, rồi một lần nữa trong từng section cho riêng mảnh của
-sơ đồ đó.
+Vấn đề dựng bằng bộ ba **`Context` · `Problem` · `Root cause`**, rồi tới link sơ đồ, rồi tới phần
+chú giải. Mặc định là **một section duy nhất**:
 
 ````
-**Context:** …
-**Problem:** …
-**Root cause:** …
-
-# Section 1 — <tên sơ đồ, nói nó trả lời câu gì>
-
 **Context:** …
 **Problem:** …
 
@@ -71,8 +64,6 @@ sơ đồ đó.
 **Colors:** …
 **How to read:** …
 **Root cause:** …
-
-# Section 2 — …
 ````
 
 Link và chữ, hai việc khác nhau — thiếu phần nào cũng mất một đường dùng:
@@ -92,25 +83,52 @@ Mỗi nhãn 1–3 câu:
 | **`Problem`** | nhìn thấy cái gì sai — số thật, dòng log thật, cái trong ảnh chụp | đúng bằng chứng user đưa, chưa diễn giải |
 | **`Root cause`** | vì sao ra thế — một câu kết luận | kết quả điều tra |
 
+`Context` + `Problem` đứng **trên** link còn `Root cause` đứng **dưới**, vì hình là **bằng chứng**:
+dựng câu hỏi, xem hình, rồi mới kết luận. Đảo lại thì kết luận đứng trước thứ chứng minh nó.
+
 Dùng `Root cause` chứ không `Tracing`: tracing là **việc đi tìm**, còn nhãn này mang **thứ tìm ra**.
-
-### Hai tầng, hai độ rộng
-
-Tầng đầu bài nói **cả bài toán** — hiện tượng user mang tới, nguyên nhân chung. Tầng trong section
-**hẹp lại đúng một mảnh**: sơ đồ này xử câu hỏi nào, và chỉ câu đó. Vào section là người đọc quên
-được phần còn lại.
-
-Trong section, `Context` + `Problem` đứng **trên** link còn `Root cause` đứng **dưới**, vì hình là
-**bằng chứng**: dựng câu hỏi, xem hình, rồi mới kết luận. Đảo lại thì kết luận đứng trước thứ chứng
-minh nó.
-
-❌ Đừng bê nguyên văn bộ ba đầu bài xuống section. Trùng chữ là dấu hiệu section đó không có vấn đề
-riêng — khi đó bỏ sơ đồ, hoặc gộp vào section khác.
 
 Giải thích một cơ chế đang chạy đúng (kiến trúc, luồng quyết định) thì không có gì sai để kể: giữ
 `Context`, đổi `Problem` thành **câu hỏi** mà sơ đồ trả lời, `Root cause` thành **câu trả lời**.
 
 ❌ Đừng mở bằng *"Dưới đây là sơ đồ giải thích…"* — đó là mô tả việc mình vừa làm, không phải context.
+
+### Nói bằng ngôn ngữ thường, bớt mã số
+
+Mặc định: **không nhắc mã số**. `065`, `P13`, `CP-23.15` chỉ có nghĩa với người đã mở đúng file đó;
+với người đọc câu trả lời nó là chữ rỗng, và câu bắt đầu bằng một mã là câu viết cho người đã biết
+sẵn. Nói **việc gì xảy ra** bằng chữ đời thường.
+
+❌ *"065 để lại 15 probe đánh số P1…P15; 043 để lại một gate."*
+
+✅ *"Việc tối ưu đường đọc số session đã đo xong và có số thật: đỉnh 41 session bẩn cùng lúc. Nhưng
+cơ chế dot đổi màu realtime thì chưa ai nghiệm thu — tới giờ chưa từng được xác nhận kể cả với một
+session đang gõ."*
+
+Bản ❌ đếm **số lượng ký hiệu**, phải mở hai file plan mới hiểu. Bản ✅ đọc một lượt là biết việc nào
+đã có bằng chứng, việc nào còn hổng — không mở file nào.
+
+Cần dẫn nguồn thì gắn mã ở **cuối** câu, dạng chú thích hoặc link — *"(plan 065)"* — chứ đừng để nó
+làm chủ ngữ. Và đừng viết *"15 probe"* khi điều đáng nói là *"đã đo và có số"*, đừng viết *"một
+gate"* khi điều đáng nói là *"chưa ai xác nhận"*.
+
+Luật này áp cả cho **nhãn node trên hình**: một ô tên `P13` không nói gì, ô tên *"đo đỉnh session
+cùng lúc"* thì đọc ra ngay.
+
+### Khi nào mới tách nhiều section
+
+Một bài toán ⇒ **một section, một sơ đồ**, bộ ba viết một lần. Đó là mặc định, vì người đọc theo
+được một mạch và không phải nhớ section nào đang nói chuyện gì.
+
+Tách thành nhiều section chỉ khi **yêu cầu chứa nhiều bài toán khác nhau** — khác hiện tượng, khác
+nguyên nhân, sửa ở chỗ khác nhau. Khi đó:
+
+- Đầu câu trả lời giữ **một** bộ ba nói cả bài toán chung.
+- Mỗi section có bộ ba **riêng**, hẹp lại đúng mảnh của nó, để vào section là quên được phần còn lại.
+- ❌ Đừng bê nguyên văn bộ ba chung xuống section. Trùng chữ nghĩa là section đó không có vấn đề riêng.
+
+Dấu hiệu tách sai: hai section cùng một hiện tượng, hoặc `Root cause` của chúng là một câu nói theo
+hai cách ⇒ gộp lại.
 
 ### Không dán nguồn sơ đồ vào câu trả lời
 
@@ -251,9 +269,10 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 
 ## Checklist trước khi gửi
 
-- [ ] Đầu bài có `Context` · `Problem` · `Root cause` cho cả bài toán
-- [ ] Mỗi section có bộ ba **riêng**, hẹp hơn: `Context` + `Problem` trên link, `Root cause` dưới link
-- [ ] Mỗi sơ đồ một `# Section`: link → phần chữ, **không** có khối ```mermaid trong câu trả lời
+- [ ] Có `Context` · `Problem` trên link và `Root cause` dưới link
+- [ ] Không có câu nào dẫn bằng mã số — việc gì xảy ra nói bằng chữ thường, mã để cuối câu nếu cần tra
+- [ ] Một bài toán ⇒ **một** section; nhiều section chỉ khi có nhiều bài toán khác nhau, mỗi cái bộ ba riêng
+- [ ] Không có khối ```mermaid trong câu trả lời
 - [ ] `roundtrip_ok=true` cho mọi link
 - [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
 - [ ] Chuỗi chính quá 7–8 node ⇒ `LR` ở **cả** dòng `flowchart` lẫn `direction` trong `subgraph ALL`
