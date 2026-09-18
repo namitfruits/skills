@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mỗi sơ đồ một section theo thứ tự code → link → giải thích. Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mở đầu bằng bối cảnh · hiện tượng · nguyên nhân, rồi mỗi sơ đồ một section theo thứ tự link → giải thích (nguồn mermaid mặc định ẩn, `--code` để kèm). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -45,22 +45,22 @@ lý do**, không phải lựa chọn ngang hàng.
 Hai câu gỡ khi phân vân:
 
 - **flowchart hay sequence?** Bỏ tên các bên đi — hình còn đúng không? Còn đúng ⇒ `flowchart`.
-  Một trục thời gian một chiều mà không ai trả lời ai thì vẫn là `flowchart` dọc.
+  Một trục thời gian một chiều mà không ai trả lời ai thì vẫn là `flowchart`.
 - **flowchart hay state?** Câu hỏi là *"đang ở ô nào"* (⇒ state) hay *"cái gì quyết định ra ô đó"*
   (⇒ flowchart)? Ví dụ: 8 ô trạng thái agent nhưng câu hỏi là thứ tự ưu tiên của luật suy ra ô ⇒
   `flowchart`, không phải `stateDiagram`.
 
 ## Khuôn câu trả lời
 
-Mỗi sơ đồ là **một section**, đúng **ba** phần, đúng thứ tự này:
+Trước hết **dựng bài toán** bằng ba đoạn ngắn, rồi mới tới các sơ đồ. Mỗi sơ đồ là **một section**,
+đúng thứ tự này:
 
 ````
-# Section 1 — <tên sơ đồ, nói nó trả lời câu gì>
+**Bối cảnh:** …
+**Hiện tượng:** …
+**Nguyên nhân:** …
 
-```mermaid
-%%{init: {'theme':'dark', 'themeVariables': {'background':'#0d1117'}}}%%
-…nguồn sơ đồ…
-```
+# Section 1 — <tên sơ đồ, nói nó trả lời câu gì>
 
 **[▶ Mở trên mermaid.live](https://mermaid.live/edit#pako:…)**
 
@@ -69,13 +69,54 @@ Mỗi sơ đồ là **một section**, đúng **ba** phần, đúng thứ tự n
 # Section 2 — …
 ````
 
-Ba phần, ba việc khác nhau — thiếu phần nào cũng mất một đường dùng:
+Hai phần, hai việc khác nhau — thiếu phần nào cũng mất một đường dùng:
 
 | Phần | Nó cho cái gì |
 | --- | --- |
-| **Khối ```mermaid** | render inline ngay trong chat, thấy hình không cần rời màn hình; copy được vào doc/PR/issue |
-| **Link `/edit`** | phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG |
+| **Link `/edit`** | thấy hình, phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG |
 | **Phần chữ** | lời giải — thứ hình không nói được |
+
+### Ba đoạn mở đầu
+
+Sơ đồ không tự nói nó đang giải cái gì. Ba đoạn này viết **một lần** ở đầu câu trả lời — không lặp
+lại ở mỗi section — mỗi đoạn 1–3 câu:
+
+| Đoạn | Trả lời | Lấy từ đâu |
+| --- | --- | --- |
+| **Bối cảnh** | hệ thống nào, ai đang chạy cái gì, chuyện này xuất hiện trong tình huống nào | những gì user kể + code đã đọc |
+| **Hiện tượng** | user nhìn thấy cái gì — số thật, dòng log thật, cái trong ảnh chụp | đúng bằng chứng user đưa, chưa diễn giải |
+| **Nguyên nhân** | vì sao ra thế — một câu kết luận | kết quả điều tra |
+
+**Nguyên nhân** ở đây là **kết luận**, nói được mà chưa cần nhìn hình. Còn khối *Chỗ đáng nhìn* dưới
+mỗi sơ đồ chỉ ra **chỗ trên hình** làm kết luận đó đứng được. Cùng một chuyện, hai loại bằng chứng —
+đừng bê nguyên câu từ chỗ này sang chỗ kia.
+
+Giải thích một cơ chế đang chạy đúng (kiến trúc, luồng quyết định) thì không có hiện tượng và nguyên
+nhân để nói: giữ **bối cảnh**, thay hai đoạn kia bằng một câu *sơ đồ dưới đây trả lời câu hỏi gì*.
+
+❌ Đừng mở bằng *"Dưới đây là sơ đồ giải thích…"* — đó là mô tả việc mình vừa làm, không phải bối cảnh.
+
+### Nguồn sơ đồ: mặc định ẩn
+
+Khối ```mermaid dài hơn cả phần chữ và chiếm hết màn hình, nên **mặc định không dán vào câu trả
+lời** — chỉ link + chữ. Đổi lại thì mất render inline: user phải mở link mới thấy hình.
+
+Dán khối ```mermaid vào khi user xin — `/explain-with-diagrams --code`, hoặc nói *"kèm code"* ·
+*"cho xem nguồn mermaid"* · *"để dán vào doc"*. Khi bật thì nó đứng **trên** link:
+
+````
+# Section 1 — …
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': {'background':'#0d1117'}}}%%
+…nguồn sơ đồ…
+```
+
+**[▶ Mở trên mermaid.live](https://mermaid.live/edit#pako:…)**
+````
+
+Bật/tắt giữ nguyên trong cả cuộc trò chuyện: user xin một lần thì các sơ đồ sau cũng kèm code, không
+cần xin lại.
 
 ### Ba khối của phần giải thích
 
@@ -93,7 +134,7 @@ giải. Viết được khối 3 thành một câu sắc thì sơ đồ mới c�
 ❌ Không diễn lại nhãn đã có trên hình (*"ô A hỏi inflight > 0, nếu đúng thì sang ô B"*) — user đọc
 được rồi.
 
-## Nguồn sơ đồ — năm luật cứng
+## Nguồn sơ đồ — sáu luật cứng
 
 ### 1· Nền phải tối thật
 
@@ -157,7 +198,31 @@ cái gì, vì sao. Đổi im lặng là lỗi.
 sơ đồ chọn theo **câu hỏi** (xem *Chọn loại sơ đồ*), chọn xong thì giữ, và nếu `sequenceDiagram` là
 đúng loại thì **chấp nhận canvas trong suốt + nói ra một câu**.
 
-### 5· Nhãn ngắn, `<br/>` để xuống dòng
+### 5· Chuỗi dài ⇒ `LR`, không `TD`
+
+mermaid.live và mọi chỗ render inline đều **fit cả hình vào khung**. Một chuỗi 10 bước xếp theo `TD`
+thành cột cao và hẹp, fit theo chiều cao ⇒ chữ nhỏ tới mức phải zoom từng đoạn mới đọc được, và mất
+đúng cái sơ đồ sinh ra để cho: **nhìn một phát thấy hình dạng**. Màn hình rộng hơn cao — hình nằm
+ngang dùng được hết chỗ đó.
+
+Ngưỡng: **chuỗi chính quá 7–8 node ⇒ `LR`**. Ngắn hơn thì `TD` đọc tự nhiên hơn, giữ `TD`.
+
+Đổi hướng phải sửa **hai chỗ** — `subgraph` có `direction` riêng và nó thắng cái khai ở dòng
+`flowchart`:
+
+```
+flowchart LR
+    subgraph ALL[" "]
+    direction LR
+    …
+```
+
+Sửa một chỗ thôi thì hình vẫn dọc như cũ, không báo lỗi gì — bẫy đã dính.
+
+Trong hình `LR`, các nhánh song song xếp theo chiều dọc. Đó là chỗ hình được phép cao lên: một mắt
+xích bị N nguồn dồn vào thì N nguồn đó nằm thành cột, đọc ra ngay là phép nhân.
+
+### 6· Nhãn ngắn, `<br/>` để xuống dòng
 
 Một node quá 3 dòng là dấu hiệu nó đang ôm hai ý — tách ra, hoặc đẩy phần thừa xuống phần chữ.
 
@@ -183,9 +248,11 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 
 ## Checklist trước khi gửi
 
-- [ ] Mỗi sơ đồ một `# Section`, đủ ba phần đúng thứ tự: khối ```mermaid → link → phần chữ
+- [ ] Mở đầu có bối cảnh · hiện tượng · nguyên nhân (không phải bug ⇒ bối cảnh + câu hỏi sơ đồ trả lời)
+- [ ] Mỗi sơ đồ một `# Section`: link → phần chữ (kèm khối ```mermaid trên link nếu user đã xin)
 - [ ] `roundtrip_ok=true` cho mọi link
 - [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
+- [ ] Chuỗi chính quá 7–8 node ⇒ `LR` ở **cả** dòng `flowchart` lẫn `direction` trong `subgraph ALL`
 - [ ] Màu khai bằng `classDef`, mỗi vai một màu, có `color:`
 - [ ] Phần chữ có đủ 3 khối, **khối 3 nói được một điều không đọc ra từ hình**
 - [ ] Không có chú thích/legend nhét trong hình
