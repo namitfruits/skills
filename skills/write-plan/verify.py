@@ -3,7 +3,8 @@
 
     python3 .claude/skills/write-plan/verify.py <plan.md>
 
-Bắt được: khung 7 section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status.
+Bắt được: khung 7 section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status,
+ô duyệt đứng ngoài phase, phase cuối là nghiệm thu, `D` ghi ai quyết.
 KHÔNG bắt được: item có kiểm được thật không, Gate có đúng bằng chứng không,
 phase chia theo "cái dùng được trước" hay theo tầng — mấy cái đó phải đọc.
 
@@ -25,14 +26,36 @@ SECTIONS = [
     (7, "Phases", True),
 ]
 STATUS_OK = ("draft", "approved", "done")
+ACCEPT = "nghiệm thu"  # tên mốc của phase cuối — luật 21
+FENCE = re.compile(r"^```\s*mermaid\s*$")
+DIR = re.compile(r"^\s*(?:flowchart|graph)\s+(TB|TD|LR|RL|BT)\b")
+NODE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*[\[\(\{]")
 
 H2 = re.compile(r"^## (\d)\.\s+(.+?)\s*$")
-H3 = re.compile(r"^### (~~)?(D|DS|Phase)\s*(\d+)(~~)?\b(.*)$")
+H3 = re.compile(r"^### (~~)?(DS|Phase|D|P)\s*(\d+)(~~)?\b(.*)$")
 D_REF = re.compile(r"\(D(\d+)\)")
 DS_REF = re.compile(r"\bDS(\d+)\b")
 P_REF = re.compile(r"\bP(\d+)\b")
+BH_REF = re.compile(r"\bBH(\d+)\b")
+BH_ROW = re.compile(r"^\|\s*`?BH(\d+)`?\s*\|")
 ITEM = re.compile(r"^\s*-\s*\[( |x)\]\s*(.*)$")
 COVER = re.compile(r"^\*\*Cover:\*\*\s*(.*)$")
+
+
+def mermaid_blocks(body):
+    """[(dòng trong khối, …)] cho từng ```mermaid trong một section."""
+    out, cur = [], None
+    for ln in body:
+        if FENCE.match(ln):
+            cur = []
+            continue
+        if cur is not None and ln.strip().startswith("```"):
+            out.append(cur)
+            cur = None
+            continue
+        if cur is not None:
+            cur.append(ln)
+    return out
 
 
 def front_matter(lines):
@@ -65,7 +88,7 @@ def split_sections(lines, start):
 
 
 def blocks(body, kind):
-    """Cắt §5/§6/§7 thành từng `### D<n>` / `### DS<n>` / `### Phase <n>`."""
+    """Cắt §4/§5/§6/§7 thành từng `### P<n>` / `### D<n>` / `### DS<n>` / `### Phase <n>`."""
     found, cur = [], None
     for ln in body:
         m = H3.match(ln)
@@ -100,7 +123,7 @@ def phase_parts(lines):
     return cover, actions, gate
 
 
-def lint(text):
+def lint(text, path=None):
     err, warn, info = [], [], []
     lines = text.splitlines()
     fm, start = front_matter(lines)
@@ -127,39 +150,66 @@ def lint(text):
         if num not in [s[0] for s in SECTIONS]:
             err.append(f"`## {num}.` ngoài khung 1–7 (luật 11)")
 
-    # --- §5 Decisions (parse trước để §4 kiểm được `chặn D<n>`)
+    # --- §3 hai hình trước/sau (proxy cơ học, không kiểm được ngữ nghĩa)
+    figs = mermaid_blocks(sec.get(3, ("", []))[1])
+    if len(figs) == 2:
+        a, b = figs
+        norm = lambda f: "\n".join(l.strip() for l in f if l.strip())
+        if norm(a) == norm(b):
+            warn.append("§3: hai hình giống hệt nhau — luồng không đổi hình dạng thì vẽ **một** hình")
+        da = DIR.search("\n".join(a))
+        db = DIR.search("\n".join(b))
+        if da and db and da.group(1) != db.group(1):
+            warn.append(f"§3: hình `Bây giờ` hướng {da.group(1)}, hình `Sau plan` hướng {db.group(1)} "
+                        f"— cùng hướng thì mắt mới so được")
+        na, nb = set(NODE.findall("\n".join(a))), set(NODE.findall("\n".join(b)))
+        if na and nb and not (na & nb):
+            warn.append("§3: hai hình không chung node nào — đang vẽ hai hệ thống khác nhau, "
+                        "không phải trước/sau của cùng một đường")
+        if nb - na and ":::" not in "\n".join(b) and "classDef" not in "\n".join(b):
+            warn.append(f"§3: hình `Sau plan` thêm node ({' · '.join(sorted(nb - na))}) nhưng không tô "
+                        f"màu chỗ đổi — người đọc phải tự dò")
+    elif len(figs) > 2:
+        warn.append(f"§3 có {len(figs)} hình — khuôn là `Bây giờ` + `Sau plan`, nhiều hơn thì "
+                    f"chia nhỏ luồng trước")
+
+    # --- §3 bảng hành vi: `H<n>` để Gate §7 trỏ về
+    hrows = {int(BH_ROW.match(ln).group(1)) for ln in sec.get(3, ("", []))[1] if BH_ROW.match(ln)}
+
+    # --- §5 Decisions (parse trước: §4 kiểm phủ `P` từ phía `D` nhắc nó)
     decisions = {d["id"]: d for d in blocks(sec.get(5, ("", []))[1], "D")}
+    cited_p = {}
     designs = {d["id"]: d for d in blocks(sec.get(6, ("", []))[1], "DS")}
     _decisions_ids = set(decisions)
 
-    # --- §4 Probe
+    # --- §4 Probe (mỗi `P` một block, cùng hình dạng `D`/`DS`)
     probes, probe_pending = {}, []
-    if 4 in sec:
-        for ln in sec[4][1]:
-            if not ln.startswith("|") or "---" in ln:
-                continue
-            m = P_REF.search(ln)
-            if not m:
-                continue
-            pid = int(m.group(1))
-            probes[pid] = ln
-            if "chưa chạy" in ln:
-                probe_pending.append(pid)
-                blocked = [f"D{d}" for d in D_REF.findall(ln)] or \
-                          [f"D{d}" for d in re.findall(r"chặn `?D(\d+)", ln)]
-                info.append(f"P{pid} chưa chạy" + (f" — chặn {' · '.join(blocked)}" if blocked else ""))
-    for pid, row in probes.items():
-        for d in set(D_REF.findall(row)) | set(re.findall(r"chặn `?D(\d+)", row)):
-            if int(d) not in _decisions_ids:
-                err.append(f"P{pid} trỏ `D{d}` không có trong §5 (luật 16)")
+    for pb in blocks(sec.get(4, ("", []))[1], "P"):
+        pid, body = pb["id"], "\n".join(pb["lines"])
+        probes[pid] = body
+        for lab in ("**Biết để làm gì:**", "**Cách chạy lại:**", "**Kết quả:**"):
+            if lab not in body:
+                warn.append(f"P{pid} thiếu dòng `{lab}` (luật 16)")
+        back = sorted({int(d) for d in re.findall(r"\bD(\d+)\b", pb["title"] + body)})
+        if back:
+            warn.append(f"P{pid} trỏ ngược về {' · '.join('D%d' % d for d in back)} — dây nối `P`↔`D` "
+                        f"viết một chiều ở phía `D` (`**Lý do:** dựa vào P{pid}`), luật 16")
+        if "chưa chạy" in body:
+            probe_pending.append(pid)
     if probe_pending and status in ("approved", "done"):
         err.append(f"status `{status}` nhưng còn probe chưa chạy: "
                    f"{' · '.join('P%d' % i for i in probe_pending)} — duyệt trên giả định (luật 16)")
 
     # --- §5 Decisions
     for did, d in decisions.items():
+        title = d["title"]
+        if re.search(r"\d{4}-\d{2}-\d{2}", title):
+            warn.append(f"D{did} có ngày tháng ở heading — heading chỉ mang ID · dấu · câu quyết định; "
+                        f"ngày xuống dòng `**Đổi (YYYY-MM-DD):**` (luật 22)")
         if d["dropped"]:
             continue
+        if "🤖" not in title and "👤" not in title:
+            warn.append(f"D{did} thiếu 🤖/👤 ở heading — không biết ai quyết (luật 22)")
         body = [l for l in d["lines"] if l.strip()]
         if len(body) > 5:
             warn.append(f"D{did} dài {len(body)} dòng (>5) — chi tiết xuống một `DS` (luật 13)")
@@ -167,8 +217,16 @@ def lint(text):
             if int(ds) not in designs:
                 err.append(f"D{did} trỏ `DS{ds}` không có trong §6 (luật 13)")
         for pid in P_REF.findall("\n".join(d["lines"])):
+            cited_p.setdefault(int(pid), []).append(f"D{did}")
             if int(pid) not in probes:
                 err.append(f"D{did} trỏ `P{pid}` không có trong §4 (luật 16)")
+
+    for pid in sorted(probes):
+        if pid not in cited_p:
+            err.append(f"P{pid} không `D` nào nhắc tới — probe không đổi được quyết định nào là probe "
+                       f"thừa, cắt (luật 16)")
+        elif pid in probe_pending:
+            info.append(f"P{pid} chưa chạy — {' · '.join(cited_p[pid])} chưa có nền")
 
     # --- §6 Design
     for dsid, d in designs.items():
@@ -176,13 +234,34 @@ def lint(text):
             warn.append(f"DS{dsid} không có tên hạng mục — heading phải nói loại contract (§6 luật 1)")
 
     # --- §7 Phases
-    phases = blocks(sec.get(7, ("", []))[1], "Phase")
+    body7 = sec.get(7, ("", []))[1]
+    phases = blocks(body7, "Phase")
     if not phases:
         err.append("§7 không có `### Phase <n>` nào (luật 7)")
-    full, partial, cited_d = {}, {}, set()
+
+    head = []
+    for ln in body7:
+        if H3.match(ln):
+            break
+        head.append(ln)
+    if not any(ITEM.match(ln) and "duyệt" in ln for ln in head):
+        err.append("§7 thiếu ô `- [ ] 👤 plan này được duyệt` ngay dưới Legend, ngoài mọi phase "
+                   "— ô đó chặn cả §7 (luật 2)")
+    if phases:
+        for ph in phases[:-1]:
+            if ACCEPT in ph["title"].lower():
+                err.append(f"Phase {ph['id']} là nghiệm thu nhưng không đứng cuối §7 (luật 21)")
+        if ACCEPT not in phases[-1]["title"].lower():
+            err.append(f"phase cuối (Phase {phases[-1]['id']}) không phải nghiệm thu — thêm "
+                       f"`### Phase <n> — nghiệm thu` chạy lại từng bullet §2 (luật 21)")
+
+    full, partial, cited_d, cited_h, acc_gate = {}, {}, set(), set(), None
     for ph in phases:
         tag = f"Phase {ph['id']}"
+        is_acc = ACCEPT in ph["title"].lower()
         cover, actions, gate = phase_parts(ph["lines"])
+        if is_acc:
+            acc_gate = gate
         if not actions:
             err.append(f"{tag} không có **Actions** (luật 7)")
         if not gate:
@@ -196,6 +275,10 @@ def lint(text):
                 if not re.search(r"\d", tail):
                     warn.append(f"{tag}: `[x]` không có bằng chứng (số/ngày sau `—`) — "
                                 f"{m.group(2)[:60]} (luật 10)")
+        for h in BH_REF.findall("\n".join(actions + gate)):
+            cited_h.add(int(h))
+            if int(h) not in hrows:
+                err.append(f"{tag} trích `BH{h}` không có trong bảng hành vi §3")
         for d in D_REF.findall("\n".join(actions + gate)):
             cited_d.add(int(d))
             if int(d) not in decisions:
@@ -209,8 +292,13 @@ def lint(text):
         cover = re.sub(r"_\(.*?\)_", "", cover)  # chú thích _(…)_ hay chứa chữ "một phần"
         items = [c.strip() for c in cover.split("·") if DS_REF.search(c)]
         if not items:
-            if ph["id"] != 0:
-                err.append(f"{tag} không cover `DS` nào — chỉ phase 0 được phép (luật 17)")
+            if ph["id"] != 0 and not is_acc:
+                err.append(f"{tag} không cover `DS` nào — chỉ phase 0 và phase nghiệm thu "
+                           f"được phép (luật 17)")
+            continue
+        if is_acc:
+            err.append(f"{tag} là nghiệm thu nhưng khai `Cover:` — để trống, nó chạy lại §2 "
+                       f"chứ không hiện thực `DS` nào (luật 21)")
             continue
         for part in items:
             dsid = int(DS_REF.search(part).group(1))
@@ -239,6 +327,30 @@ def lint(text):
         elif len(full[dsid]) > 1:
             err.append(f"DS{dsid} được {len(full[dsid])} phase cùng nhận trọn "
                        f"({' · '.join(full[dsid])}) — tách `DS` ra (luật 17)")
+
+    for h in sorted(hrows - cited_h):
+        warn.append(f"BH{h} không Gate nào nhắc — khai một hành vi đổi mà không ai chứng minh (§3)")
+
+    if acc_gate is not None:
+        goals = [l for l in sec.get(2, ("", []))[1]
+                 if re.match(r"^\s*[-*]\s+\S", l) and "ngoài scope" not in l.lower()]
+        if goals and len(acc_gate) < len(goals):
+            warn.append(f"phase nghiệm thu có {len(acc_gate)} item Gate < {len(goals)} bullet §2 "
+                        f"— mỗi bullet §2 một dòng bằng chứng (luật 21)")
+
+    # --- dòng bê nguyên từ template mà chưa điền (luật 4)
+    tpl = Path(__file__).with_name("template.md")
+    same = path and Path(path).resolve() == tpl.resolve()  # chính template thì bỏ qua
+    if tpl.is_file() and not same:
+        blank = {l.strip() for l in tpl.read_text(encoding="utf-8").splitlines()
+                 if l.strip() and (("<" in l and ">" in l) or "_(" in l)}
+        left = sorted({l.strip() for l in lines if l.strip() in blank})
+        if left:
+            where = "ERROR" if status in ("approved", "done") else "WARN"
+            msg = (f"{len(left)} dòng còn nguyên chỗ trống của `template.md`, chưa điền: "
+                   f"{left[0][:60]}…" if len(left) > 1 else
+                   f"còn nguyên chỗ trống của `template.md`: {left[0][:60]}")
+            (err if where == "ERROR" else warn).append(msg + " (luật 4)")
 
     # --- tick vs status (luật 15)
     open_boxes = sum(1 for ln in lines if ITEM.match(ln) and ITEM.match(ln).group(1) == " ")
@@ -278,7 +390,7 @@ def main():
             print(f"không thấy file: {path}")
             rc = 2
             continue
-        err, warn, info = lint(path.read_text(encoding="utf-8"))
+        err, warn, info = lint(path.read_text(encoding="utf-8"), path)
         print(f"\n=== {path} — {len(err)} ERROR · {len(warn)} WARN")
         for i in info:
             print(f"  INFO   {i}")
