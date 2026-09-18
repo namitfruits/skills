@@ -8,17 +8,22 @@ Agent skills tôi hay dùng. Cài được cho Claude Code, Codex, Cursor, OpenC
 
 ```bash
 # Cài toàn bộ
-npx skills add namitfruits/skills
+npx -y skills@latest add namitfruits/skills
 
 # Cài một skill cụ thể
-npx skills add namitfruits/skills --skill write-plan
+npx -y skills@latest add namitfruits/skills --skill write-plan
 
 # Xem có gì mà không cài
-npx skills add namitfruits/skills --list
+npx -y skills@latest add namitfruits/skills --list
 
 # Cài global cho Claude Code, không hỏi gì
-npx skills add namitfruits/skills --skill '*' -g -a claude-code -y
+npx -y skills@latest add namitfruits/skills --skill '*' -g -a claude-code -y
 ```
+
+Hai chỗ trước tên package là để không bị hỏi gì: `-y` của **npx** trả lời sẵn câu *"Need to install
+the following packages… Ok to proceed?"*, còn `@latest` bắt npx bỏ bản cũ trong cache mà lấy bản mới
+nhất. `-y` ở cuối dòng là của **`skills add`** — bỏ qua prompt chọn skill và chọn agent. Hai flag
+khác nhau, trùng tên.
 
 ## Skills
 
