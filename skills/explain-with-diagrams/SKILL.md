@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — mở đầu bằng bối cảnh · hiện tượng · nguyên nhân, rồi mỗi sơ đồ một section gồm link → giải thích (không dán nguồn mermaid vào chat). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — dựng vấn đề bằng `Context` · `Problem` · `Root cause` ở cả đầu bài lẫn trong từng section, rồi link → giải thích (không dán nguồn mermaid vào chat). Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -52,49 +52,65 @@ Hai câu gỡ khi phân vân:
 
 ## Khuôn câu trả lời
 
-Trước hết **dựng bài toán** bằng ba đoạn ngắn, rồi mới tới các sơ đồ. Mỗi sơ đồ là **một section**,
-đúng thứ tự này:
+Mỗi vấn đề dựng bằng bộ ba **`Context` · `Problem` · `Root cause`**, và bộ này xuất hiện **hai
+tầng**: một lần ở đầu câu trả lời cho cả bài, rồi một lần nữa trong từng section cho riêng mảnh của
+sơ đồ đó.
 
 ````
-**Bối cảnh:** …
-**Hiện tượng:** …
-**Nguyên nhân:** …
+**Context:** …
+**Problem:** …
+**Root cause:** …
 
 # Section 1 — <tên sơ đồ, nói nó trả lời câu gì>
 
+**Context:** …
+**Problem:** …
+
 **[▶ Mở trên mermaid.live](https://mermaid.live/edit#pako:…)**
 
-<mô tả / giải thích / cách hiểu — 3 khối, xem dưới>
+**Colors:** …
+**How to read:** …
+**Root cause:** …
 
 # Section 2 — …
 ````
 
-Hai phần, hai việc khác nhau — thiếu phần nào cũng mất một đường dùng:
+Link và chữ, hai việc khác nhau — thiếu phần nào cũng mất một đường dùng:
 
 | Phần | Nó cho cái gì |
 | --- | --- |
 | **Link `/edit`** | thấy hình, phóng to, pan/zoom, sửa tại chỗ, đổi theme, export PNG/SVG, copy nguồn |
 | **Phần chữ** | lời giải — thứ hình không nói được |
 
-### Ba đoạn mở đầu
+### Bộ ba nói gì
 
-Sơ đồ không tự nói nó đang giải cái gì. Ba đoạn này viết **một lần** ở đầu câu trả lời — không lặp
-lại ở mỗi section — mỗi đoạn 1–3 câu:
+Mỗi nhãn 1–3 câu:
 
-| Đoạn | Trả lời | Lấy từ đâu |
+| Nhãn | Trả lời | Lấy từ đâu |
 | --- | --- | --- |
-| **Bối cảnh** | hệ thống nào, ai đang chạy cái gì, chuyện này xuất hiện trong tình huống nào | những gì user kể + code đã đọc |
-| **Hiện tượng** | user nhìn thấy cái gì — số thật, dòng log thật, cái trong ảnh chụp | đúng bằng chứng user đưa, chưa diễn giải |
-| **Nguyên nhân** | vì sao ra thế — một câu kết luận | kết quả điều tra |
+| **`Context`** | hệ thống nào, ai đang chạy cái gì, chuyện này xuất hiện trong tình huống nào | user kể + code đã đọc |
+| **`Problem`** | nhìn thấy cái gì sai — số thật, dòng log thật, cái trong ảnh chụp | đúng bằng chứng user đưa, chưa diễn giải |
+| **`Root cause`** | vì sao ra thế — một câu kết luận | kết quả điều tra |
 
-**Nguyên nhân** ở đây là **kết luận**, nói được mà chưa cần nhìn hình. Còn khối *Chỗ đáng nhìn* dưới
-mỗi sơ đồ chỉ ra **chỗ trên hình** làm kết luận đó đứng được. Cùng một chuyện, hai loại bằng chứng —
-đừng bê nguyên câu từ chỗ này sang chỗ kia.
+Dùng `Root cause` chứ không `Tracing`: tracing là **việc đi tìm**, còn nhãn này mang **thứ tìm ra**.
 
-Giải thích một cơ chế đang chạy đúng (kiến trúc, luồng quyết định) thì không có hiện tượng và nguyên
-nhân để nói: giữ **bối cảnh**, thay hai đoạn kia bằng một câu *sơ đồ dưới đây trả lời câu hỏi gì*.
+### Hai tầng, hai độ rộng
 
-❌ Đừng mở bằng *"Dưới đây là sơ đồ giải thích…"* — đó là mô tả việc mình vừa làm, không phải bối cảnh.
+Tầng đầu bài nói **cả bài toán** — hiện tượng user mang tới, nguyên nhân chung. Tầng trong section
+**hẹp lại đúng một mảnh**: sơ đồ này xử câu hỏi nào, và chỉ câu đó. Vào section là người đọc quên
+được phần còn lại.
+
+Trong section, `Context` + `Problem` đứng **trên** link còn `Root cause` đứng **dưới**, vì hình là
+**bằng chứng**: dựng câu hỏi, xem hình, rồi mới kết luận. Đảo lại thì kết luận đứng trước thứ chứng
+minh nó.
+
+❌ Đừng bê nguyên văn bộ ba đầu bài xuống section. Trùng chữ là dấu hiệu section đó không có vấn đề
+riêng — khi đó bỏ sơ đồ, hoặc gộp vào section khác.
+
+Giải thích một cơ chế đang chạy đúng (kiến trúc, luồng quyết định) thì không có gì sai để kể: giữ
+`Context`, đổi `Problem` thành **câu hỏi** mà sơ đồ trả lời, `Root cause` thành **câu trả lời**.
+
+❌ Đừng mở bằng *"Dưới đây là sơ đồ giải thích…"* — đó là mô tả việc mình vừa làm, không phải context.
 
 ### Không dán nguồn sơ đồ vào câu trả lời
 
@@ -105,18 +121,18 @@ hình đầy đủ, phóng to được, export được, copy nguồn được n
 User xin nguồn để dán vào doc/PR ⇒ đưa **file `.mmd`** đã sinh sẵn cho `mermaid-link.mjs`, hoặc chỉ
 sang tab *Code* trên mermaid.live. Đừng dán lại vào chat.
 
-### Ba khối của phần giải thích
+### Ba khối dưới link
 
 Viết theo đúng thứ tự, mỗi khối 1–3 câu:
 
 | Khối | Trả lời | Ví dụ |
 | --- | --- | --- |
-| **1· Bảng màu** | mỗi màu nghĩa là gì | *"**đỏ** = điều kiện đang hỏng · **tím nhạt** = câu hỏi · **xám** = kết luận nghỉ"* |
-| **2· Cách đọc** | đi từ đâu, dừng ở đâu, thứ tự có ý nghĩa không | *"đi từ trên xuống, dừng ở ô kết luận đầu tiên gặp"* |
-| **3· Chỗ đáng nhìn** | cái **không** đọc ra được từ hình | *"ba nhánh đều đúng khi đứng riêng; sai nằm ở hình dạng — ô đỏ nối bằng `\|\|` nên nó có quyền phủ quyết"* |
+| **`Colors`** | mỗi màu nghĩa là gì | *"**đỏ** = điều kiện đang hỏng · **tím nhạt** = câu hỏi · **xám** = kết luận nghỉ"* |
+| **`How to read`** | đi từ đâu, dừng ở đâu, thứ tự có ý nghĩa không | *"đi từ trên xuống, dừng ở ô kết luận đầu tiên gặp"* |
+| **`Root cause`** | chỗ **trên hình** làm kết luận đứng được — cái không đọc thẳng ra từ nhãn | *"ba nhánh đều đúng khi đứng riêng; sai nằm ở hình dạng — ô đỏ nối bằng `\|\|` nên nó có quyền phủ quyết"* |
 
-Khối 3 là khối duy nhất không thể bỏ. Nó là **lý do** section đó tồn tại; hai khối trên chỉ là chú
-giải. Viết được khối 3 thành một câu sắc thì sơ đồ mới có giá.
+`Root cause` là khối duy nhất không thể bỏ. Nó là **lý do** section đó tồn tại; hai khối trên chỉ là
+chú giải. Viết được nó thành một câu sắc thì sơ đồ mới có giá.
 
 ❌ Không diễn lại nhãn đã có trên hình (*"ô A hỏi inflight > 0, nếu đúng thì sang ô B"*) — user đọc
 được rồi.
@@ -235,11 +251,12 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 
 ## Checklist trước khi gửi
 
-- [ ] Mở đầu có bối cảnh · hiện tượng · nguyên nhân (không phải bug ⇒ bối cảnh + câu hỏi sơ đồ trả lời)
+- [ ] Đầu bài có `Context` · `Problem` · `Root cause` cho cả bài toán
+- [ ] Mỗi section có bộ ba **riêng**, hẹp hơn: `Context` + `Problem` trên link, `Root cause` dưới link
 - [ ] Mỗi sơ đồ một `# Section`: link → phần chữ, **không** có khối ```mermaid trong câu trả lời
 - [ ] `roundtrip_ok=true` cho mọi link
 - [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
 - [ ] Chuỗi chính quá 7–8 node ⇒ `LR` ở **cả** dòng `flowchart` lẫn `direction` trong `subgraph ALL`
 - [ ] Màu khai bằng `classDef`, mỗi vai một màu, có `color:`
-- [ ] Phần chữ có đủ 3 khối, **khối 3 nói được một điều không đọc ra từ hình**
+- [ ] Dưới link đủ `Colors` · `How to read` · `Root cause`, và `Root cause` nói được một điều không đọc ra từ hình
 - [ ] Không có chú thích/legend nhét trong hình
