@@ -4,7 +4,8 @@
     python3 .claude/skills/write-plan/verify.py <plan.md>
 
 Bắt được: khung 7 section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status,
-ô duyệt đứng ngoài phase, phase cuối là nghiệm thu, `D` ghi ai quyết.
+ô duyệt đứng ngoài phase, phase cuối là nghiệm thu, `D` ghi ai quyết,
+§1–§3 không mang tên code / không trỏ ID, §3 có hình.
 KHÔNG bắt được: item có kiểm được thật không, Gate có đúng bằng chứng không,
 phase chia theo "cái dùng được trước" hay theo tầng — mấy cái đó phải đọc.
 
@@ -40,6 +41,57 @@ BH_REF = re.compile(r"\bBH(\d+)\b")
 BH_ROW = re.compile(r"^\|\s*`?BH(\d+)`?\s*\|")
 ITEM = re.compile(r"^\s*-\s*\[( |x)\]\s*(.*)$")
 COVER = re.compile(r"^\*\*Cover:\*\*\s*(.*)$")
+
+# §1–§3 viết cho người chưa mở repo — luật 23. Lệnh / URL có dấu cách (`npx foo`, `POST /orders`) cho
+# qua; chỉ bắt dấu hiệu chắc là tên trong code: gọi hàm, camelCase, snake_case, `a.b`, `key: value`, `{…}`
+CODE_SPAN = re.compile(r"`([^`\n]+)`")
+CODE_ALWAYS = re.compile(r"\w\(|\b[a-z]+[A-Z]|^\w+:\s|[{}]")
+CODE_TOKEN = re.compile(r"[A-Za-z0-9]_[A-Za-z0-9]|[A-Za-z]\.[A-Za-z]")
+ID_REF = re.compile(r"\b(?:DS|D|P)\d+\b")
+NODE_OPEN = re.compile(r"\b[A-Za-z_]\w*(\[\[|\[\(|\(\(|\(\[|\{\{|\[|\(|\{|>)")
+NODE_CLOSE = {"[[": "]]", "[(": ")]", "((": "))", "([": "])", "{{": "}}",
+              "[": "]", "(": ")", "{": "}", ">": "]"}
+EDGE_LABEL = re.compile(r"\|([^|]+)\|")
+MERMAID_STYLE = re.compile(r"^\s*(classDef|class|style|linkStyle)\b")
+
+
+def mermaid_labels(ln):
+    """Chữ trong nhãn node + nhãn cạnh của một dòng mermaid."""
+    out, pos = [], 0
+    while True:
+        m = NODE_OPEN.search(ln, pos)
+        if not m:
+            break
+        close = ln.find(NODE_CLOSE[m.group(1)], m.end())
+        if close < 0:
+            break
+        out.append(ln[m.end():close].strip().strip('"'))
+        pos = close + len(NODE_CLOSE[m.group(1)])
+    return out + EDGE_LABEL.findall(ln)
+
+
+def code_names(body):
+    """Tên trông như trong code ở phần lời + nhãn node mermaid của một section."""
+    found, fence = [], None
+    for ln in body:
+        if ln.strip().startswith("```"):
+            fence = None if fence is not None else ("mermaid" if FENCE.match(ln) else "other")
+            continue
+        if fence == "other":
+            continue
+        if fence == "mermaid":
+            if MERMAID_STYLE.match(ln):
+                continue
+            for text in mermaid_labels(ln):
+                if re.search(r"\w\(|\b[a-z]+[A-Z]", text) or CODE_TOKEN.search(text):
+                    found.append(text)
+            continue
+        for span in CODE_SPAN.findall(ln):
+            if "://" in span:
+                continue
+            if CODE_ALWAYS.search(span) or (" " not in span.strip() and CODE_TOKEN.search(span)):
+                found.append(f"`{span}`")
+    return found
 
 
 def mermaid_blocks(body):
@@ -172,6 +224,23 @@ def lint(text, path=None):
     elif len(figs) > 2:
         warn.append(f"§3 có {len(figs)} hình — khuôn là `Bây giờ` + `Sau plan`, nhiều hơn thì "
                     f"chia nhỏ luồng trước")
+    elif not figs and 3 in sec:
+        warn.append("§3 không có hình — mặc định có hình, chỉ bỏ khi luồng thẳng một mạch ≤3 bước "
+                    "(luật 23)")
+
+    # --- §1–§3 cho người chưa mở repo (luật 23)
+    for num in (1, 2, 3):
+        body = sec.get(num, ("", []))[1]
+        names = code_names(body)
+        if names:
+            more = f" … (+{len(names) - 5})" if len(names) > 5 else ""
+            warn.append(f"§{num} có tên trông như trong code: {' · '.join(names[:5])}{more} — kể bằng "
+                        f"chuyện xảy ra, tên hàm/field/file để dành cho §6–§7 (luật 23)")
+        text = "\n".join(l for l in body if not l.strip().startswith("```"))
+        ids = sorted(set(ID_REF.findall(text)))
+        if ids:
+            warn.append(f"§{num} trỏ {' · '.join(ids)} — kể luôn nội dung, người đọc §1–§3 không phải "
+                        f"lật xuống dưới (luật 23)")
 
     # --- §3 bảng hành vi: `H<n>` để Gate §7 trỏ về
     hrows = {int(BH_ROW.match(ln).group(1)) for ln in sec.get(3, ("", []))[1] if BH_ROW.match(ln)}

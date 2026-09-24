@@ -1,6 +1,6 @@
 ---
 name: write-plan
-description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases — Probe optional) với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó, phase cuối nghiệm thu lại từng bullet §2. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**. Kèm `template.md` (copy ra rồi điền) và `verify.py` — lint khung section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status, ô duyệt, phase nghiệm thu.
+description: Viết doc kế hoạch triển khai (plan doc) cho một feature — trình bày trong chat trước, chốt ID công việc, dựng file theo khung cố định 7 section (Problem · Goal · Mental model · Probe · Decisions · Design · Phases — Probe optional) — §1–§3 viết bằng chữ thường cho người chưa mở repo, §3 có sơ đồ — với ký hiệu 🤖/👤, rồi tick tới đâu làm tới đó, phase cuối nghiệm thu lại từng bullet §2. Dùng khi user nói "lập kế hoạch", "viết plan cho X", "lưu lại plan", "tạo doc plan", "thiết kế X trước khi code", hoặc khi một yêu cầu đủ lớn để cần plan trước khi sửa code. Đọc convention của project (CLAUDE.md / AGENTS.md / thư mục docs) để lấy **binding** — thư mục, hệ ID, doc nguồn, lệnh kiểm — còn **hình dạng doc thì theo skill này**. Kèm `template.md` (copy ra rồi điền) và `verify.py` — lint khung section, sợi dây `P → D → DS → phase`, phủ `DS`, tick/status, ô duyệt, phase nghiệm thu.
 ---
 
 # Viết doc plan
@@ -19,7 +19,9 @@ bàn trong chat → plan doc (draft) → 👤 duyệt → implement, tick tới 
 Ngoại lệ **duy nhất** được chạm doc nguồn trước khi duyệt: **thêm ID công việc mới** vào backlog — không
 có ID thì plan mồ côi.
 
-Doc chia hai nửa, ngăn bằng `---` sau §2: **§1–§2 cho người duyệt**, **§3–§7 cho người làm**.
+Doc chia hai nửa, ngăn bằng `---` sau §3: **§1–§3 cho người đọc**, **§4–§7 cho người làm**. §1–§3 là
+phần được người đọc nhiều nhất — người duyệt, người mới vào, người mở lại plan cũ thường dừng ở đó — nên
+có luật viết riêng (luật 23): người chưa mở repo đọc là hiểu.
 
 ## Bước 0 — đọc **binding** của project (làm trước mọi thứ)
 
@@ -43,7 +45,7 @@ copy nó là nhân bản drift.
 Project có `CLAUDE.md`/`AGENTS.md` **chép lại luật viết plan** ⇒ nói user rút nó về binding + trỏ tới
 skill này, đừng giữ hai bản luật.
 
-## Quy trình — 22 luật
+## Quy trình — 23 luật
 
 > Đánh số ổn định: doc cũ trích `luật 2`, `luật 10`… là trỏ tới danh sách này.
 
@@ -62,7 +64,7 @@ skill này, đừng giữ hai bản luật.
 3. **Chốt ID công việc** plan này phủ. Chưa có ID ⇒ dừng, thêm vào backlog trước.
 4. **Tạo file bằng cách copy [`template.md`](template.md)** ra đường dẫn theo binding bước 0, rồi điền
    — front matter `type: plan` + `implements: [...]`.
-5. **`## 1. Problem` đứng trước `## 2. Goal`**, cả hai bắt buộc:
+5. **`## 1. Problem` đứng trước `## 2. Goal`**, cả hai bắt buộc, viết theo luật 23:
    - **Problem** — 2–4 dòng **hiện trạng**: ai đau, đau vì gì, hỏng ở đâu, số đo thật nếu có ("build
      40′", "71 lượt load skill trên 347 transcript"). Chưa nói giải pháp.
    - **Goal** — 3–5 bullet **trạng thái quan sát được** sau khi xong: mở được trang nào, chạy được lệnh
@@ -144,10 +146,7 @@ skill này, đừng giữ hai bản luật.
     - `D` nào thêm một tầng · một dependency · một bảng ⇒ dòng **Phương án đã loại** phải nói vì sao cách
       thẳng tay không đủ ("ghi thẳng vào bảng `order` không đủ vì cần đọc chéo 3 service"). **"để sau này
       dễ mở rộng" không phải lý do** — sau này chưa có trong §2.
-    - **§3 viết cho người chưa mở repo**: đi một đường thật, tên file/hàm/field thật, không tự đúc thuật
-      ngữ lai ghép — gọi tên bằng câu nói việc gì xảy ra. Đọc §3 xong không kể lại được luồng bằng một
-      câu ⇒ viết lại §3, đừng thêm sơ đồ để bù. Cấu trúc bốn phần và ranh giới với §1 · §2 · §7: xem
-      §"§3 Mental model".
+    - **§1–§3 viết cho người chưa mở repo** — luật 23.
     - Dấu hiệu quá tay, thấy thì cắt: `DS` không phase nào cần (luật 17) · phase "dựng nền" mà xong chẳng
       ai dùng được gì (luật 7 Goal) · plan sinh ra thứ §2 không đòi.
 
@@ -178,14 +177,35 @@ skill này, đừng giữ hai bản luật.
     - Trùng ký hiệu với Legend §7 nhưng **khác trục**: §7 hỏi *ai kiểm được*, §5 hỏi *ai quyết* — phân
       biệt bằng vị trí, ô tick hay heading `D`.
 
+23. **§1–§3 viết cho người chưa mở repo.** Ba section này được đọc nhiều nhất, và phần lớn người đọc
+    dừng ở đó — nên dễ hiểu đứng trước đầy đủ. Người implement cần tên hàm để đối chiếu thì đã có §6–§7.
+    - **Cụ thể bằng chuyện xảy ra, không bằng tên trong code**: ai làm gì, lúc nào, hệ thống làm gì,
+      cuối cùng người ta thấy gì. "Khách bấm Đặt hàng, server kiểm đơn này gửi rồi chưa" — không phải
+      "`POST /orders` → `checkIdem(idem_key)`".
+    - **Chỉ gọi tên thứ người đọc thấy hoặc gõ**: nút, trang, lệnh, URL, thông báo lỗi hiện ra. Tên
+      hàm · field · biến · file · event · payload · mã trạng thái nội bộ ⇒ §6–§7.
+    - **Không trỏ `P` · `D` · `DS`** — đọc §1–§3 không phải lật xuống dưới. Cần kết quả của `P1` thì kể
+      luôn kết quả đó bằng một câu ("app tự gửi lại khi chờ quá 5 giây").
+    - **Không tự đúc thuật ngữ lai ghép** — gọi tên bằng câu nói việc gì xảy ra.
+    - **§3 được kể theo trình tự** ("mỗi phút… rồi… xong thì…") — luật "không narrative" ở §"Luật viết"
+      chỉ áp cho §4–§7. Kể một đường là đúng việc của §3.
+    - **§3 có hình nếu vẽ được** — chỉ bỏ khi luồng thẳng một mạch ≤3 bước. Nhãn node cũng theo luật
+      này: "kiểm đơn trùng", không phải `checkIdem()`. Quy ước hai hình: §"§3 Mental model".
+    - **Phép thử**: người chưa mở repo đọc xong kể lại được §1 đau gì, §2 xong thì thấy gì, §3 luồng chạy
+      ra sao — mỗi cái một câu. Không kể được ⇒ viết lại bằng chữ thường, đừng thêm tên code cho "cụ thể",
+      đừng thêm sơ đồ để bù chữ tối.
+    - `verify.py` WARN khi §1–§3 có tên trông như trong code (`foo()`, `camelCase`, `snake_case`, `a.b`,
+      `key: value`, `{…}`) hoặc trỏ `P`/`D`/`DS`, và khi §3 không có hình. Lint chỉ bắt được tên code —
+      câu tối nghĩa vẫn phải tự đọc.
+
 ## Khung cố định — 7 section (§4 optional), không thêm không bớt
 
 | §   | Tên              | Vai                                                                    |
 | --- | ---------------- | ---------------------------------------------------------------------- |
 | 1   | **Problem**      | đau gì, số đo thật, chưa nói giải pháp                                 |
 | 2   | **Goal**         | trạng thái quan sát được sau khi xong + Ngoài scope                    |
-| —   | `---`            | ngăn phần người duyệt (1–2) với phần người làm (3–7)                   |
-| 3   | **Mental model** | **bây giờ chạy thế nào** · **sau plan chạy thế nào** (cùng đường, chỉ chỗ đổi) · hành vi đổi ra sao (`BH1`…`BHn`) · không đụng — người chưa mở repo đọc là hiểu (luật 20) |
+| 3   | **Mental model** | **bây giờ chạy thế nào** · **sau plan chạy thế nào** (cùng đường, chỉ chỗ đổi) · hình · hành vi đổi ra sao (`BH1`…`BHn`) · không đụng |
+| —   | `---`            | ngăn phần người đọc (1–3, luật 23) với phần người làm (4–7)            |
 | 4   | **Probe** _(optional)_ | `### P1`…`Pn` — heading = câu hỏi; `**Biết để làm gì:**` · `**Cách chạy lại:**` · `**Kết quả:**`. Dây nối ID nằm ở `D` (§5) |
 | 5   | **Decisions**    | `D0`…`Dn`, mỗi D ≤5 dòng, heading ghi 🤖/👤 ai quyết — **cái được duyệt, cái plan sau lật** |
 | 6   | **Design**       | `DS1`…`DSn` append-only — contract đối chiếu được; **số & tên tùy bài toán**  |
@@ -200,15 +220,27 @@ chưa viết được §5 vì thiếu dữ kiện ⇒ chưa tới lúc viết pl
 
 ## §3 Mental model — kể một đường hai lần
 
-§3 trả đúng một câu: **người chưa mở repo đọc xong có kể lại được luồng bằng một câu không?** Bốn phần,
-đúng thứ tự, mỗi phần có một ranh giới dễ vượt:
+§3 trả đúng một câu: **người chưa mở repo đọc xong có kể lại được luồng bằng một câu không?** Viết theo
+luật 23 — bằng chữ thường, tên code để dành cho §6–§7. Bốn phần, đúng thứ tự, mỗi phần có một ranh giới
+dễ vượt:
 
 | Phần | Nội dung | Đừng lấn sang |
 | --- | --- | --- |
-| **Bây giờ chạy thế nào** | một đường thật (một request · một job · một lần đồng bộ) từ đầu vào tới nơi lưu, tên file/hàm/field thật | **cơ chế**, không phải nỗi đau — ai đau và số đo là §1, không chép xuống |
-| **Sau plan chạy thế nào** | cùng đường đó, chỉ nói chỗ khác đi và vì sao chỗ đó giải được §1 | không tả lại đoạn không đổi |
-| **Hành vi đổi ra sao** | bảng `BH1`…`BHn` — tình huống · bây giờ · sau plan | khoá theo **hành vi**, không theo file; file nào sửa là §7 Actions |
-| **Không đụng** | một dòng rào scope | trỏ được về Gate `git diff --stat` thì càng tốt |
+| **Bây giờ chạy thế nào** | một đường thật (một request · một job · một lần đồng bộ) từ lúc bắt đầu tới khi xong, kể bằng chuyện xảy ra — kèm hình | **cơ chế**, không phải nỗi đau — ai đau và số đo là §1. Tên hàm, chuỗi gọi hàm, điều kiện chặn từng cái một, payload là §6 |
+| **Sau plan chạy thế nào** | cùng đường đó, chỉ nói chỗ khác đi và vì sao chỗ đó giải được §1 — kèm hình | không tả lại đoạn không đổi |
+| **Hành vi đổi ra sao** | bảng `BH1`…`BHn` — tình huống · bây giờ · sau plan, tả cái **người dùng thấy** ("app báo đơn đã gửi, lịch sử vẫn một đơn") | khoá theo **hành vi**, không theo file; file nào sửa là §7 Actions; payload, mã lỗi là §6 |
+| **Không đụng** | một dòng rào scope, gọi bằng tên người đọc hiểu ("phần thanh toán") | trỏ được về Gate `git diff --stat` thì càng tốt |
+
+Ví dụ phần lời — cùng một luồng, viết hai kiểu:
+
+> ❌ `POST /orders` → `OrderController.create()` → `orderService.insert(payload)` ghi thẳng bảng `order`;
+> client `retryOnTimeout()` gửi lại cùng `payload` sau 5s ⇒ 2 row `state: 'new'`.
+>
+> ✅ Khách bấm Đặt hàng, app gửi đơn lên server, server ghi luôn một đơn mới. Mạng chậm quá 5 giây thì
+> app tưởng lỗi và tự gửi lại — server không biết đó là cùng một đơn, nên ghi thêm đơn thứ hai. Khách
+> thấy hai đơn giống hệt nhau trong lịch sử.
+
+Bản ❌ đúng từng chữ nhưng chỉ người đã mở repo đọc ra; những tên đó thuộc §6.
 
 **Vì sao kể hai lần.** Một lượt mô tả "hệ thống sau khi xong" đọc thì mượt nhưng người duyệt không thấy
 được **cái gì đổi** — họ phải tự nhớ hiện trạng rồi trừ trong đầu. Hai nhãn tách ra thì phép trừ nằm sẵn
@@ -218,9 +250,13 @@ nào, người đọc phải đoán.
 **Bảng đi hết nhánh, phần lời chỉ đi một đường.** Đó là lý do bảng không bỏ được: nhánh lỗi và ca biên
 không nhét vào một đường kể được. Khác §2 ở chỗ §2 không có cột *bây giờ* và chỉ nói cái người dùng thấy.
 
-**Hai hình — tuỳ, và có quy ước** (chi tiết nằm sẵn trong `template.md`):
+**Hình — vẽ nếu vẽ được, và có quy ước** (chi tiết nằm sẵn trong `template.md`):
 
-- Vẽ khi luồng nhiều nhánh / nhiều tầng / nhiều trạng thái. Thẳng một mạch 3 bước ⇒ bỏ cả hai.
+- **Mặc định có hình.** Người đọc nắm luồng bằng mắt nhanh hơn đọc chữ. Chỉ bỏ khi luồng thẳng một mạch
+  ≤3 bước — lúc đó hình không nói thêm gì. Phần lời vẫn phải tự đứng được: mermaid không render ở
+  terminal, diff và một số viewer.
+- **Nhãn node bằng chữ thường** (luật 23): "khách bấm Đặt hàng", "kiểm đơn trùng", "ghi đơn" —
+  không phải tên hàm. Hình ở §3 cho người chưa mở repo, cùng người đọc với phần lời.
 - Hình dạng luồng **không** đổi (chỉ đổi field, đổi giá trị) ⇒ vẽ **một** hình. Hai hình y hệt nhau thì
   không so được gì — `verify.py` bắt ca này.
 - Vẽ thì **cùng node, cùng hướng**, chỉ tô màu chỗ đổi. Bố cục khác nhau là mắt phải so lại từ đầu, mất
@@ -364,7 +400,7 @@ trước không được phụ thuộc phase sau.
 | Test dedupe: 3 lượt trong 5′ ⇒ **1 row**; lượt thứ 4 sau 16′ ⇒ **2 row** | có test cho dedupe    |
 | `git diff --stat` chứng minh `lease.ts` không đổi dòng nào               | không ảnh hưởng lease |
 
-**Văn phong:**
+**Văn phong** — áp cho §4–§7. §1–§3 theo luật 23: chữ thường, được kể theo trình tự, không tên code.
 
 - **Không narrative**: câu khẳng định trạng thái ("endpoint trả 409 khi trùng key"), không kể quá trình
   ("đầu tiên ta kiểm tra key, sau đó…").
@@ -391,7 +427,7 @@ python3 .claude/skills/write-plan/verify.py .docs/042-slug.md   # exit 1 nếu c
 | Mức       | Bắt gì                                                                                                                                                                                                                                                                                                  |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ERROR** | khung section thiếu · sai tên · sai thứ tự · `Cover:` / `(D<n>)` / `→ DS<n>` / `dựa vào P<n>` trỏ vào ID không tồn tại hoặc đã gạch · `DS` không phase nào nhận trọn (hoặc ≥2 phase cùng nhận) · phase không cover `DS` nào (trừ phase 0 và phase nghiệm thu) · phase thiếu Actions/Gate · §7 thiếu ô `👤 plan này được duyệt` ngoài mọi phase · phase cuối không phải nghiệm thu · `status: approved`/`done` mà còn dòng bê nguyên chỗ trống của `template.md` · Gate trích `BH<n>` không có trong bảng §3 · `P` không `D` nào nhắc tới · `status: done` mà còn `[ ]` · `status: approved` mà ô duyệt chưa tick · duyệt khi còn `P` **chưa chạy** |
-| **WARN**  | `D` dài >5 dòng · `[x]` không có số/ngày làm bằng chứng · item thiếu 🤖/👤 · phase nhận trọn `DSn` mà Gate không nhắc `DSn` · phase nghiệm thu ít item Gate hơn số bullet §2 · `D` thiếu 🤖/👤 ở heading · `D` có ngày tháng ở heading (kể cả `D` đã bỏ) · §3 hai hình giống hệt nhau · khác hướng · không chung node nào · hình `Sau plan` thêm node mà không tô màu · còn chỗ trống chưa điền (khi `draft`) · `BH` không Gate nào nhắc · `P` thiếu `**Biết để làm gì:**` / `**Cách chạy lại:**` / `**Kết quả:**` · `P` trỏ ngược về `D<n>`                                                                                                                                                                              |
+| **WARN**  | `D` dài >5 dòng · `[x]` không có số/ngày làm bằng chứng · item thiếu 🤖/👤 · phase nhận trọn `DSn` mà Gate không nhắc `DSn` · phase nghiệm thu ít item Gate hơn số bullet §2 · `D` thiếu 🤖/👤 ở heading · `D` có ngày tháng ở heading (kể cả `D` đã bỏ) · §1–§3 có tên trông như trong code, cả trong nhãn node · §1–§3 trỏ `P`/`D`/`DS` · §3 không có hình (luật 23) · §3 hai hình giống hệt nhau · khác hướng · không chung node nào · hình `Sau plan` thêm node mà không tô màu · còn chỗ trống chưa điền (khi `draft`) · `BH` không Gate nào nhắc · `P` thiếu `**Biết để làm gì:**` / `**Cách chạy lại:**` / `**Kết quả:**` · `P` trỏ ngược về `D<n>`                                                                                                                                                                              |
 | **INFO**  | bảng phủ `DS → phase` · `P` chưa chạy thì `D` nào chưa có nền · `D` không action nào trích — **không phải lỗi** (luật 17)                                                                                                                                                                                     |
 
 **Có ERROR thì làm gì** — `verify.py` không tự sửa doc (`--fix` sẽ luôn đoán sai, vì mỗi ERROR có ít nhất
@@ -410,7 +446,8 @@ hai hướng sửa lệch nhau về scope):
 **Không bắt được, phải tự đọc:** hành vi trong bảng §3 có khớp logic trên hình không
 (§"§3 Mental model") · item có kiểm được thật không · Gate có đúng bằng chứng cho contract không ·
 phase chia theo "cái dùng được trước" hay theo tầng · `DS` có phải contract đối chiếu được hay chỉ là văn xuôi ·
-giải pháp có phải cách nhỏ nhất giải được §1 · §3 đọc xong có kể lại được luồng không (luật 20).
+giải pháp có phải cách nhỏ nhất giải được §1 · §1–§3 người chưa mở repo đọc có hiểu không (luật 23 —
+linter chỉ bắt tên code, không bắt câu tối nghĩa).
 Lint sạch ≠ plan tốt.
 
 ## Bẫy hành vi — thứ `verify.py` không bắt
@@ -427,5 +464,6 @@ doc, không nằm trong doc, nên không grep ra được.
 | Đánh "xong" khi mới viết xong, chưa chạy                        | luật 10 — chỉ tick khi **chạy được và có bằng chứng** cạnh ô tick |
 | Xoá dòng cũ trong backlog khi bỏ scope                          | luật 9 + 14 — backlog trỏ ngược lại; ID append-only, đánh dấu bỏ chứ không xoá |
 | Thêm tầng trừu tượng / config / chỗ cắm "cho sau này" mà §2 không đòi | luật 20 — `D` phải nói vì sao cách thẳng tay không đủ; ≥2 ca thật mới tổng quát hoá |
-| §3 viết bằng chữ nghe kêu, người chưa mở repo đọc không ra luồng | luật 20 — một đường thật, tên thật; kể lại được bằng một câu |
+| §1–§3 viết bằng chữ nghe kêu, người chưa mở repo đọc không ra luồng | luật 23 — một đường thật, kể bằng chuyện xảy ra; kể lại được bằng một câu |
+| Sửa §3 mơ hồ bằng cách nhồi tên hàm/field cho "cụ thể"          | luật 23 — cụ thể bằng chuyện xảy ra; tên code để dành cho §6–§7   |
 | Mọi phase xanh là báo xong, chưa ai chạy thử cái §2 hứa          | luật 21 — phase nghiệm thu, Gate một dòng ứng một bullet §2, dán khối đó vào chat |

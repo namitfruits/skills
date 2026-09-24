@@ -26,18 +26,19 @@ supersedes: [] # doc plan bị lật một phần hoặc toàn bộ
 
 **Ngoài scope:** <1 dòng, nếu dễ bị hiểu lầm là có>
 
----
-
 ## 3. Mental model
 
-**Bây giờ chạy thế nào** — <3–5 dòng: đi theo **một** đường thật (một request, một job, một lần đồng
-bộ) từ đầu vào tới nơi lưu, tên file/hàm/field thật. Đây là **cơ chế**, không phải nỗi đau — ai đau và
-số đo nằm ở §1, đừng kể lại. Lời là nguồn: mermaid không render ở terminal / diff / một số viewer, nên
-đọc riêng phần lời phải hiểu được.>
+_(§1–§3 viết cho người chưa mở repo — luật 23: chữ thường, chỉ gọi tên thứ người đọc thấy hoặc gõ như
+nút, trang, lệnh; tên hàm · field · file · payload để dành cho §6–§7; không trỏ `P`/`D`/`DS`)_
+
+**Bây giờ chạy thế nào** — <3–5 dòng: kể **một** đường thật (một lần bấm, một job, một lần đồng bộ) từ
+lúc bắt đầu tới khi xong, bằng chuyện xảy ra: ai làm gì, hệ thống làm gì, cuối cùng thấy gì. Đây là
+**cơ chế**, không phải nỗi đau — ai đau và số đo nằm ở §1. Đọc riêng phần lời phải hiểu được, vì
+mermaid không render ở terminal / diff / một số viewer.>
 
 ```mermaid
 flowchart LR
-  A[<đầu vào>] --> B[<xử lý hiện tại>] --> C[(<nơi lưu>)]
+  A[<người dùng làm gì>] --> B[<hệ thống làm gì>] --> C[(<lưu ở đâu>)]
 ```
 
 **Sau plan chạy thế nào** — <3–5 dòng: **cùng đường đó**, chỉ nói chỗ khác đi và vì sao chỗ đó giải
@@ -45,27 +46,27 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  A[<đầu vào>] --> B[<xử lý hiện tại>] --> D[<bước mới>]:::new --> C[(<nơi lưu>)]
+  A[<người dùng làm gì>] --> B[<hệ thống làm gì>] --> D[<bước mới>]:::new --> C[(<lưu ở đâu>)]
   classDef new fill:#fde68a,stroke:#b45309,stroke-width:2px,color:#1b2230
 ```
 
-<Hình **tuỳ** — vẽ khi luồng nhiều nhánh / nhiều tầng / nhiều trạng thái, đọc chữ không nắm nổi. Thẳng
-một mạch 3 bước ⇒ bỏ cả hai. Hình dạng luồng không đổi (chỉ đổi field, đổi giá trị) ⇒ vẽ **một** hình,
-hai hình y hệt nhau thì so cái gì. Vẽ thì hai hình **cùng node, cùng hướng**, **chỉ tô màu chỗ đổi** —
-bố cục khác nhau là mắt phải so lại từ đầu, mất luôn cái lợi của việc đặt cạnh nhau. Màu set thẳng trên
-node kèm `color:` cho chữ, không dựa theme: plan doc bị đọc cả trên GitHub nền sáng lẫn IDE nền tối.
-Trong file **dán code** ```mermaid, không dán link `mermaid.live`.>
+_(Hình mặc định có — chỉ bỏ khi luồng thẳng một mạch ≤3 bước. Nhãn node bằng chữ thường, không tên
+hàm. Hình dạng luồng không đổi, chỉ đổi giá trị ⇒ vẽ **một** hình. Vẽ hai thì **cùng node, cùng hướng**,
+**chỉ tô màu chỗ đổi**; màu set thẳng trên node kèm màu chữ, không dựa theme. Chi tiết: §"§3 Mental
+model" trong SKILL.md)_
 
-**Hành vi đổi ra sao** — mỗi dòng một nhánh của đúng luồng vừa vẽ, tả bằng thứ **quan sát được**;
-file nào phải sửa là việc của §7 Actions, đừng chép lên đây. `BH<n>` để Gate ở §7 trỏ ngược lại
-(`— BH2`), append-only như `D`/`DS` (luật 14):
+**Hành vi đổi ra sao** — mỗi dòng một nhánh của đúng luồng vừa vẽ, tả cái **người dùng thấy**; payload,
+mã lỗi là §6, file nào phải sửa là §7 Actions. `BH<n>` để Gate ở §7 trỏ ngược lại (`— BH2`),
+append-only như `D`/`DS` (luật 14):
 
-| #     | Tình huống            | Bây giờ              | Sau plan                   |
-| ----- | --------------------- | -------------------- | -------------------------- |
-| `BH1` | <nhánh chính>         | <quan sát được gì>   | <quan sát được gì>         |
-| `BH2` | <nhánh lỗi / ca biên> | <…>                  | <…>                        |
+| #     | Tình huống            | Bây giờ                | Sau plan                 |
+| ----- | --------------------- | ---------------------- | ------------------------ |
+| `BH1` | <nhánh chính>         | <người dùng thấy gì>   | <người dùng thấy gì>     |
+| `BH2` | <nhánh lỗi / ca biên> | <…>                    | <…>                      |
 
-**Không đụng:** <1 dòng — thứ người đọc dễ tưởng là có đổi; trỏ được về Gate `git diff --stat` thì càng tốt>
+**Không đụng:** <1 dòng, gọi bằng tên người đọc hiểu — thứ dễ bị tưởng là có đổi; trỏ được về Gate `git diff --stat` thì càng tốt>
+
+---
 
 ## 4. Probe
 
