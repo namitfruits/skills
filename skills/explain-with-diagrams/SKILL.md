@@ -1,6 +1,6 @@
 ---
 name: explain-with-diagrams
-description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối, màu theo ngữ nghĩa, kèm link mermaid.live/edit mở được ngay — hai mode — `easy` (mặc định) giải thích bằng ví von ứng 1-1 theo khuôn *một câu → ví von → chuyện thật diễn ra thế nào*, `tech` (`--tech`) gọi đúng tên file/hàm/field theo khuôn `Context` · `Problem` · `Root cause`. Chỉ giải thích hiện tượng, không đề xuất cách sửa; không dán nguồn mermaid vào chat. Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
+description: Giải thích một cơ chế, một bug, một luồng quyết định hay một kiến trúc bằng sơ đồ mermaid nền tối (vẽ theo skill `mermaid-diagram-simple`), kèm link mermaid.live/edit mở được ngay — hai mode — `easy` (mặc định) giải thích bằng ví von ứng 1-1 theo khuôn *một câu → ví von → chuyện thật diễn ra thế nào*, `tech` (`--tech`) gọi đúng tên file/hàm/field theo khuôn `Context` · `Problem` · `Root cause`. Chỉ giải thích hiện tượng, không đề xuất cách sửa; không dán nguồn mermaid vào chat. Dùng khi user nói "vẽ sơ đồ", "diagram hoá", "mermaid", "vẽ cho dễ hiểu", "mô tả bằng sơ đồ", khi user hỏi "tại sao X" mà câu trả lời có nhiều tầng / nhiều nhánh / nhiều trạng thái, hoặc khi đã giải thích bằng chữ mà user vẫn chưa nắm được. Kèm `mermaid-link.mjs` sinh link offline + verify round-trip.
 ---
 
 # Giải thích bằng sơ đồ
@@ -15,13 +15,9 @@ description: Giải thích một cơ chế, một bug, một luồng quyết đ�
 Nhét lời giải vào trong hình thì hình thành một trang văn bản có viền, và người đọc mất đúng cái mà
 sơ đồ sinh ra để cho: **nhìn một phát thấy hình dạng**.
 
-Một sơ đồ đáng vẽ khi câu trả lời có **nhiều tầng**, **nhiều nhánh**, hoặc **thứ tự ưu tiên**. Ba cái
-đó viết bằng văn xuôi thì người đọc phải tự dựng hình trong đầu. Còn một danh sách phẳng, một bảng
-so sánh, hay ba dòng tuần tự thì **đừng vẽ** — bảng đọc nhanh hơn.
-
-**Phạm vi:** sơ đồ **trả lời trong chat** — nền tối cứng, kèm link mở được ngay. Hình để dán vào
-tài liệu là việc khác: ở đó hình phải đọc được trên **cả** nền sáng lẫn nền tối, nên dùng palette
-pastel + chữ đậm chứ không phải bộ dưới đây.
+Skill này lo **phần chữ** và **cách đưa hình**: mode, khuôn, ví von, chuỗi nhân quả, link
+mermaid.live. **Viết nguồn sơ đồ** — chọn loại, nền tối, màu, hướng `TD`/`LR`, nhãn — theo skill
+`mermaid-diagram-simple`. Load nó trước khi viết sơ đồ đầu tiên.
 
 ## Mục tiêu: giải thích hiện tượng, không đề xuất giải pháp
 
@@ -36,33 +32,6 @@ còn chưa được xác nhận.
 Trong lúc điều tra mà lộ ra chỗ sửa quá rõ ⇒ được nhắc **một câu**, đặt cuối, và nói rõ đó là quan
 sát: *"Chỗ gọi `fetch` có `AbortSignal` sẵn mà không truyền vào."* Hết. User hỏi tiếp thì mới sang
 việc thiết kế.
-
-## Chọn loại sơ đồ
-
-Chọn theo **câu hỏi người đọc đang hỏi**, không theo cái nào nhìn ngầu hơn.
-
-| Người đọc đang hỏi | Loại |
-| --- | --- |
-| *"gồm những gì, nối nhau ra sao"* · *"luật nào quyết định"* · *"đi đường nào"* · *"xếp tầng thế nào"* | **`flowchart` — mặc định** |
-| *"ai gọi ai, theo thứ tự nào"* — N bên **trao đổi qua lại**, tên từng bên là một phần câu trả lời | `sequenceDiagram` |
-| *"đi từ trạng thái nào sang trạng thái nào, do event gì"* — transition có tên, có vòng lặp | `stateDiagram-v2` |
-| *"bảng nào khoá vào bảng nào, một-nhiều hay nhiều-nhiều"* | `erDiagram` |
-| *"việc nào trước việc nào, dài bao lâu"* — có **ngày thật** | `gantt` |
-| nhánh · merge của git | `gitGraph` |
-| còn lại (`mindmap` · `journey` · `timeline` · `classDiagram` · `quadrantChart`…) | đừng dùng trừ khi user xin — bảng thường đọc nhanh hơn |
-| `C4Context` · `C4Container` | **cấm** — dùng `flowchart` có vùng |
-
-**`flowchart` là mặc định** vì nó cho overview tốt nhất: có shape mang nghĩa, có `subgraph` để phân
-vùng, sơn được nền tối, và đọc được cả khi người ta chỉ liếc qua. Ba loại dưới nó là **ngoại lệ có
-lý do**, không phải lựa chọn ngang hàng.
-
-Hai câu gỡ khi phân vân:
-
-- **flowchart hay sequence?** Bỏ tên các bên đi — hình còn đúng không? Còn đúng ⇒ `flowchart`.
-  Một trục thời gian một chiều mà không ai trả lời ai thì vẫn là `flowchart`.
-- **flowchart hay state?** Câu hỏi là *"đang ở ô nào"* (⇒ state) hay *"cái gì quyết định ra ô đó"*
-  (⇒ flowchart)? Ví dụ: 8 ô trạng thái agent nhưng câu hỏi là thứ tự ưu tiên của luật suy ra ô ⇒
-  `flowchart`, không phải `stateDiagram`.
 
 ## Hai mode
 
@@ -214,98 +183,6 @@ hình đầy đủ, phóng to được, export được, copy nguồn được n
 User xin nguồn để dán vào doc/PR ⇒ đưa **file `.mmd`** đã sinh sẵn cho `mermaid-link.mjs`, hoặc chỉ
 sang tab *Code* trên mermaid.live. Đừng dán lại vào chat.
 
-## Nguồn sơ đồ — sáu luật cứng
-
-### 1· Nền phải tối thật
-
-`theme: 'dark'` **một mình không đủ** — nó chỉ đổi màu node, canvas vẫn trắng. Cần cả hai:
-
-```
-%%{init: {'theme':'dark', 'themeVariables': {'background':'#0d1117'}}}%%
-flowchart TD
-    subgraph ALL[" "]
-    …toàn bộ node…
-    end
-    style ALL fill:#0d1117,stroke:#0d1117
-```
-
-Khối `subgraph ALL` bọc **tất cả** node mới là thứ thật sự sơn nền. Lề ngoài SVG trên mermaid.live
-vẫn theo toggle sáng/tối của chính site đó (localStorage) — **nói ra cho user biết**, đừng im.
-
-### 2· Màu theo **ngữ nghĩa**, khai bằng `classDef`
-
-Không tô vài ô cho có màu. Mỗi *loại* node một màu, khai một lần rồi `class` vào:
-
-```
-classDef bug fill:#5a1e1e,stroke:#ff7b72,color:#ffdedb,stroke-width:3px
-class A,FAIL bug
-```
-
-| Vai trò | fill | stroke | color |
-| --- | --- | --- | --- |
-| nguồn dữ liệu · điểm vào | `#10324a` | `#58a6ff` | `#cfe8ff` |
-| chỗ hỏng · `failed` | `#5a1e1e` | `#ff7b72` | `#ffdedb` |
-| suy ra · cảnh báo | `#5a4a1e` | `#e3b341` | `#fff6d5` |
-| kết luận "đang chạy" · thành công | `#14532d` | `#4ade80` | `#dcfce7` |
-| trung tính · đã nghỉ · `done` | `#2a2f36` | `#8b949e` | `#d6dbe1` |
-| câu hỏi · nhánh quyết định | `#1c2431` | `#8b9cff` | `#dfe3ff` |
-| chờ người | `#5a3410` | `#ffb454` | `#ffe9cc` |
-| biến đổi · nén · xử lý | `#3a2a5a` | `#bc8cff` | `#ece0ff` |
-| song song · chờ con | `#14453d` | `#39d3bb` | `#d6fff7` |
-
-Pastel sáng (`#ffdddd`, `#ddffdd`) là màu cho nền trắng — trên nền tối nó thành mảng chói. Luôn khai
-cả `color:` (màu chữ), nếu không mermaid để chữ tối trên nền tối ở vài node.
-
-**Nhuộm cạnh** theo màu đích khi sơ đồ có hai kết cục đối nhau — nhìn màu cạnh là biết nhánh đó dẫn
-về đâu: `linkStyle 1 stroke:#ff7b72,stroke-width:4px`. Index đếm từ **0**, theo thứ tự cạnh xuất hiện
-trong nguồn; `A --> B & C` là **hai** cạnh. Đếm sai chỉ tô nhầm cạnh, không vỡ hình.
-
-### 3· Không chú thích trong hình
-
-Không `subgraph "Ghi chú"`, không node legend. Chú giải sống trong câu trả lời (khối 1–3 ở trên).
-
-### 4· Một chủ đề = **một** loại sơ đồ, giữ nguyên qua các lượt
-
-Vẽ lại cùng một thứ ở lượt sau thì **giữ nguyên loại sơ đồ, thứ tự node, tên section**. Người đọc đã
-dựng bản đồ trong đầu từ lượt trước; đổi hình là bắt họ học lại từ đầu, và họ sẽ tưởng nội dung đã
-đổi chứ không phải chỉ cái vỏ.
-
-Buộc phải đổi (ràng buộc kỹ thuật, phát hiện hình cũ sai) ⇒ **nói ra một câu ngay dưới hình**: đổi
-cái gì, vì sao. Đổi im lặng là lỗi.
-
-⚠️ Bẫy đã dính: `sequenceDiagram` **không có `subgraph`**, nên không sơn được nền tối bằng khối
-`ALL` — canvas của nó trong suốt, theo nền site. Đừng vì thế mà lặng lẽ đổi sang `flowchart`: loại
-sơ đồ chọn theo **câu hỏi** (xem *Chọn loại sơ đồ*), chọn xong thì giữ, và nếu `sequenceDiagram` là
-đúng loại thì **chấp nhận canvas trong suốt + nói ra một câu**.
-
-### 5· Chuỗi dài ⇒ `LR`, không `TD`
-
-mermaid.live và mọi chỗ render inline đều **fit cả hình vào khung**. Một chuỗi 10 bước xếp theo `TD`
-thành cột cao và hẹp, fit theo chiều cao ⇒ chữ nhỏ tới mức phải zoom từng đoạn mới đọc được, và mất
-đúng cái sơ đồ sinh ra để cho: **nhìn một phát thấy hình dạng**. Màn hình rộng hơn cao — hình nằm
-ngang dùng được hết chỗ đó.
-
-Ngưỡng: **chuỗi chính quá 7–8 node ⇒ `LR`**. Ngắn hơn thì `TD` đọc tự nhiên hơn, giữ `TD`.
-
-Đổi hướng phải sửa **hai chỗ** — `subgraph` có `direction` riêng và nó thắng cái khai ở dòng
-`flowchart`:
-
-```
-flowchart LR
-    subgraph ALL[" "]
-    direction LR
-    …
-```
-
-Sửa một chỗ thôi thì hình vẫn dọc như cũ, không báo lỗi gì — bẫy đã dính.
-
-Trong hình `LR`, các nhánh song song xếp theo chiều dọc. Đó là chỗ hình được phép cao lên: một mắt
-xích bị N nguồn dồn vào thì N nguồn đó nằm thành cột, đọc ra ngay là phép nhân.
-
-### 6· Nhãn ngắn, `<br/>` để xuống dòng
-
-Một node quá 3 dòng là dấu hiệu nó đang ôm hai ý — tách ra, hoặc đẩy phần thừa xuống phần chữ.
-
 ## Sinh link mermaid.live
 
 ```bash
@@ -336,7 +213,4 @@ bash. Tách ra: Write tool cho script, Bash cho `node`. Ghi `.mmd` bằng heredo
 - [ ] Một bài toán ⇒ **một** sơ đồ
 - [ ] Không có khối ```mermaid trong câu trả lời
 - [ ] `roundtrip_ok=true` cho mọi link
-- [ ] Nguồn có `%%{init}%%` dark **và** `subgraph ALL` sơn nền
-- [ ] Chuỗi chính quá 7–8 node ⇒ `LR` ở **cả** dòng `flowchart` lẫn `direction` trong `subgraph ALL`
-- [ ] Màu khai bằng `classDef`, mỗi vai một màu, có `color:`
-- [ ] Không có chú thích/legend nhét trong hình
+- [ ] Sơ đồ qua checklist của `mermaid-diagram-simple`
