@@ -29,6 +29,9 @@ const CHROME_CANDIDATES = [
 ].filter(Boolean);
 
 const CHALLENGE_TITLE = /just a moment|attention required|checking your browser/i;
+// Trang bắt giải captcha thật (AWS WAF: "Let's confirm you are human"). Chờ bao lâu cũng không tự qua,
+// nên phải nhận ra để báo lỗi, không thì defuddle đọc trang captcha như một bài bình thường.
+const CAPTCHA_PAGE = `!!(window.gokuProps || document.querySelector('script[src*="captcha.awswaf.com"]'))`;
 const FORMATS = ['md', 'html', 'json'];
 const USAGE = 'Cách dùng: node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html]';
 
@@ -202,6 +205,7 @@ async function main() {
 
     const title = await page.evaluate('document.title');
     if (CHALLENGE_TITLE.test(title)) throw new Error(`Vẫn kẹt ở trang chặn bot: "${title}"`);
+    if (await page.evaluate(CAPTCHA_PAGE)) throw new Error(`Trang bắt giải captcha, không lấy được nội dung: "${title}"`);
 
     if (options.rawHtml) writeFileSync(options.rawHtml, await page.evaluate('document.documentElement.outerHTML'));
 

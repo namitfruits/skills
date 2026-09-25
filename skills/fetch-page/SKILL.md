@@ -56,8 +56,8 @@ stderr in `title`, `url` (sau redirect), `wordCount` và thời gian. Một bài
 defuddle đã bỏ mất một phần. Soi bằng cách chạy lại với `--raw-html`, rồi so các đoạn `<p>` trong thân
 bài của HTML với markdown.
 
-Lỗi thì script thoát với mã 1 và in lý do ra stderr: domain sai (`net::ERR_NAME_NOT_RESOLVED`), hoặc
-vẫn kẹt ở trang chặn bot.
+Lỗi thì script thoát với mã 1 và in lý do ra stderr: domain sai (`net::ERR_NAME_NOT_RESOLVED`), vẫn
+kẹt ở trang chặn bot, hoặc trang bắt giải captcha. Gặp captcha thì đừng chạy lại, kết quả sẽ y hệt.
 
 ## Vì sao script đặt những thứ này
 
@@ -69,6 +69,7 @@ Mỗi dòng dưới đây là một lỗi đã gặp thật. Bỏ cái nào thì
 | `Emulation.setDeviceMetricsOverride` rộng 1440 | Khung headless mặc định ~756px, AP News coi là mobile, gập nửa sau bài bằng `display: none`, defuddle xoá phần bị ẩn → mất nửa bài |
 | Không chờ `Page.loadEventFired`, chỉ chờ DOMContentLoaded rồi chờ chữ trên trang thôi đổi (tối đa 10s) | Trang báo nhiều quảng cáo không bao giờ bắn `load`, script treo hoặc chờ không 15s |
 | `FIX_CODE_HIGHLIGHTERS` thay khối Urvanov/Crayon bằng `<pre><code>` | Plugin WordPress này vẽ code thành bảng số dòng + code, defuddle ra bảng markdown với code dồn một dòng |
+| `CAPTCHA_PAGE` nhận ra trang captcha AWS WAF (`window.gokuProps`, script `captcha.awswaf.com`) | Script thoát mã 0 và in trang "Let's confirm you are human" ra như một bài 29 từ (arstechnica.com) |
 | `Page.setBypassCSP` | Trang có CSP chặt chặn việc inject bundle defuddle |
 | Chờ Chrome thoát hẳn rồi mới xoá profile tạm | `rmSync` gặp `ENOTEMPTY` vì Chrome còn đang ghi file |
 
@@ -84,7 +85,8 @@ Mỗi dòng dưới đây là một lỗi đã gặp thật. Bỏ cái nào thì
 ## Giới hạn
 
 - Chỉ qua được kiểu chặn bot nhìn User-Agent. Captcha, kiểm tra dấu vân tay trình duyệt, paywall thì
-  không qua.
+  không qua. Captcha chỉ nhận ra được loại của AWS WAF; loại khác (reCAPTCHA, hCaptcha toàn trang…) vẫn
+  lọt qua thành kết quả, nên `wordCount` thấp bất thường thì mở markdown ra xem.
 - Ngôn ngữ trong fence code là defuddle đoán; HTML không ghi thì có thể đoán sai (Python ra ` ```js `).
 - `buildFrontmatter` được import theo đường dẫn file trong `node_modules/defuddle/dist/` vì package
   không export nó. Version defuddle ghim ở `0.19.4` trong `package.json`; nâng version thì kiểm tra
