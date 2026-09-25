@@ -16,3 +16,6 @@ Kết quả mỗi lần chạy thử để ở `.test/<tên-skill>/NNN-<slug>/`.
 - `slug` là vài chữ tả lần chạy đó, vd `001-apnews-bessent-ai`, `003-apnews-after-rename`.
 - Trong thư mục, file đặt tên chung một tiền tố và phân biệt bằng đuôi: `page.md`, `page.json`…
   Phần skill in ra stderr ghi thành file cùng tên thêm `.log` (`page.md.log`).
+- Chạy thử `fetch-page` thì luôn kèm `--raw-html page.raw.html`. Nhờ vậy mỗi thư mục trong
+  `.test/fetch-page/` là một trang đã lưu để `replay.mjs` chạy lại (bước "Kiểm tra" trong "Vòng lặp cải
+  tiến" của SKILL.md). Sửa script xong thì replay cả bộ: `node skills/fetch-page/replay.mjs .test/fetch-page/*/`.

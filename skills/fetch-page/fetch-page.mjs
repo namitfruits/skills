@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 // Mở URL bằng Chrome headless qua CDP, chạy defuddle ngay trong tab, in nội dung chính của trang.
 //
-//   node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html]
+//   node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--debug]
 //
-// Nội dung ra stdout (hoặc file -o), tiến độ và thống kê ra stderr.
+// Nội dung ra stdout (hoặc file -o), tiến độ và thống kê ra stderr. Các lỗi defuddle hay mắc và cách
+// sửa nằm trong page-fixes.mjs.
 
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { PROBLEMS } from './page-fixes.mjs';
 
 const skillDir = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -33,15 +35,19 @@ const CHALLENGE_TITLE = /just a moment|attention required|checking your browser/
 // nên phải nhận ra để báo lỗi, không thì defuddle đọc trang captcha như một bài bình thường.
 const CAPTCHA_PAGE = `!!(window.gokuProps || document.querySelector('script[src*="captcha.awswaf.com"]'))`;
 const FORMATS = ['md', 'html', 'json'];
-const USAGE = 'Cách dùng: node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html]';
+const USAGE = 'Cách dùng: node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--debug]';
+// Chặn trên cho vòng lặp sửa lỗi, phòng khi fix này làm lộ ra lỗi khác rồi cứ thế nối nhau.
+const MAX_ROUNDS = 5;
 
 function parseArguments(argv) {
-  const options = { url: null, format: 'md', out: null, rawHtml: null };
+  const options = { url: null, format: 'md', out: null, rawHtml: null, html: null, debug: false };
   for (let index = 0; index < argv.length; index++) {
     const argument = argv[index];
     if (argument === '-o' || argument === '--out') options.out = argv[++index];
     else if (argument === '--format') options.format = argv[++index];
     else if (argument === '--raw-html') options.rawHtml = argv[++index];
+    else if (argument === '--html') options.html = argv[++index];
+    else if (argument === '--debug') options.debug = true;
     else if (!options.url) options.url = argument;
   }
   if (!options.url || !FORMATS.includes(options.format)) {
@@ -55,12 +61,41 @@ function parseArguments(argv) {
 // html: HTML đã làm sạch, không kèm metadata.
 // json: cả object defuddle trả về; content là HTML, contentMarkdown là markdown.
 function render(result, format) {
-  if (format === 'md') return buildFrontmatter(result, result.url) + result.content;
+  if (format === 'md') return buildFrontmatter(result, result.url) + result.contentMarkdown;
   if (format === 'html') return result.content;
   return JSON.stringify(result, null, 2) + '\n';
 }
 
 const log = (...parts) => console.error(...parts);
+
+// Lần fetch có vấn đề mà chưa giải quyết được thì ghi lại để dò sau, trong logs/ của thư mục skill (ở
+// project nào gọi skill cũng ghi về một chỗ):
+//   log.jsonl  — mỗi lỗi một dòng, append vào, mỗi dòng một object phẳng: time, url, finalUrl (chỉ khi
+//                redirect), error, html. Một lần fetch còn nhiều lỗi thì ghi nhiều dòng, chung một html.
+//   page-raw/  — HTML của trang trước mọi fix; mở lại được bằng --html để dò.
+//   fix.jsonl  — lỗi đã được fix sửa, để tổng hợp site nào cần fix nào (xem recordFixes). Tách khỏi
+//                log.jsonl để mỗi dòng log.jsonl đều là một việc cần dò.
+const LOG_DIR = join(skillDir, 'logs');
+
+// url là URL lúc gọi, để chạy lại được; finalUrl chỉ ghi khi trang redirect sang chỗ khác.
+function recordFailure({ url, finalUrl, rawHtml, errors }) {
+  const time = new Date().toISOString();
+  const html = join('page-raw', `${time.replace(/[:.]/g, '-')}-${new URL(finalUrl).hostname}.html`);
+  mkdirSync(join(LOG_DIR, 'page-raw'), { recursive: true });
+  writeFileSync(join(LOG_DIR, html), rawHtml);
+  const lines = errors.map(error => JSON.stringify({ time, url, ...(finalUrl !== url && { finalUrl }), error, html }));
+  appendFileSync(join(LOG_DIR, 'log.jsonl'), lines.join('\n') + '\n');
+  log(`đã ghi lỗi vào ${join(LOG_DIR, 'log.jsonl')}, HTML ở ${join(LOG_DIR, html)}`);
+}
+
+// Mỗi fix đã sửa được một lỗi thì append một dòng phẳng vào fix.jsonl: time, url, finalUrl (chỉ khi
+// redirect), error, fix, changes (số chỗ fix đã sửa). Không lưu HTML, vì lỗi đã sửa thì không cần dò.
+function recordFixes({ url, finalUrl, fixed }) {
+  const time = new Date().toISOString();
+  const lines = fixed.map(item => JSON.stringify({ time, url, ...(finalUrl !== url && { finalUrl }), ...item }));
+  mkdirSync(LOG_DIR, { recursive: true });
+  appendFileSync(join(LOG_DIR, 'fix.jsonl'), lines.join('\n') + '\n');
+}
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 async function waitFor(check, timeoutMilliseconds, what) {
@@ -115,6 +150,7 @@ async function connectToPage(port) {
   let lastId = 0;
   const pending = new Map();
   const seenEvents = new Set();
+  const listeners = new Map();
   socket.onmessage = ({ data }) => {
     const message = JSON.parse(data);
     if (message.id && pending.has(message.id)) {
@@ -123,6 +159,7 @@ async function connectToPage(port) {
       message.error ? reject(new Error(`${message.error.message}`)) : resolve(message.result);
     } else if (message.method) {
       seenEvents.add(message.method);
+      listeners.get(message.method)?.(message.params);
     }
   };
 
@@ -140,7 +177,9 @@ async function connectToPage(port) {
     return result.result.value;
   };
 
-  return { send, evaluate, seenEvents, close: () => socket.close() };
+  const on = (method, listener) => listeners.set(method, listener);
+
+  return { send, evaluate, on, seenEvents, close: () => socket.close() };
 }
 
 // Không chờ Page.loadEventFired: trang báo nhiều quảng cáo có khi chẳng bao giờ bắn event này.
@@ -167,23 +206,91 @@ async function waitUntilSettled(page) {
   }
 }
 
-// Plugin WordPress Urvanov/Crayon vẽ code thành bảng (cột số dòng + cột code), defuddle đọc như
-// bảng thường. Code thô nằm trong textarea ẩn của mỗi khối → thay cả khối bằng <pre><code>.
-const FIX_CODE_HIGHLIGHTERS = `
-  document.querySelectorAll('.urvanov-syntax-highlighter-syntax, .crayon-syntax').forEach(block => {
-    const plain = block.querySelector('textarea.urvanov-syntax-highlighter-plain, textarea.crayon-plain');
-    if (!plain) return;
-    const pre = document.createElement('pre');
-    const code = document.createElement('code');
-    code.textContent = plain.value;
-    pre.appendChild(code);
-    block.replaceWith(pre);
-  });
-`;
+// Gửi một hàm trong page-fixes.mjs vào tab và chạy nó.
+const runInPage = (page, fn, ...args) => page.evaluate(`(${fn})(${args.map(arg => JSON.stringify(arg)).join(', ')})`);
+
+// Luôn lấy cả HTML (content) lẫn markdown (contentMarkdown): detect trong PROBLEMS đọc HTML, còn
+// --format md in markdown. debug: defuddle trả thêm danh sách khối nó xoá, xoá ở bước nào.
+const runDefuddle = async (page, debug) => JSON.parse(await page.evaluate(`
+  (async () => {
+    const DefuddleClass = window.Defuddle.default || window.Defuddle;
+    const options = { separateMarkdown: true, debug: ${debug}, url: location.href };
+    const result = await new DefuddleClass(document, options).parseAsync();
+    return JSON.stringify({ ...result, url: location.href });
+  })()
+`, { awaitPromise: true }));
+
+// Vòng lặp: defuddle → detect mọi problem → có lỗi thì chạy các fix chưa thử của lỗi đó → defuddle lại.
+// Dừng khi hết lỗi, khi không fix nào sửa được gì, hoặc hết MAX_ROUNDS. Mỗi fix chỉ thử một lần.
+// Fix sửa thẳng vào DOM nên không lùi lại được; thay vào đó giữ kết quả ít lỗi nhất (bằng nhau thì lấy
+// vòng sau, vì nó đã qua nhiều fix hơn). Lỗi còn lại thì vẫn trả kết quả, kèm cảnh báo.
+// Trả về: unfixed — lỗi còn lại; fixed — fix đã sửa được gì mà lỗi của nó không còn ở kết quả cuối.
+async function extractWithFixes(page, debug) {
+  const tried = new Set();
+  const applied = [];
+  let best = null;
+  for (let round = 1; ; round++) {
+    const result = await runDefuddle(page, debug);
+    const found = [];
+    for (const problem of PROBLEMS) {
+      const detail = await runInPage(page, problem.detect, result.content);
+      if (detail) found.push({ problem, detail });
+    }
+    if (!best || found.length <= best.found.length) best = { result, found };
+    if (!found.length) {
+      if (round > 1) log(`vòng ${round}: hết lỗi`);
+      break;
+    }
+    found.forEach(({ problem, detail }) => log(`vòng ${round}: ${problem.name} — ${detail}`));
+    if (round === MAX_ROUNDS) break;
+
+    let fixed = 0;
+    for (const { problem, detail } of found) {
+      for (const fix of problem.fixes.filter(fix => !tried.has(fix))) {
+        tried.add(fix);
+        // Fix ném lỗi giữa chừng thì DOM có thể đã bị sửa dở. Không dừng cả lần fetch: bỏ fix đó, đi
+        // tiếp; kết quả sửa dở mà tệ hơn thì bước giữ kết quả ít lỗi nhất sẽ không chọn nó.
+        let count = 0;
+        try {
+          count = await runInPage(page, fix.run);
+        } catch (error) {
+          log(`vòng ${round}: fix bị lỗi, bỏ qua: ${fix.name} — ${error.message.split('\n')[0]}`);
+        }
+        if (count) {
+          log(`vòng ${round}: đã sửa: ${fix.name} (${count})`);
+          applied.push({ problem, error: `${problem.name} — ${detail}`, fix: fix.name, changes: count });
+        }
+        fixed += count;
+      }
+    }
+    if (!fixed) break;
+  }
+  const unfixed = best.found.map(({ problem, detail }) => `${problem.name} — ${detail}`);
+  unfixed.forEach(reason => log(`cảnh báo: chưa sửa được ${reason}`));
+  const fixed = applied
+    .filter(({ problem }) => !best.found.some(item => item.problem === problem))
+    .map(({ error, fix, changes }) => ({ error, fix, changes }));
+  return { result: best.result, unfixed, fixed };
+}
+
+// In các khối có chữ mà defuddle xoá: bước nào, selector nào, đoạn đầu của chữ. Bỏ qua khối dưới 8 từ
+// (icon, nút, nhãn) cho danh sách đọc được.
+function logRemovals(debug) {
+  log(`debug: defuddle lấy thân bài từ ${debug.contentSelector}`);
+  for (const removal of debug.removals) {
+    const text = (removal.text || '').replace(/\s+/g, ' ').trim();
+    if (text.split(' ').length < 8) continue;
+    log(`debug: xoá ở ${removal.step}${removal.selector ? ` (${removal.selector})` : ''}, ${removal.reason}: "${text.slice(0, 80)}"`);
+  }
+}
+
+// Serialize cả doctype: thiếu nó thì trang mở lại bằng --html chạy ở quirks mode, bố cục khác đi.
+const RAW_HTML = `(document.doctype ? new XMLSerializer().serializeToString(document.doctype) + '\\n' : '') + document.documentElement.outerHTML`;
 
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   const startedAt = Date.now();
+  log(`mở: ${options.url}`);
   const chrome = await launchChrome();
   try {
     const page = await connectToPage(chrome.port);
@@ -197,6 +304,17 @@ async function main() {
     await page.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     // Cho phép inject bundle defuddle vào cả trang có CSP chặt.
     await page.send('Page.setBypassCSP', { enabled: true });
+    // --html: mở lại một trang đã lưu bằng --raw-html. Chrome vẫn đi tới URL thật nhưng nhận file đã lưu
+    // thay cho trang, nên đường dẫn tương đối, CSS, ảnh vẫn đúng. Tắt JS để trang không tự dựng lại DOM.
+    if (options.html) {
+      const body = readFileSync(options.html).toString('base64');
+      page.on('Fetch.requestPaused', ({ requestId }) => page.send('Fetch.fulfillRequest', {
+        requestId, responseCode: 200, body,
+        responseHeaders: [{ name: 'Content-Type', value: 'text/html; charset=utf-8' }],
+      }));
+      await page.send('Fetch.enable', { patterns: [{ urlPattern: options.url.replace(/[*?\\]/g, '\\$&'), resourceType: 'Document' }] });
+      await page.send('Emulation.setScriptExecutionDisabled', { value: true });
+    }
 
     const navigation = await page.send('Page.navigate', { url: options.url });
     if (navigation.errorText) throw new Error(`Không mở được trang: ${navigation.errorText}`);
@@ -204,27 +322,30 @@ async function main() {
     const loadedAt = Date.now();
 
     const title = await page.evaluate('document.title');
-    if (CHALLENGE_TITLE.test(title)) throw new Error(`Vẫn kẹt ở trang chặn bot: "${title}"`);
-    if (await page.evaluate(CAPTCHA_PAGE)) throw new Error(`Trang bắt giải captcha, không lấy được nội dung: "${title}"`);
+    // Lấy HTML thô trước mọi fix: cần cho --raw-html, và cho recordFailure khi có vấn đề.
+    const rawHtml = await page.evaluate(RAW_HTML);
+    if (options.rawHtml) writeFileSync(options.rawHtml, rawHtml);
+    // --html là chạy lại trang đã lưu để dò, không ghi vào log.jsonl hay fix.jsonl.
+    const shouldRecord = !options.html;
 
-    if (options.rawHtml) writeFileSync(options.rawHtml, await page.evaluate('document.documentElement.outerHTML'));
+    const blocked = CHALLENGE_TITLE.test(title) ? `Vẫn kẹt ở trang chặn bot: "${title}"`
+      : await page.evaluate(CAPTCHA_PAGE) ? `Trang bắt giải captcha, không lấy được nội dung: "${title}"`
+      : null;
+    if (blocked) {
+      const error = new Error(blocked);
+      if (shouldRecord) {
+        log(`Lỗi: ${blocked}`);
+        error.logged = true;
+        recordFailure({ url: options.url, finalUrl: await page.evaluate('location.href'), rawHtml, errors: [blocked] });
+      }
+      throw error;
+    }
 
-    await page.evaluate(FIX_CODE_HIGHLIGHTERS);
     await page.evaluate(readFileSync(defuddleBundlePath, 'utf8'));
-    const defuddleOptions = {
-      md: { markdown: true },
-      html: {},
-      json: { separateMarkdown: true },
-    }[options.format];
-    const result = JSON.parse(await page.evaluate(`
-      (async () => {
-        const DefuddleClass = window.Defuddle.default || window.Defuddle;
-        const options = { ...${JSON.stringify(defuddleOptions)}, url: location.href };
-        const result = await new DefuddleClass(document, options).parseAsync();
-        return JSON.stringify({ ...result, url: location.href });
-      })()
-    `, { awaitPromise: true }));
+    const { result, unfixed, fixed } = await extractWithFixes(page, options.debug);
     page.close();
+    // Bật debug làm defuddle giữ lại vài thứ nó vốn bỏ (wordCount lệch vài từ), nên chỉ dùng để dò lỗi.
+    if (options.debug) logRemovals(result.debug);
 
     const output = render(result, options.format);
     if (options.out) writeFileSync(options.out, output);
@@ -234,12 +355,14 @@ async function main() {
     log(`url: ${result.url}`);
     log(`wordCount: ${result.wordCount}`);
     log(`thời gian: tải trang ${((loadedAt - startedAt) / 1000).toFixed(1)}s, defuddle ${((Date.now() - loadedAt) / 1000).toFixed(1)}s`);
+    if (fixed.length && shouldRecord) recordFixes({ url: options.url, finalUrl: result.url, fixed });
+    if (unfixed.length && shouldRecord) recordFailure({ url: options.url, finalUrl: result.url, rawHtml, errors: unfixed });
   } finally {
     await chrome.close();
   }
 }
 
 main().catch(error => {
-  log(`Lỗi: ${error.message}`);
+  if (!error.logged) log(`Lỗi: ${error.message}`);
   process.exit(1);
 });
