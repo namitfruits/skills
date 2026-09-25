@@ -1,0 +1,8 @@
+{
+  "name": "fetch-page",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "defuddle": "0.19.4"
+  }
+}

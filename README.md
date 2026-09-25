@@ -34,6 +34,7 @@ khác nhau, trùng tên.
 | [`explain-with-diagrams`](skills/explain-with-diagrams/SKILL.md) | Giải thích một cơ chế, một bug hay một kiến trúc bằng sơ đồ mermaid nền tối — mỗi sơ đồ một section, link [mermaid.live](https://mermaid.live) mở được ngay, hình mang cấu trúc còn chữ mang lời giải. Kèm [`mermaid-link.mjs`](skills/explain-with-diagrams/mermaid-link.mjs) sinh link offline + verify round-trip. |
 | [`mermaid-diagram-simple`](skills/mermaid-diagram-simple/SKILL.md) | Viết nguồn sơ đồ mermaid nền tối để xem trong chat — chọn loại sơ đồ theo câu hỏi, màu theo ngữ nghĩa bằng `classDef`, chuỗi dài vẽ ngang `LR`, không legend trong hình. Chỉ lo việc vẽ; `explain-with-diagrams` dùng nó. |
 | [`mermaid-diagram-design`](skills/mermaid-diagram-design/SKILL.md) | Style spec cho mermaid diagram — "zone-tinted flowchart": subgraph tô nền per vùng, classDef palette, shape có nghĩa. Kèm [`verify.py`](skills/mermaid-diagram-design/verify.py) lint + render 2 nền sáng/tối. |
+| [`fetch-page`](skills/fetch-page/SKILL.md) | Lấy nội dung chính của một trang web — mặc định markdown kèm frontmatter, hoặc HTML đã làm sạch, hoặc JSON đủ metadata (`--format md\|html\|json`). Mở trang bằng Chrome headless qua CDP, chạy defuddle ngay trong tab để bỏ menu, quảng cáo, sidebar. Qua được trang Cloudflare "Just a moment..." và trang phải chạy JS mới hiện nội dung. Cần Node ≥ 22 + Chrome; lần đầu chạy `npm install` trong thư mục skill. |
 
 ## Dùng thử không cài
 
