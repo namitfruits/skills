@@ -3,3 +3,4 @@ node_modules/
 __pycache__/
 .test/
 skills/fetch-page/logs/
+.env
