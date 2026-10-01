@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Mở URL bằng Chrome headless qua CDP, chạy defuddle ngay trong tab, in nội dung chính của trang.
+// Lấy nội dung chính của một URL. Thử curl_cffi trước (không mở trình duyệt, dưới 1s); kết quả có gì
+// đáng ngờ thì mở Chrome headless qua CDP, chạy defuddle ngay trong tab.
 //
-//   node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--debug]
+//   node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--chrome] [--debug]
 //
 // Nội dung ra stdout (hoặc file -o), tiến độ và thống kê ra stderr. Các lỗi defuddle hay mắc và cách
 // sửa nằm trong page-fixes.mjs.
@@ -12,6 +13,8 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { Defuddle as defuddleHtml } from 'defuddle/node';
+import { parseHTML } from 'linkedom';
 import { PROBLEMS } from './page-fixes.mjs';
 
 const skillDir = dirname(fileURLToPath(import.meta.url));
@@ -34,19 +37,26 @@ const CHALLENGE_TITLE = /just a moment|attention required|checking your browser/
 // Trang bắt giải captcha thật (AWS WAF: "Let's confirm you are human"). Chờ bao lâu cũng không tự qua,
 // nên phải nhận ra để báo lỗi, không thì defuddle đọc trang captcha như một bài bình thường.
 const CAPTCHA_PAGE = `!!(window.gokuProps || document.querySelector('script[src*="captcha.awswaf.com"]'))`;
+const CAPTCHA_HTML = /window\.gokuProps|captcha\.awswaf\.com/;
 const FORMATS = ['md', 'html', 'json'];
-const USAGE = 'Cách dùng: node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--debug]';
+const USAGE = 'Cách dùng: node fetch-page.mjs <url> [--format md|html|json] [-o out] [--raw-html page.html] [--html page.html] [--chrome] [--debug]';
 // Chặn trên cho vòng lặp sửa lỗi, phòng khi fix này làm lộ ra lỗi khác rồi cứ thế nối nhau.
 const MAX_ROUNDS = 5;
+// Kết quả curl_cffi dưới ngưỡng này thì để Chrome đọc lại. Trang bắt chạy JS mới cho vào (reddit trả
+// HTTP 200 kèm một đoạn JS, ra 39 chữ) và paywall chỉ trả phần đầu bài (tomshardware.com, 98 chữ) đều
+// rơi vào đây. Trang thật sự ngắn thì chỉ tốn thêm vài giây mở Chrome, kết quả không kém đi.
+const MIN_CURL_WORDS = 150;
+const CURL_TIMEOUT = 30000;
 
 function parseArguments(argv) {
-  const options = { url: null, format: 'md', out: null, rawHtml: null, html: null, debug: false };
+  const options = { url: null, format: 'md', out: null, rawHtml: null, html: null, chrome: false, debug: false };
   for (let index = 0; index < argv.length; index++) {
     const argument = argv[index];
     if (argument === '-o' || argument === '--out') options.out = argv[++index];
     else if (argument === '--format') options.format = argv[++index];
     else if (argument === '--raw-html') options.rawHtml = argv[++index];
     else if (argument === '--html') options.html = argv[++index];
+    else if (argument === '--chrome') options.chrome = true;
     else if (argument === '--debug') options.debug = true;
     else if (!options.url) options.url = argument;
   }
@@ -287,10 +297,118 @@ function logRemovals(debug) {
 // Serialize cả doctype: thiếu nó thì trang mở lại bằng --html chạy ở quirks mode, bố cục khác đi.
 const RAW_HTML = `(document.doctype ? new XMLSerializer().serializeToString(document.doctype) + '\\n' : '') + document.documentElement.outerHTML`;
 
+// Chạy curl-fetch.py bằng uv. Lỗi gì (không có uv, timeout, mạng) cũng chỉ trả về lý do, để main() mở Chrome.
+function runCurlFetch(url) {
+  return new Promise(resolve => {
+    const child = spawn('uv', ['run', '--quiet', '--script', join(skillDir, 'curl-fetch.py'), url],
+      { stdio: ['ignore', 'pipe', 'pipe'] });
+    const stdout = [];
+    const stderr = [];
+    const timer = setTimeout(() => child.kill(), CURL_TIMEOUT);
+    child.stdout.on('data', chunk => stdout.push(chunk));
+    child.stderr.on('data', chunk => stderr.push(chunk));
+    child.on('error', error => {
+      clearTimeout(timer);
+      resolve({ reason: error.code === 'ENOENT' ? 'không có uv' : error.message });
+    });
+    child.on('close', code => {
+      clearTimeout(timer);
+      if (code === 0) return resolve({ response: JSON.parse(Buffer.concat(stdout).toString('utf8')) });
+      const lastLine = Buffer.concat(stderr).toString('utf8').trim().split('\n').pop();
+      resolve({ reason: code === null ? `hết ${CURL_TIMEOUT / 1000}s` : lastLine || `thoát mã ${code}` });
+    });
+  });
+}
+
+// Chạy detect của PROBLEMS trên DOM linkedom thay cho tab Chrome. linkedom không dựng layout, nên mọi
+// phần tử được coi là đang hiện: detect có báo nhầm thì chỉ tốn một lần mở Chrome.
+function detectProblems(rawHtml, contentHtml) {
+  const { window, document } = parseHTML(rawHtml);
+  window.Element.prototype.getClientRects = () => [{}];
+  const getComputedStyle = () => ({ visibility: 'visible' });
+  // DOMParser của linkedom gặp HTML không có <html><body> (content của defuddle) thì ra body rỗng, nên
+  // `thiếu chữ` coi như không giữ chữ nào và không bao giờ báo (tomshardware.com: 216/628 chữ vẫn qua).
+  class DOMParser {
+    parseFromString(html, type) {
+      return new window.DOMParser().parseFromString(`<!doctype html><html><body>${html}</body></html>`, type);
+    }
+  }
+  const found = [];
+  for (const problem of PROBLEMS) {
+    const detect = new Function('document', 'DOMParser', 'getComputedStyle', `return (${problem.detect})`)(
+      document, DOMParser, getComputedStyle);
+    const detail = detect(contentHtml);
+    if (detail) found.push(`${problem.name} — ${detail}`);
+  }
+  return found;
+}
+
+// Tải bằng curl_cffi, bóc bằng defuddle trong Node. Đường này không chạy JS, không có CSS, không có vòng
+// sửa lỗi, nên chỉ nhận kết quả khi mọi kiểm tra đều sạch. Có gì đáng ngờ thì trả về reason để main()
+// mở Chrome: trang nào curl_cffi đọc được thì Chrome cũng đọc được, nên chuyển sang Chrome không bao giờ
+// làm kết quả tệ đi, chỉ chậm hơn.
+async function fetchWithCurl(url, debug) {
+  const startedAt = Date.now();
+  const { response, reason } = await runCurlFetch(url);
+  if (!response) return { reason };
+  if (response.status !== 200) return { reason: `HTTP ${response.status}` };
+  if (!response.html) return { reason: `không phải HTML (${response.contentType})` };
+  const fetchedAt = Date.now();
+  const rawHtml = response.html;
+  const title = parseHTML(rawHtml).document.title || '';
+  if (CHALLENGE_TITLE.test(title) || CAPTCHA_HTML.test(rawHtml)) return { reason: `trang chặn bot: "${title}"` };
+
+  let result;
+  try {
+    result = await defuddleHtml(rawHtml, response.url, { separateMarkdown: true, debug });
+  } catch (error) {
+    return { reason: `defuddle lỗi: ${error.message.split('\n')[0]}` };
+  }
+  if ((result.wordCount || 0) < MIN_CURL_WORDS) return { reason: `chỉ ${result.wordCount || 0} chữ` };
+  let problems;
+  try {
+    problems = detectProblems(rawHtml, result.content);
+  } catch (error) {
+    return { reason: `detect lỗi: ${error.message.split('\n')[0]}` };
+  }
+  if (problems.length) return { reason: problems.join('; ') };
+
+  return {
+    result: { ...result, url: response.url },
+    rawHtml,
+    fetchSeconds: (fetchedAt - startedAt) / 1000,
+    parseSeconds: (Date.now() - fetchedAt) / 1000,
+  };
+}
+
+// fetchedWith cho biết kết quả đến từ đường nào ("curl_cffi" hoặc "chrome"); chỉ --format json in ra.
+function writeResult(result, options, fetchedWith) {
+  // Bật debug làm defuddle giữ lại vài thứ nó vốn bỏ (wordCount lệch vài từ), nên chỉ dùng để dò lỗi.
+  if (options.debug) logRemovals(result.debug);
+  const output = render({ ...result, fetchedWith }, options.format);
+  if (options.out) writeFileSync(options.out, output);
+  else process.stdout.write(output);
+  log(`đường tải: ${fetchedWith}`);
+  log(`title: ${result.title}`);
+  log(`url: ${result.url}`);
+  log(`wordCount: ${result.wordCount}`);
+}
+
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   const startedAt = Date.now();
   log(`mở: ${options.url}`);
+  // --html mở lại trang đã lưu để dò lỗi trong Chrome, nên không đi đường curl_cffi.
+  if (!options.html && !options.chrome) {
+    const fromCurl = await fetchWithCurl(options.url, options.debug);
+    if (fromCurl.result) {
+      if (options.rawHtml) writeFileSync(options.rawHtml, fromCurl.rawHtml);
+      writeResult(fromCurl.result, options, 'curl_cffi');
+      log(`thời gian: curl_cffi ${fromCurl.fetchSeconds.toFixed(1)}s, defuddle ${fromCurl.parseSeconds.toFixed(1)}s`);
+      return;
+    }
+    log(`curl_cffi không dùng được (${fromCurl.reason}), mở Chrome`);
+  }
   const chrome = await launchChrome();
   try {
     const page = await connectToPage(chrome.port);
@@ -344,16 +462,8 @@ async function main() {
     await page.evaluate(readFileSync(defuddleBundlePath, 'utf8'));
     const { result, unfixed, fixed } = await extractWithFixes(page, options.debug);
     page.close();
-    // Bật debug làm defuddle giữ lại vài thứ nó vốn bỏ (wordCount lệch vài từ), nên chỉ dùng để dò lỗi.
-    if (options.debug) logRemovals(result.debug);
-
-    const output = render(result, options.format);
-    if (options.out) writeFileSync(options.out, output);
-    else process.stdout.write(output);
-
-    log(`title: ${result.title}`);
-    log(`url: ${result.url}`);
-    log(`wordCount: ${result.wordCount}`);
+    writeResult(result, options, 'chrome');
+    // Tính từ lúc bắt đầu, nên có cả thời gian đã thử curl_cffi trước đó.
     log(`thời gian: tải trang ${((loadedAt - startedAt) / 1000).toFixed(1)}s, defuddle ${((Date.now() - loadedAt) / 1000).toFixed(1)}s`);
     if (fixed.length && shouldRecord) recordFixes({ url: options.url, finalUrl: result.url, fixed });
     if (unfixed.length && shouldRecord) recordFailure({ url: options.url, finalUrl: result.url, rawHtml, errors: unfixed });

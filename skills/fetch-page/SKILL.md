@@ -1,6 +1,6 @@
 ---
 name: fetch-page
-description: Lấy nội dung chính của một trang web — mặc định ra markdown sạch kèm frontmatter (title, author, published, source…), hoặc HTML đã làm sạch, hoặc JSON đủ metadata — mở trang bằng Chrome headless qua Chrome DevTools Protocol (CDP), chạy defuddle ngay trong tab để bỏ menu, quảng cáo, sidebar. Dùng khi user đưa một URL và muốn đọc, tóm tắt, trích nội dung, lưu bài thành markdown/HTML/JSON, hoặc khi WebFetch/curl bị chặn (Cloudflare "Just a moment...") hay trả về trang thiếu nội dung vì phải chạy JS mới hiện.
+description: Lấy nội dung chính của một trang web — mặc định ra markdown sạch kèm frontmatter (title, author, published, source…), hoặc HTML đã làm sạch, hoặc JSON đủ metadata — tải trước bằng curl_cffi giả Chrome (dưới 1 giây, qua được Cloudflare), kết quả đáng ngờ thì mở Chrome headless qua Chrome DevTools Protocol (CDP), chạy defuddle để bỏ menu, quảng cáo, sidebar. Dùng khi user đưa một URL và muốn đọc, tóm tắt, trích nội dung, lưu bài thành markdown/HTML/JSON, hoặc khi WebFetch/curl bị chặn (Cloudflare "Just a moment...") hay trả về trang thiếu nội dung vì phải chạy JS mới hiện.
 ---
 
 # Trang web → nội dung chính
@@ -8,15 +8,29 @@ description: Lấy nội dung chính của một trang web — mặc định ra 
 ## Chạy thế nào
 
 ```
-URL ──► Chrome headless ──CDP──► tab đã chạy JS xong ──► defuddle ──► detect mọi problem ──hết lỗi──► md | html | json
+URL ──► curl_cffi ──► defuddle (Node) ──► mọi kiểm tra sạch? ──có──────────────────────────────────────► md | html | json
+                                                │không
+                                                ▼
+        Chrome headless ──CDP──► tab đã chạy JS xong ──► defuddle ──► detect mọi problem ──hết lỗi──► md | html | json
                                                             ▲                │có lỗi
                                                             └── chạy fix ◄───┘
 ```
 
-Script mở Chrome với cổng debug, nối websocket vào một tab và ra lệnh CDP: đổi User-Agent, đặt khung
-màn hình desktop, `Page.navigate`, chờ trang ổn định. Sau đó nó inject bundle defuddle vào trang và
-gọi `parseAsync()` trên DOM thật. Defuddle luôn lọc trang trước; `--format` chỉ quyết định kết quả
-lọc được in ra dưới dạng nào.
+**Đường nhanh: curl_cffi.** `curl-fetch.py` tải trang bằng curl_cffi với `impersonate="chrome"`. Đây là
+curl build với BoringSSL, bắt tay TLS và HTTP/2 giống hệt Chrome, nên Cloudflare coi là Chrome thật.
+curl thường hay `fetch` của Node thì bị chặn, dù gửi đúng header của Chrome. Script chạy file này bằng
+`uv run --script`, rồi bóc HTML bằng defuddle trong Node. Tải dưới 1 giây, không mở trình duyệt.
+
+Đường này không chạy JS, không có CSS, không có vòng sửa lỗi. Vì vậy kết quả chỉ được nhận khi mọi
+kiểm tra đều sạch: HTTP 200, là HTML, không phải trang chặn bot hay captcha, từ 150 chữ trở lên, và
+không `detect` nào trong `PROBLEMS` báo lỗi (chạy trên DOM linkedom). Một kiểm tra không qua là mở
+Chrome. Trang nào curl_cffi đọc được thì Chrome cũng đọc được, nên chuyển sang Chrome không làm kết quả
+tệ đi, chỉ chậm hơn vài giây.
+
+**Đường chắc: Chrome.** Script mở Chrome với cổng debug, nối websocket vào một tab và ra lệnh CDP: đổi
+User-Agent, đặt khung màn hình desktop, `Page.navigate`, chờ trang ổn định. Sau đó nó inject bundle
+defuddle vào trang và gọi `parseAsync()` trên DOM thật. Defuddle luôn lọc trang trước; `--format` chỉ
+quyết định kết quả lọc được in ra dưới dạng nào.
 
 Sau defuddle là vòng lặp sửa lỗi, dùng danh sách `PROBLEMS` trong `page-fixes.mjs`:
 
@@ -29,8 +43,8 @@ Sau defuddle là vòng lặp sửa lỗi, dùng danh sách `PROBLEMS` trong `pag
 
 Trang bình thường chỉ chạy defuddle một lần. Mỗi vòng thêm tốn khoảng 0,2s.
 
-Defuddle chạy **trong Chrome** chứ không qua JSDOM: CSS thật, không phải parse lại HTML 1–2 MB, nên
-phần defuddle chỉ mất dưới 1 giây.
+Trên đường Chrome, defuddle chạy **trong tab** chứ không qua JSDOM: CSS thật, không phải parse lại HTML
+1–2 MB, nên phần defuddle chỉ mất dưới 1 giây.
 
 ## Dùng
 
@@ -51,19 +65,25 @@ node ${CLAUDE_SKILL_DIR}/fetch-page.mjs <url> -o /tmp/page.md
 | `--format md\|html\|json` | Dạng đầu ra, mặc định `md` (xem bảng dưới) |
 | `-o <file>` | Ghi kết quả ra file. Không có thì in ra stdout |
 | `--raw-html <file>` | Lưu thêm HTML thô của trang (sau khi JS chạy, trước khi defuddle lọc) để soi khi kết quả lạ |
-| `--html <file>` | Không tải trang thật mà mở lại file đã lưu bằng `--raw-html` (vẫn phải đưa URL gốc). JS tắt, CSS và ảnh vẫn tải từ mạng |
+| `--html <file>` | Không tải trang thật mà mở lại file đã lưu bằng `--raw-html` (vẫn phải đưa URL gốc). Luôn mở bằng Chrome. JS tắt, CSS và ảnh vẫn tải từ mạng |
+| `--chrome` | Bỏ qua curl_cffi, mở Chrome luôn. Dùng để so với kết quả của curl_cffi |
 | `--debug` | In ra stderr các khối có chữ mà defuddle xoá, xoá ở bước nào. Chỉ để dò lỗi: bật lên thì defuddle giữ lại vài thứ, `wordCount` lệch vài từ |
 
 | `--format` | Ra gì | Khi nào dùng |
 |---|---|---|
 | `md` | Frontmatter YAML + markdown, giống `defuddle parse --markdown --frontmatter` | Đọc, tóm tắt, lưu bài |
 | `html` | HTML đã làm sạch, không kèm metadata | Cần giữ cấu trúc HTML (bảng phức tạp, render lại) |
-| `json` | Cả object defuddle trả về: `content` là HTML, `contentMarkdown` là markdown, cùng `title`, `author`, `published`, `schemaOrgData`, `metaTags`… | Cần metadata để xử lý tiếp bằng code |
+| `json` | Cả object defuddle trả về: `content` là HTML, `contentMarkdown` là markdown, cùng `title`, `author`, `published`, `schemaOrgData`, `metaTags`…, thêm `fetchedWith` (`"curl_cffi"` hoặc `"chrome"`) | Cần metadata để xử lý tiếp bằng code |
 
-Cần Node ≥ 22 (dùng `WebSocket` có sẵn) và Chrome. Chrome không nằm ở chỗ quen thuộc thì đặt
-`CHROME_PATH`.
+Cần Node ≥ 22 (dùng `WebSocket` có sẵn), Chrome, và [uv](https://docs.astral.sh/uv/) cho đường
+curl_cffi. Lần đầu uv tự cài curl_cffi theo khai báo ở đầu `curl-fetch.py`, mất vài giây. Không có
+uv thì mọi trang đi thẳng Chrome, stderr ghi `curl_cffi không dùng được (không có uv)`. Chrome không
+nằm ở chỗ quen thuộc thì đặt `CHROME_PATH`.
 
-stderr in `mở: <url>` lúc bắt đầu, rồi `title`, `url` (sau redirect), `wordCount` và thời gian. Một bài báo thường mất 2–6 giây.
+stderr in `mở: <url>` lúc bắt đầu. curl_cffi không dùng được thì in thêm
+`curl_cffi không dùng được (<lý do>), mở Chrome`. Sau đó là `đường tải`, `title`, `url` (sau
+redirect), `wordCount` và thời gian. Một bài báo đi đường curl_cffi mất 1–2 giây, đi đường Chrome
+mất 4–10 giây.
 Trang có lỗi thì stderr kể lại từng vòng: `vòng 1: <lỗi> — <chi tiết>`, `vòng 1: đã sửa: <fix> (<số chỗ>)`,
 `vòng 2: hết lỗi`.
 
@@ -101,6 +121,12 @@ Mỗi dòng dưới đây là một lỗi đã gặp thật. Bỏ cái nào thì
 
 | Trong script | Nếu không có |
 |---|---|
+| curl_cffi với `impersonate="chrome"`, không phải curl hay `fetch` | Cloudflare nhận ra client không phải trình duyệt qua gói bắt tay TLS, trả 403 dù header y hệt Chrome (apnews.com) |
+| Đường curl_cffi chỉ nhận kết quả từ 150 chữ trở lên | reddit có lúc trả HTTP 200 kèm một đoạn JS bắt trình duyệt giải phép tính (39 chữ). Paywall Kiosq chỉ trả phần đầu bài (tomshardware.com: 98 chữ, Chrome ra 709 chữ nhờ fix `thiếu chữ`) |
+| Đường curl_cffi chạy mọi `detect` của `PROBLEMS` trên DOM linkedom, báo lỗi là mở Chrome | Đường curl không có vòng sửa lỗi, trang có code vẽ thành bảng sẽ ra bảng markdown hỏng (machinelearningmastery.com, 29 bảng) |
+| linkedom được gắn `getClientRects` luôn trả một khung | linkedom không dựng layout, `detect` của `thiếu chữ` gọi `getClientRects` thì ném lỗi |
+| `detect` trên đường curl_cffi nhận `DOMParser` bọc HTML vào `<html><body>` trước khi parse | `DOMParser` của linkedom gặp HTML không có `<body>` thì ra body rỗng, `thiếu chữ` không bao giờ báo: tomshardware.com qua đường curl với 216/628 chữ |
+| `curl-fetch.py` không giải mã body khi `content-type` không phải HTML | PDF bị đọc thành chữ rác, tới bước đếm chữ mới bị chặn |
 | `Network.setUserAgentOverride` bỏ chữ `HeadlessChrome` | Cloudflare trả trang "Just a moment..." thay cho bài (machinelearningmastery.com) |
 | `Emulation.setDeviceMetricsOverride` rộng 1440 | Khung headless mặc định ~756px, AP News coi là mobile, gập nửa sau bài bằng `display: none`, defuddle xoá phần bị ẩn → mất nửa bài |
 | Không chờ `Page.loadEventFired`, chỉ chờ DOMContentLoaded rồi chờ chữ trên trang thôi đổi (tối đa 10s) | Trang báo nhiều quảng cáo không bao giờ bắn `load`, script treo hoặc chờ không 15s |
@@ -157,8 +183,14 @@ Mẹo dò cho những lỗi đã gặp:
 
 ## Giới hạn
 
-- Chỉ qua được kiểu chặn bot nhìn User-Agent. Captcha, kiểm tra dấu vân tay trình duyệt, paywall thì
-  không qua. Captcha chỉ nhận ra được loại của AWS WAF; loại khác (reCAPTCHA, hCaptcha toàn trang…) vẫn
+- Trên đường Chrome, widget do JS chèn vào giữa thân bài lọt vào kết quả. Ví dụ techradar.com: script
+  quiz của kwizly.com chèn 7 câu trắc nghiệm, form đăng nhập, bảng xếp hạng, tổng 544 chữ. Chrome ra
+  1538 chữ, curl_cffi ra 1088 chữ đúng bằng phần bài, vì không chạy JS. Nên curl_cffi ra ít chữ hơn
+  Chrome chưa chắc là curl thiếu: so bằng `--chrome` thì phải xem phần dư là gì.
+- Trên đường curl_cffi, `detect` coi mọi phần tử là đang hiện, vì linkedom không có CSS. Nó có thể
+  báo nhầm, nhưng báo nhầm chỉ tốn một lần mở Chrome, kết quả không sai đi.
+- Qua được kiểu chặn bot nhìn User-Agent (Chrome đã bỏ `HeadlessChrome`) và kiểu nhìn gói bắt tay TLS
+  (curl_cffi). Captcha, paywall thì không qua. Captcha chỉ nhận ra được loại của AWS WAF; loại khác (reCAPTCHA, hCaptcha toàn trang…) vẫn
   lọt qua thành kết quả, nên `wordCount` thấp bất thường thì mở markdown ra xem.
 - `detect` của `thiếu chữ` chỉ xét `<p>` nằm chung container với đoạn được giữ. Site bọc mỗi đoạn trong
   một `div` riêng, hay defuddle chọn nhầm hẳn container khác, thì chữ mất mà không có cảnh báo.

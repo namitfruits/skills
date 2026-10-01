@@ -1,9 +1,11 @@
 # fetch-page — workflow
 
-`fetch-page.mjs` mở URL trong Chrome headless đã cấu hình giống trình duyệt desktop thật, chờ JS của
-trang chạy xong, rồi chạy defuddle ngay trong tab để lấy phần thân bài. Sau đó nó kiểm tra kết quả có
-lỗi nào đã biết không. Có lỗi thì sửa trang, cho defuddle đọc lại, rồi kiểm tra tiếp, cho tới khi hết
-lỗi hoặc hết cách sửa. Trang chặn bot hoặc captcha thì dừng hẳn.
+`fetch-page.mjs` thử tải trang bằng curl_cffi giả Chrome trước, bóc bằng defuddle trong Node. Kết quả
+sạch thì in luôn, không mở trình duyệt. Có gì đáng ngờ thì mới mở URL trong Chrome headless đã cấu
+hình giống trình duyệt desktop thật, chờ JS của trang chạy xong, rồi chạy defuddle ngay trong tab để
+lấy phần thân bài. Sau đó nó kiểm tra kết quả có lỗi nào đã biết không. Có lỗi thì sửa trang, cho
+defuddle đọc lại, rồi kiểm tra tiếp, cho tới khi hết lỗi hoặc hết cách sửa. Trang chặn bot hoặc
+captcha thì dừng hẳn.
 
 ## Lấy một trang
 
@@ -12,6 +14,11 @@ lỗi hoặc hết cách sửa. Trang chặn bot hoặc captcha thì dừng hẳ
 flowchart TB
   subgraph WHO["`**NGƯỜI GỌI**`"]
     U(["Agent / user"])
+  end
+  subgraph CURL["`**Đường nhanh** — không mở trình duyệt`"]
+    CF["curl_cffi giả Chrome<br/>defuddle trong Node"]
+    CLEAN{"HTTP 200, HTML,<br/>≥ 150 chữ, detect sạch?"}
+    CF --> CLEAN
   end
   subgraph NODE["`**fetch-page.mjs** — điều khiển Chrome qua CDP`"]
     OPEN["Mở tab, tải trang<br/>UA không có Headless<br/>khung rộng 1440"]
@@ -35,7 +42,9 @@ flowchart TB
     WARN["Kết quả ít lỗi nhất<br/>+ dòng cảnh báo:<br/>ghi vào logs/log.jsonl"]
     ERR["Thoát mã 1<br/>ghi vào logs/log.jsonl"]
   end
-  U -->|"URL"| OPEN
+  U -->|"URL"| CF
+  CLEAN -->|"sạch"| OK
+  CLEAN -.->|"đáng ngờ"| OPEN
   GATE -->|"không"| DEF
   GATE -.->|"có"| ERR
   DET -->|"không"| OK
@@ -49,19 +58,30 @@ flowchart TB
   classDef svc   fill:#DFE3F5,stroke:#4c5bab,stroke-width:1.6px,color:#1b2230
   classDef core  fill:#2b6cb0,stroke:#173f66,stroke-width:2px,color:#ffffff,font-weight:bold
   class U actor
-  class OPEN,WAIT,GATE svc
+  class CF,OPEN,WAIT,GATE svc
+  class CLEAN fe3
   class DET,HAS,FIX fe2
   class DEF core
   class OK fe
   class WARN,ERR fe3
   style WHO fill:#F7F5FA,stroke:#6a4c9c,stroke-width:1.2px,stroke-dasharray: 4 3
+  style CURL fill:#F4F5FB,stroke:#4c5bab,stroke-width:1.2px,stroke-dasharray: 4 3
   style NODE fill:#F4F5FB,stroke:#4c5bab,stroke-width:1.2px,stroke-dasharray: 4 3
   style TAB fill:#F3FBF6,stroke:#2f855a,stroke-width:1.2px,stroke-dasharray: 4 3
   style OUT fill:#FDF8F1,stroke:#a86a12,stroke-width:1.2px,stroke-dasharray: 4 3
 ```
 
-**Trang bình thường:** tải trang → chờ ổn định → defuddle một lần → không có lỗi → in kết quả. Một bài
-báo mất khoảng 2–6 giây.
+**Trang bình thường:** curl_cffi tải → defuddle trong Node → mọi kiểm tra sạch → in kết quả. Một bài
+báo mất 1–2 giây.
+
+**Đường curl_cffi có gì đáng ngờ → mở Chrome.** Đường này không chạy JS, không có CSS, không có vòng sửa
+lỗi, nên chỉ nhận kết quả khi: HTTP 200, là HTML, không phải trang chặn bot hay captcha, từ 150 chữ trở
+lên, và không `detect` nào báo lỗi (chạy trên DOM linkedom, coi mọi phần tử là đang hiện). Trang bắt
+chạy JS (reddit có lúc), paywall chỉ trả phần đầu (tomshardware.com), code vẽ thành bảng
+(machinelearningmastery.com), PDF, captcha đều sang Chrome. Chrome đọc được mọi trang curl_cffi đọc
+được, nên chuyển sang không làm kết quả tệ đi. Đường Chrome mất 4–10 giây.
+
+**Đường Chrome:** tải trang → chờ ổn định → defuddle một lần → không có lỗi → in kết quả.
 
 **Trước vòng lặp: cấu hình để lấy được trang ngay lần đầu.** Mấy thứ này phải đặt trước khi tải trang,
 vì hỏng rồi thì sửa trong tab không cứu được nữa:
