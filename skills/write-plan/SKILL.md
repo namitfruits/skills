@@ -70,6 +70,13 @@ skill này, đừng giữ hai bản luật.
    - **Goal** — 3–5 bullet **trạng thái quan sát được** sau khi xong: mở được trang nào, chạy được lệnh
      nào, endpoint trả gì. Viết cái **có**, không viết cái **muốn** — "chạy `npx foo` lên được server ở
      :4000", **không** "cải thiện observability". Thêm `**Ngoài scope:**` nếu dễ bị hiểu lầm là có.
+   - **Goal tả hành vi, không tả lượt đo.** "Quan sát được" nghĩa là *ai cũng kiểm được hành vi đó*,
+     không phải *kể một lượt chạy*. Mỗi bullet nói cái gì đúng với **mọi** đầu vào trong scope; dữ liệu
+     cụ thể dùng để chứng minh — fixture, bed, tài khoản test, ID bản ghi, tên một feature mẫu — là
+     **bằng chứng**, gọi tên ở Gate §7 (phase nghiệm thu chạy lại nó, luật 21). "Khách gửi trùng đơn
+     trong 24h thì chỉ có một đơn", **không** "chạy `orders-dup.json` ra 1 row".
+   - **Phép thử:** thay fixture bằng một fixture khác cùng loại — bullet còn đúng nguyên chữ không?
+     Không ⇒ đang viết Gate, chưa phải Goal.
 6. **Legend** `🤖` = agent tự kiểm được (lệnh, test, grep) · `👤` = cần người kiểm (số đo thật, hạ tầng,
    UI, quyết định) — đặt **ngay dưới heading `## 7. Phases`**, không để đầu doc, không thành section riêng.
    Ngay dưới Legend là ô `👤 plan này được duyệt` (luật 2), rồi mới tới `### Phase`.
@@ -427,7 +434,7 @@ python3 .claude/skills/write-plan/verify.py .docs/042-slug.md   # exit 1 nếu c
 | Mức       | Bắt gì                                                                                                                                                                                                                                                                                                  |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ERROR** | khung section thiếu · sai tên · sai thứ tự · `Cover:` / `(D<n>)` / `→ DS<n>` / `dựa vào P<n>` trỏ vào ID không tồn tại hoặc đã gạch · `DS` không phase nào nhận trọn (hoặc ≥2 phase cùng nhận) · phase không cover `DS` nào (trừ phase 0 và phase nghiệm thu) · phase thiếu Actions/Gate · §7 thiếu ô `👤 plan này được duyệt` ngoài mọi phase · phase cuối không phải nghiệm thu · `status: approved`/`done` mà còn dòng bê nguyên chỗ trống của `template.md` · Gate trích `BH<n>` không có trong bảng §3 · `P` không `D` nào nhắc tới · `status: done` mà còn `[ ]` · `status: approved` mà ô duyệt chưa tick · duyệt khi còn `P` **chưa chạy** |
-| **WARN**  | `D` dài >5 dòng · `[x]` không có số/ngày làm bằng chứng · item thiếu 🤖/👤 · phase nhận trọn `DSn` mà Gate không nhắc `DSn` · phase nghiệm thu ít item Gate hơn số bullet §2 · `D` thiếu 🤖/👤 ở heading · `D` có ngày tháng ở heading (kể cả `D` đã bỏ) · §1–§3 có tên trông như trong code, cả trong nhãn node · §1–§3 trỏ `P`/`D`/`DS` · §3 không có hình (luật 23) · §3 hai hình giống hệt nhau · khác hướng · không chung node nào · hình `Sau plan` thêm node mà không tô màu · còn chỗ trống chưa điền (khi `draft`) · `BH` không Gate nào nhắc · `P` thiếu `**Biết để làm gì:**` / `**Cách chạy lại:**` / `**Kết quả:**` · `P` trỏ ngược về `D<n>`                                                                                                                                                                              |
+| **WARN**  | `D` dài >5 dòng · `[x]` không có số/ngày làm bằng chứng · item thiếu 🤖/👤 · phase nhận trọn `DSn` mà Gate không nhắc `DSn` · phase nghiệm thu ít item Gate hơn số bullet §2 · `D` thiếu 🤖/👤 ở heading · `D` có ngày tháng ở heading (kể cả `D` đã bỏ) · §1–§3 có tên trông như trong code, cả trong nhãn node · §1–§3 trỏ `P`/`D`/`DS` · §3 không có hình (luật 23) · §3 hai hình giống hệt nhau · khác hướng · không chung node nào · hình `Sau plan` thêm node mà không tô màu · còn chỗ trống chưa điền (khi `draft`) · `BH` không Gate nào nhắc · `P` thiếu `**Biết để làm gì:**` / `**Cách chạy lại:**` / `**Kết quả:**` · `P` trỏ ngược về `D<n>` · §2 nhắc bed/fixture/dữ liệu mẫu (luật 5)                                                                                                                                                                           |
 | **INFO**  | bảng phủ `DS → phase` · `P` chưa chạy thì `D` nào chưa có nền · `D` không action nào trích — **không phải lỗi** (luật 17)                                                                                                                                                                                     |
 
 **Có ERROR thì làm gì** — `verify.py` không tự sửa doc (`--fix` sẽ luôn đoán sai, vì mỗi ERROR có ít nhất
@@ -466,4 +473,5 @@ doc, không nằm trong doc, nên không grep ra được.
 | Thêm tầng trừu tượng / config / chỗ cắm "cho sau này" mà §2 không đòi | luật 20 — `D` phải nói vì sao cách thẳng tay không đủ; ≥2 ca thật mới tổng quát hoá |
 | §1–§3 viết bằng chữ nghe kêu, người chưa mở repo đọc không ra luồng | luật 23 — một đường thật, kể bằng chuyện xảy ra; kể lại được bằng một câu |
 | Sửa §3 mơ hồ bằng cách nhồi tên hàm/field cho "cụ thể"          | luật 23 — cụ thể bằng chuyện xảy ra; tên code để dành cho §6–§7   |
+| Goal kể một lượt chạy trên fixture cụ thể ("chạy X trên bed Y ra Z") vì hiểu "quan sát được" là "kể lượt đo" | luật 5 — Goal tả hành vi đúng với mọi đầu vào; fixture là bằng chứng, gọi tên ở Gate §7. Phép thử: thay fixture khác, bullet còn đúng không |
 | Mọi phase xanh là báo xong, chưa ai chạy thử cái §2 hứa          | luật 21 — phase nghiệm thu, Gate một dòng ứng một bullet §2, dán khối đó vào chat |

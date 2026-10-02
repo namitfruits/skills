@@ -48,6 +48,9 @@ CODE_SPAN = re.compile(r"`([^`\n]+)`")
 CODE_ALWAYS = re.compile(r"\w\(|\b[a-z]+[A-Z]|^\w+:\s|[{}]")
 CODE_TOKEN = re.compile(r"[A-Za-z0-9]_[A-Za-z0-9]|[A-Za-z]\.[A-Za-z]")
 ID_REF = re.compile(r"\b(?:DS|D|P)\d+\b")
+# §2 — dấu hiệu đang kể một lượt đo thay vì tả hành vi (luật 5). Chỉ WARN: đôi khi Goal có lý do nêu tên
+EVIDENCE = re.compile(r"\b(?:bed|fixtures?|seed data|sample data|test account|dữ liệu mẫu|tài khoản test)\b",
+                      re.IGNORECASE)
 NODE_OPEN = re.compile(r"\b[A-Za-z_]\w*(\[\[|\[\(|\(\(|\(\[|\{\{|\[|\(|\{|>)")
 NODE_CLOSE = {"[[": "]]", "[(": ")]", "((": "))", "([": "])", "{{": "}}",
               "[": "]", "(": ")", "{": "}", ">": "]"}
@@ -241,6 +244,14 @@ def lint(text, path=None):
         if ids:
             warn.append(f"§{num} trỏ {' · '.join(ids)} — kể luôn nội dung, người đọc §1–§3 không phải "
                         f"lật xuống dưới (luật 23)")
+
+    # --- §2 tả hành vi, không tả lượt đo (luật 5): fixture/bed là bằng chứng, chỗ của nó là Gate §7
+    goal = "\n".join(l for l in sec.get(2, ("", []))[1] if not l.strip().startswith("```"))
+    evid = sorted({m.group(0).lower() for m in EVIDENCE.finditer(goal)})
+    if evid:
+        warn.append(f"§2 nhắc {' · '.join(evid)} — Goal tả hành vi đúng với mọi đầu vào trong scope; "
+                    f"fixture/bed cụ thể là bằng chứng, gọi tên ở Gate §7. Thay fixture khác cùng loại "
+                    f"mà bullet hết đúng ⇒ đang viết Gate (luật 5)")
 
     # --- §3 bảng hành vi: `H<n>` để Gate §7 trỏ về
     hrows = {int(BH_ROW.match(ln).group(1)) for ln in sec.get(3, ("", []))[1] if BH_ROW.match(ln)}
