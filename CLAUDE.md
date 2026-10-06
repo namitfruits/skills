@@ -19,3 +19,8 @@ Kết quả mỗi lần chạy thử để ở `.test/<tên-skill>/NNN-<slug>/`.
 - Chạy thử `fetch-page` thì luôn kèm `--raw-html page.raw.html`. Nhờ vậy mỗi thư mục trong
   `.test/fetch-page/` là một trang đã lưu để `replay.mjs` chạy lại (bước "Kiểm tra" trong "Vòng lặp cải
   tiến" của SKILL.md). Sửa script xong thì replay cả bộ: `node skills/fetch-page/replay.mjs .test/fetch-page/*/`.
+
+## Sơ đồ
+
+Sơ đồ trong SKILL.md, doc, README luôn vẽ bằng mermaid (theo skill `mermaid-diagram-design`), không vẽ bằng ký tự
+ASCII (`─►`, `│`, `└──`).
