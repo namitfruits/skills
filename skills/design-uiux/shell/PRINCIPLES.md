@@ -1,0 +1,46 @@
+# Nguyên tắc thiết kế shell
+
+shell là thứ người xem dùng để vặn và so bản thiết kế. Nó phải **dễ thấy là đang vặn gì, mà không lấn vào bản thiết
+kế**. Tên các khối (toolbar, option-switcher, view-controller, panel, data-panel, config-panel) theo mục "Các khối
+điều khiển" của `SKILL.md`.
+
+Sửa shell thì giữ đúng các nguyên tắc dưới đây, rồi chạy `scripts/test-shell.mjs`. Nguyên tắc nào có phép kiểm thì
+phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép kiểm cùng lúc.
+
+## Màu: tách khỏi page mà không chói
+
+- shell dùng màu trung tính riêng, không dùng token của design system: đổi design system không đổi shell.
+- Cùng sáng tối với page, khác tông: page sáng thì shell nền xám, page tối thì shell xám sáng hơn nền page một bậc.
+  Đảo màu (page sáng, shell đen) thì chói; cùng màu page thì shell chìm vào bản thiết kế.
+- Viền ngoài của toolbar và panel rõ vừa phải (`--ds-bar-edge`), đường kẻ bên trong nhạt (`--ds-bar-line`). Viền
+  ngoài là thứ tách shell khỏi page, không phải nền.
+- Ô nhập nổi trên nền shell (trắng trên xám ở chế độ sáng).
+
+## Bố cục: theo trang, không theo màn hình
+
+- Hai mép thanh trên cùng thẳng mép chữ của trang, không sát mép màn hình.
+- toolbar là một khối liền: option-switcher ở giữa trang, view-controller bên phải, luôn cùng một dòng. Thiếu chỗ
+  thì A B C dồn dần sang trái, không chồng lên view-controller.
+- Đủ chỗ thì panel luôn mở ở lề hai bên, không đè và không bóp khối trang (breakpoint của page vẫn đúng). Thiếu chỗ
+  thì panel gập thành hai nút "Dữ liệu", "Cấu hình", hai nút rộng bằng nhau để toolbar cân giữa.
+- Hai nút mở panel đứng ở lề ngoài trang, ngay trên chỗ panel mở ra, khi lề đủ chỗ; lề hẹp mới vào trong thanh.
+  Nhờ vậy toolbar luôn rộng đúng bằng trang: đổi khổ desktop / tablet / mobile, panel mở sẵn hay gập, toolbar không
+  xê dịch. Mép thanh ở mọi khổ cùng một phép tính: mép khối trang trừ padding.
+- Thanh không vừa một dòng thì hai nút mở panel lên dòng trên, toolbar nguyên khối ở dòng dưới. Vừa hay không đo
+  bằng bề rộng thật của từng nút, không đoán bằng breakpoint.
+- Khung nổi của shell (mô tả phương án, panel gập) luôn nằm trong màn hình, kể cả ở 375px.
+
+## data-panel và config-panel: thấy ngay, khó nhập sai
+
+- **data-panel bên trái vặn dữ liệu** (variables, bộ dữ liệu); **config-panel bên phải vặn cấu hình** (tweaks:
+  role, bố cục, độ dày). Không trộn hai loại vào một panel.
+- **Thấy hết giá trị đang chọn mà không phải mở gì.** Ô chọn ít lựa chọn, chữ ngắn (≤ 4 lựa chọn, tổng ≤ 24 ký tự)
+  là dãy nút bấm như A B C; nhiều hơn mới là ô chọn thả xuống.
+- **Không cho nhập giá trị ngoài khoảng.** Số có cả min và max là thanh kéo kèm số đang chọn; chỉ số không có
+  khoảng mới là ô nhập.
+- **Thay đổi nào cũng phải nhìn ra.** Chọn bộ dữ liệu thì ô bộ dữ liệu giữ tên bộ đang khớp, các ô bị bộ đó đổi
+  nháy lên một lúc; vặn lệch khỏi bộ thì ô bộ dữ liệu về "Bộ dữ liệu…".
+- Cách tô "đang chọn" giống nhau khắp shell: nền accent nhạt, chữ accent, đậm.
+- Nhãn ngắn, một dòng; ô rộng hết panel, nhãn trên ô dưới.
+- **Giải thích khi nhãn chưa đủ nói.** Ô có `help` thì có icon ⓘ cạnh nhãn; đưa chuột, Tab tới hay chạm vào thì hiện
+  lời giải thích, khung nằm trong màn hình. Nhãn đã rõ thì không có icon: icon ở mọi ô thành nhiễu.

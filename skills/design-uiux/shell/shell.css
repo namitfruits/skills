@@ -1,0 +1,291 @@
+/* shell: toolbar (option-switcher, view-controller), panel (data-panel, config-panel), khung mobile / tablet, số
+   khối. Tên các khối: SKILL.md, mục "Các khối điều khiển". toolbar và panel nằm ngoài bản thiết kế nên dùng màu trung tính
+   riêng, không dùng token của design system: đổi design system không đổi chúng.
+   shell theo sáng tối của page nhưng khác tông: page sáng thì shell nền xám, page tối thì shell xám sáng hơn nền
+   page một bậc. Viền ngoài của toolbar và panel đậm (--ds-bar-edge) để tách khỏi giao diện đang thiết kế mà không chói
+   như đảo màu; đường kẻ bên trong giữ nhạt (--ds-bar-line).
+   Nền và viền quanh khung mobile / tablet cũng theo page. */
+
+:root {
+  --ds-bar-scheme: light;
+  --ds-bar-bg: #e4e4e7;
+  --ds-bar-fg: #1f2328;
+  --ds-bar-muted: #52525b;
+  --ds-bar-line: #d4d4d8;
+  --ds-bar-edge: #a1a1aa;
+  --ds-bar-field: #ffffff;
+  --ds-bar-active: #ffffff;
+  --ds-bar-accent: #2563eb;
+  --ds-frame-bg: #e9eaee;
+  --ds-frame-line: #e5e7eb;
+}
+:root[data-theme="dark"] {
+  --ds-bar-scheme: dark;
+  --ds-bar-bg: #303033;
+  --ds-bar-fg: #e8e9ec;
+  --ds-bar-muted: #a1a1aa;
+  --ds-bar-line: #45454b;
+  --ds-bar-edge: #5c5c63;
+  --ds-bar-field: #1f1f22;
+  --ds-bar-active: #45454b;
+  --ds-bar-accent: #7aa2ff;
+  --ds-frame-bg: #0e0f11;
+  --ds-frame-line: #2c2e33;
+}
+
+/* Thanh trên cùng: nút mở data-panel · toolbar (option-switcher giữa, view-controller phải) · nút mở config-panel. Hai
+   mép thẳng mép chữ của trang (shell.js đo, ghi vào --ds-edge-left / --ds-edge-right), không sát mép màn hình.
+   Không vừa một dòng thì shell.js đặt data-stack: hai nút mở panel ở dòng trên, toolbar nguyên khối ở dòng dưới. */
+.ds-bar {
+  position: relative;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 52px;
+  padding: 8px max(12px, var(--ds-edge-right, 12px)) 8px max(12px, var(--ds-edge-left, 12px));
+  background: var(--ds-bar-bg);
+  border-bottom: 1px solid var(--ds-bar-edge);
+  color: var(--ds-bar-fg);
+  color-scheme: var(--ds-bar-scheme);
+  font: 13px/1.2 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.ds-bar *, .ds-bar *::before, .ds-bar *::after { box-sizing: border-box; }
+.ds-bar svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ds-bar button, .ds-bar select, .ds-bar input { font: inherit; color: inherit; }
+.ds-bar :focus-visible { outline: 2px solid var(--ds-bar-accent); outline-offset: 1px; }
+/* toolbar ba cột: option-switcher ở giữa, view-controller bên phải. Cột phải luôn đủ cho view-controller, cột trái co
+   trước: đủ chỗ thì A B C nằm chính giữa, thiếu chỗ thì A B C dồn dần sang trái. */
+.ds-toolbar { display: grid; flex: 1 1 0; min-width: min-content; grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 12px; }
+.ds-toolbar > .ds-pages { grid-column: 2; }
+.ds-bar-view { display: flex; grid-column: 3; justify-self: end; align-items: center; gap: 8px; }
+/* Lề đủ chỗ: hai nút mở panel đứng ở lề ngoài trang, thẳng hàng với panel (12px cách mép màn hình). */
+.ds-bar[data-toggles="margin"] > .ds-panel-toggle { position: absolute; top: 50%; translate: 0 -50%; }
+.ds-bar[data-toggles="margin"] > [data-ds-panel-toggle="variables"] { left: 12px; }
+.ds-bar[data-toggles="margin"] > [data-ds-panel-toggle="tweaks"] { right: 12px; }
+.ds-bar[data-stack] > .ds-panel-toggle[data-ds-panel-toggle="tweaks"] { margin-left: auto; }
+.ds-bar[data-stack] > .ds-toolbar { order: 1; flex-basis: 100%; }
+/* Màn hẹp: bỏ nút khổ màn, màn hẹp đã là khổ mobile, khung tablet 768px không vừa. */
+@media (max-width: 720px) {
+  .ds-bar [data-ds-key="viewport"] { display: none; }
+}
+
+/* panel: data-panel ở mép trái, config-panel ở mép phải. Gập thì bấm nút trên toolbar mới mở, thẻ trồi ngay dưới
+   toolbar dù toolbar cao bao nhiêu. */
+.ds-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  width: min(var(--ds-panel-width), calc(100vw - 24px));
+  max-height: calc(100vh - 76px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--ds-bar-edge);
+  border-radius: 12px;
+  background: var(--ds-bar-bg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.16);
+}
+:root { --ds-panel-width: 240px; }
+.ds-panel[data-ds-panel="variables"] { left: 12px; }
+.ds-panel[data-ds-panel="tweaks"] { right: 12px; }
+.ds-panel[data-open] { display: flex; }
+.ds-panel-title { margin: 0; color: var(--ds-bar-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+/* Hai nút mở panel rộng bằng nhau để toolbar ở giữa cân hai bên, A B C nằm đúng giữa trang. */
+.ds-panel-toggle { display: inline-flex; justify-content: center; min-width: 108px; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-bg); cursor: pointer; }
+.ds-panel-toggle small { min-width: 18px; padding: 1px 5px; border-radius: 9px; background: var(--ds-bar-field); color: var(--ds-bar-muted); font-size: 11px; text-align: center; }
+.ds-panel-toggle[aria-expanded="true"] { border-color: var(--ds-bar-accent); color: var(--ds-bar-accent); }
+
+/* Đủ chỗ thì panel luôn mở, đè lên lề trống: bản thiết kế không bị bóp nên breakpoint của page vẫn đúng. fixed
+   để cuộn trang vẫn thấy nút. Đủ chỗ hay không do shell.js tính theo bề rộng trang (data-panels). */
+:root[data-panels="docked"] .ds-panel { position: fixed; top: 64px; display: flex; box-shadow: none; }
+:root[data-panels="docked"] .ds-panel-toggle { display: none; }
+
+/* Trong panel: nhãn trên, ô dưới, ô rộng hết panel. */
+.ds-panel .ds-field { display: grid; grid-template-columns: 1fr auto; gap: 4px 6px; height: auto; padding: 0; border: 0; background: none; }
+.ds-panel .ds-field-label { grid-column: 1 / -1; font-size: 12px; }
+.ds-panel .ds-field input, .ds-panel .ds-field select { width: 100% !important; height: 30px; padding: 0 8px; border: 1px solid var(--ds-bar-line); border-radius: 6px; background: var(--ds-bar-field); }
+.ds-panel .ds-field input[type="number"] { text-align: left; }
+.ds-panel .ds-field em { padding: 0; }
+.ds-panel .ds-field:not(:has(em)) > :is(input, select) { grid-column: 1 / -1; }
+.ds-panel .ds-field-toggle { align-items: center; }
+.ds-panel .ds-field-toggle .ds-field-label { grid-column: 1; }
+.ds-panel .ds-field-presets { padding-bottom: 12px; border-bottom: 1px solid var(--ds-bar-line); border-radius: 0; }
+/* Icon ⓘ cạnh nhãn ô vặn và khung giải thích của nó (shell.js, helpTip). */
+.ds-help { display: inline-grid; place-items: center; margin-left: 4px; color: var(--ds-bar-muted); vertical-align: -2px; cursor: help; border-radius: 50%; }
+.ds-help:hover, .ds-help:focus-visible { color: var(--ds-bar-accent); }
+.ds-bar .ds-help svg { width: 13px; height: 13px; }
+.ds-help-tip {
+  position: fixed;
+  z-index: 1002;
+  display: none;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid var(--ds-bar-edge);
+  border-radius: 8px;
+  background: var(--ds-bar-bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  color: var(--ds-bar-fg);
+  font: 12px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: var(--ds-bar-scheme);
+}
+.ds-help-tip[data-open] { display: block; }
+/* Dãy nút cho select ít lựa chọn: rộng hết panel, các nút chia đều, nút đang chọn tô accent. */
+.ds-panel .ds-choice { display: flex; grid-column: 1 / -1; gap: 2px; padding: 2px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-field); }
+.ds-panel .ds-choice button { flex: 1; min-width: 0; height: 26px; padding: 0 6px; border: 0; border-radius: 6px; background: none; color: var(--ds-bar-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-panel .ds-choice button:hover { color: var(--ds-bar-fg); }
+.ds-panel .ds-choice button[aria-pressed="true"] { background: color-mix(in srgb, var(--ds-bar-accent) 14%, transparent); color: var(--ds-bar-accent); font-weight: 600; }
+/* Thanh kéo cho số có khoảng: thanh rộng hết panel, số đang chọn bên phải. */
+.ds-panel .ds-range { display: flex; grid-column: 1 / -1; align-items: center; gap: 10px; }
+.ds-panel .ds-field input[type="range"] { flex: 1; width: auto !important; min-width: 0; height: 20px; padding: 0; border: 0; background: none; accent-color: var(--ds-bar-accent); }
+.ds-panel .ds-range output { min-width: 5ch; color: var(--ds-bar-fg); font-variant-numeric: tabular-nums; text-align: right; }
+/* Ô vừa đổi giá trị vì chọn bộ dữ liệu: nháy nền accent rồi tắt. */
+@keyframes ds-flash { from { background: color-mix(in srgb, var(--ds-bar-accent) 22%, transparent); } to { background: transparent; } }
+.ds-panel .ds-field[data-flash] { margin: -4px -6px; padding: 4px 6px; border-radius: 6px; animation: ds-flash 1.2s ease-out; }
+
+.ds-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--ds-bar-line);
+  border-radius: 8px;
+  background: var(--ds-bar-bg);
+  white-space: nowrap;
+}
+.ds-field-label { color: var(--ds-bar-muted); }
+.ds-field input, .ds-field select {
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--ds-bar-field);
+}
+.ds-field input[type="number"] { text-align: right; -moz-appearance: textfield; }
+/* Nút tăng giảm của ô số chiếm chỗ của chữ số trong ô hẹp; gõ số hay dùng phím lên xuống vẫn được. */
+.ds-field input[type="number"]::-webkit-inner-spin-button, .ds-field input[type="number"]::-webkit-outer-spin-button { margin: 0; appearance: none; }
+.ds-field em { padding-right: 6px; color: var(--ds-bar-muted); font-style: normal; }
+.ds-field-toggle { padding-right: 6px; }
+.ds-switch { position: relative; width: 32px; height: 18px; padding: 0; border: 0; border-radius: 9px; background: var(--ds-bar-line); cursor: pointer; transition: background 0.15s; }
+.ds-switch i { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); transition: translate 0.15s; }
+.ds-switch[aria-checked="true"] { background: var(--ds-bar-accent); }
+.ds-switch[aria-checked="true"] i { translate: 14px 0; }
+
+
+.ds-segmented { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--ds-bar-field); }
+.ds-segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ds-bar-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ds-segmented button { position: relative; }
+.ds-derived-dot { position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--ds-bar-accent); }
+.ds-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ds-segmented button[aria-pressed="true"] { background: var(--ds-bar-active); color: var(--ds-bar-fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+
+.ds-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ds-bar-line);
+  border-radius: 8px;
+  background: var(--ds-bar-bg);
+  color: var(--ds-bar-muted);
+  cursor: pointer;
+}
+.ds-icon-button[aria-pressed="true"] { color: var(--ds-bar-fg); background: var(--ds-bar-field); }
+
+/* option-switcher: nút A B C. Khung mô tả hiện khi đưa chuột, Tab tới, hay chạm giữ (data-tip). */
+.ds-pages { position: relative; display: inline-flex; align-items: center; gap: 10px; }
+.ds-options { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--ds-bar-field); }
+.ds-option-wrap { position: relative; }
+.ds-option {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--ds-bar-muted);
+  font-weight: 600;
+  text-decoration: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.ds-option:hover { color: var(--ds-bar-fg); }
+.ds-option[aria-current="page"] { background: var(--ds-bar-active); color: var(--ds-bar-accent); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.ds-option-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1001;
+  display: none;
+  gap: 4px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--ds-bar-edge);
+  border-radius: 10px;
+  background: var(--ds-bar-bg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  white-space: normal;
+  pointer-events: none;
+}
+.ds-option-tip b { font-weight: 600; }
+.ds-option-tip small { color: var(--ds-bar-muted); font-size: 11px; }
+.ds-option-wrap:hover .ds-option-tip, .ds-option-wrap:focus-within .ds-option-tip, .ds-option-wrap[data-tip] .ds-option-tip { display: grid; }
+/* Màn hẹp: khung mô tả rộng hết toolbar, ngay dưới toolbar. Canh theo nút thì nút C đẩy khung ra ngoài màn 375. */
+@media (max-width: 720px) {
+  .ds-pages, .ds-option-wrap { position: static; }
+  .ds-option-tip { left: 12px; right: 12px; width: auto; max-width: none; }
+}
+
+/* Khung mobile / tablet: thân page ẩn, iframe của chính page đứng giữa. */
+:root:not([data-frame])[data-viewport="tablet"] #design,
+:root:not([data-frame])[data-viewport="mobile"] #design { display: none !important; }
+.ds-frame-wrap { display: grid; place-items: start center; min-height: calc(100vh - 52px); padding: 24px 12px; background: var(--ds-frame-bg); overflow-x: auto; }
+/* content-box: preflight của Tailwind đặt border-box cho mọi phần tử, viền 1px ăn vào bề rộng, khung 375 còn 373. */
+.ds-frame-wrap iframe { box-sizing: content-box; max-width: none; border: 1px solid var(--ds-frame-line); border-radius: 20px; background: transparent; box-shadow: 0 8px 32px rgb(0 0 0 / 0.16); }
+
+/* Số khối để góp ý ("bỏ khối 3"). Nằm ngay trên mép trên của khối nên không đè chữ. position trong layer base: rule ngoài layer
+   thắng mọi utility Tailwind, sticky / absolute của khối sẽ thành relative. */
+@layer base {
+  :root[data-sections="1"] [data-block] { position: relative; }
+}
+
+/* Tailwind v4 không còn đặt cursor: pointer cho nút. Để trong layer base nên class cursor-* của page vẫn đè được (N10). */
+@layer base {
+  #design button:not(:disabled), #design [role="button"]:not([aria-disabled="true"]), #design summary { cursor: pointer; }
+}
+:root[data-sections="1"] [data-block]::before {
+  content: attr(data-block);
+  position: absolute;
+  top: -20px;
+  left: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #1f2328;
+  color: #fff;
+  font: 600 11px/1 ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}
+
+[data-copied] [data-icon="copy"], [data-copy]:not([data-copied]) [data-icon="copied"] { display: none; }

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thành viên</title>
+<!-- Thứ tự nạp cố định: token → danh sách page → khai nút → shell → Tailwind → icon → Alpine (defer). -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  // Nút vặn: variables ở data-panel đổi dữ liệu, tweaks ở config-panel đổi cấu hình UI (DS3). Nút vặn mà UI không đổi thì đừng khai.
+  // help: chỉ khai khi nhãn chưa tự nói rõ nút làm gì; shell hiện thành icon ⓘ cạnh nhãn.
+  window.DESIGN = {
+    lang: "vi",
+    variables: [
+      { key: "count", label: "Số người", type: "number", min: 0, max: 200, default: 8 },
+      { key: "longNames", label: "Tên dài", type: "toggle", default: false,
+        help: "Bật thì tên và email dài tràn hai dòng, để xem hàng có vỡ không." },
+      { key: "state", label: "Trạng thái", type: "select", default: "data", options: [
+        { value: "data", label: "Có dữ liệu" }, { value: "loading", label: "Đang tải" },
+        { value: "empty", label: "Rỗng" }, { value: "error", label: "Lỗi" },
+      ] },
+    ],
+    tweaks: [
+      { key: "role", label: "Role", type: "select", default: "admin", help: "Ai đang xem. Chỉ xem thì nút mời và xoá bị khoá.", options: [{ value: "admin", label: "Quản trị" }, { value: "viewer", label: "Chỉ xem" }] },
+      { key: "layout", label: "Bố cục", type: "select", default: "list", options: [{ value: "list", label: "Danh sách" }, { value: "grid", label: "Lưới" }] },
+      { key: "density", label: "Độ dày", type: "select", default: "comfortable", options: [{ value: "comfortable", label: "Thoáng" }, { value: "compact", label: "Gọn" }] },
+    ],
+    presets: [
+      { label: "Ca biên: một người, tên dài", values: { count: 1, longNames: true, state: "data" } },
+      { label: "Nhiều dữ liệu", values: { count: 120, longNames: false, state: "data" } },
+    ],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<script>
+  // Mở thẳng file khuôn trong templates/ thì thiếu tokens.js, pages.js, ../_shell/: báo rõ thay vì hiện page vỡ.
+  if (!window.DESIGN_THEME) document.write('<p style="font:16px/1.5 system-ui;padding:24px;max-width:640px">Đây là <b>khuôn</b> của skill design-uiux, không mở trực tiếp được. Tạo page bằng <code>node scripts/new-design.mjs page &lt;thư mục design&gt; &lt;slug&gt; --title "…"</code>, rồi mở file trong thư mục <code>.design/</code>.</p>');
+</script>
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data="membersPage()">
+  <div class="mx-auto max-w-page px-md py-lg sm:px-lg">
+
+    <section data-block="1" class="flex flex-wrap items-end justify-between gap-md">
+      <div class="min-w-0">
+        <h1 class="font-display text-display-sm text-ink">Thành viên</h1>
+        <p class="mt-xxs text-body-sm text-muted" x-text="subtitle()"></p>
+      </div>
+      <button type="button" class="inline-flex h-10 items-center gap-xs rounded-md bg-primary px-md text-button text-on-primary hover:bg-primary-active disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="!isAdmin()" :title="isAdmin() ? '' : 'Chỉ quản trị viên mời được người mới'" @click="openInvite()">
+        <i data-lucide="user-plus" class="size-4"></i>Mời thành viên
+      </button>
+    </section>
+
+    <section data-block="2" class="mt-lg flex flex-wrap items-center gap-sm">
+      <div class="flex rounded-md bg-surface-soft p-xxs" role="tablist">
+        <template x-for="tab in tabs" :key="tab.value">
+          <button type="button" role="tab" class="h-8 rounded-sm px-sm text-body-sm"
+            :class="filter === tab.value ? 'bg-surface-card text-ink shadow-sm' : 'text-body hover:text-ink'"
+            :aria-selected="String(filter === tab.value)" @click="filter = tab.value" x-text="`${tab.label} · ${countFor(tab.value)}`"></button>
+        </template>
+      </div>
+      <label class="relative ml-auto w-full sm:w-64">
+        <span class="sr-only">Tìm thành viên</span>
+        <span class="pointer-events-none absolute inset-y-0 left-sm flex items-center"><i data-lucide="search" class="size-4 text-muted"></i></span>
+        <input type="search" x-model="query" placeholder="Tìm theo tên hoặc email"
+          class="h-9 w-full rounded-md border border-hairline bg-surface-card pr-sm pl-9 text-body-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none">
+      </label>
+    </section>
+
+    <section data-block="3" class="mt-md">
+      <!-- Đang tải: khung chờ đúng hình dòng thật. -->
+      <div x-show="$store.design.state === 'loading'" class="grid gap-sm" :class="gridClass()">
+        <template x-for="index in 6" :key="index">
+          <div class="flex animate-pulse items-center gap-sm rounded-lg border border-hairline bg-surface-card" :class="rowPadding()">
+            <div class="size-9 shrink-0 rounded-full bg-surface-soft"></div>
+            <div class="grid flex-1 gap-xs"><div class="h-3 w-2/5 rounded-xs bg-surface-soft"></div><div class="h-3 w-3/5 rounded-xs bg-surface-soft"></div></div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Lỗi -->
+      <div x-show="$store.design.state === 'error'" class="grid justify-items-center gap-sm rounded-lg border border-hairline bg-surface-card px-lg py-xxl text-center">
+        <i data-lucide="cloud-off" class="size-6 text-error"></i>
+        <p class="text-title-md text-ink">Không tải được danh sách thành viên</p>
+        <p class="max-w-sm text-body-sm text-muted">Kết nối tới máy chủ bị gián đoạn. Dữ liệu cũ vẫn còn, thử tải lại sau ít phút.</p>
+        <button type="button" class="mt-xs h-9 rounded-md border border-hairline bg-surface-card px-md text-button text-ink hover:bg-surface-soft" @click="$store.design.state = 'data'">Thử lại</button>
+      </div>
+
+      <!-- Rỗng: trạng thái rỗng thật, hoặc lọc / tìm không ra ai. -->
+      <div x-show="$store.design.state === 'empty' || ($store.design.state === 'data' && visible().length === 0)"
+        class="grid justify-items-center gap-sm rounded-lg border border-dashed border-hairline bg-surface-card px-lg py-xxl text-center">
+        <i data-lucide="users" class="size-6 text-muted"></i>
+        <p class="text-title-md text-ink" x-text="emptyTitle()"></p>
+        <p class="max-w-sm text-body-sm text-muted" x-text="emptyHint()"></p>
+        <button type="button" x-show="isFiltered()" class="mt-xs h-9 rounded-md border border-hairline px-md text-button text-ink hover:bg-surface-soft" @click="query = ''; filter = 'all'">Xoá bộ lọc</button>
+        <button type="button" x-show="!isFiltered() && isAdmin()" class="mt-xs h-9 rounded-md bg-primary px-md text-button text-on-primary hover:bg-primary-active" @click="openInvite()">Mời người đầu tiên</button>
+      </div>
+
+      <!-- Có dữ liệu -->
+      <ul x-show="$store.design.state === 'data' && visible().length > 0" class="grid gap-sm" :class="gridClass()">
+        <template x-for="member in visible()" :key="member.id">
+          <li class="flex min-w-0 items-center gap-sm rounded-lg border border-hairline bg-surface-card" :class="[rowPadding(), $store.design.layout === 'grid' ? 'flex-col items-start' : '']">
+            <div class="flex min-w-0 flex-1 items-center gap-sm">
+              <template x-if="member.avatar"><img :src="member.avatar" alt="" class="size-9 shrink-0 rounded-full object-cover"></template>
+              <template x-if="!member.avatar"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-soft text-caption text-body-strong" x-text="initials(member.name)"></span></template>
+              <div class="min-w-0">
+                <h3 class="line-clamp-2 text-title-sm break-words text-ink" :title="member.name" x-text="member.name"></h3>
+                <p class="truncate text-body-sm text-muted" :title="member.email" x-text="member.email"></p>
+              </div>
+            </div>
+            <div class="flex shrink-0 items-center gap-sm" :class="$store.design.layout === 'grid' ? 'w-full justify-between' : ''">
+              <!-- Đang lọc theo quyền thì mọi dòng cùng một quyền: bỏ badge, không lặp một ý ở mọi dòng (N4). -->
+              <span x-show="filter === 'all'" class="rounded-pill px-xs py-0.5 text-caption" :class="member.role === 'admin' ? 'bg-primary/10 text-body-strong' : 'bg-surface-soft text-body'" x-text="member.role === 'admin' ? 'Quản trị' : 'Chỉ xem'"></span>
+              <span class="hidden text-caption text-muted sm:inline" x-text="member.joined"></span>
+              <button type="button" class="grid size-8 place-items-center rounded-md text-muted hover:bg-surface-soft hover:text-error disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="!isAdmin()" :title="isAdmin() ? 'Xoá khỏi nhóm' : 'Chỉ quản trị viên xoá được thành viên'" :aria-label="`Xoá ${member.name}`" @click="removing = member">
+                <i data-lucide="trash-2" class="size-4"></i>
+              </button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </section>
+  </div>
+
+  <!-- Modal mời: thêm người vào danh sách giả, đóng bằng Esc hoặc bấm nền. -->
+  <div x-show="inviteOpen" x-transition.opacity class="fixed inset-0 z-[1100] grid place-items-center bg-ink/40 p-md" @click.self="inviteOpen = false" @keydown.escape.window="inviteOpen = false">
+    <form data-block="4" role="dialog" aria-modal="true" aria-labelledby="invite-title" class="w-full max-w-md rounded-xl border border-hairline bg-surface-card p-lg shadow-xl" @submit.prevent="invite()">
+      <div class="flex items-start justify-between gap-sm">
+        <h2 id="invite-title" class="text-title-lg text-ink">Mời thành viên</h2>
+        <button type="button" aria-label="Đóng" class="grid size-8 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-soft hover:text-ink" @click="inviteOpen = false"><i data-lucide="x" class="size-4"></i></button>
+      </div>
+      <p class="mt-xxs text-body-sm text-muted">Người được mời nhận email và vào nhóm sau khi chấp nhận.</p>
+      <label class="mt-md grid gap-xxs">
+        <span class="text-caption text-body-strong">Email <span class="text-error">*</span></span>
+        <input x-ref="inviteEmail" type="email" required x-model="draft.email" placeholder="ten@congty.vn"
+          class="h-10 rounded-md border border-hairline bg-surface-card px-sm text-body-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none">
+      </label>
+      <label class="mt-sm grid gap-xxs">
+        <span class="text-caption text-body-strong">Quyền</span>
+        <select x-model="draft.role" class="h-10 rounded-md border border-hairline bg-surface-card px-sm text-body-sm text-ink focus:border-primary focus:outline-none">
+          <option value="viewer">Chỉ xem</option><option value="admin">Quản trị</option>
+        </select>
+      </label>
+      <div class="mt-lg flex justify-end gap-xs">
+        <button type="button" class="h-9 rounded-md px-md text-button text-body hover:bg-surface-soft" @click="inviteOpen = false">Huỷ</button>
+        <button type="submit" class="h-9 rounded-md bg-primary px-md text-button text-on-primary hover:bg-primary-active">Gửi lời mời</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal xác nhận xoá -->
+  <div x-show="removing" x-transition.opacity class="fixed inset-0 z-[1100] grid place-items-center bg-ink/40 p-md" @click.self="removing = null" @keydown.escape.window="removing = null">
+    <div role="dialog" aria-modal="true" aria-labelledby="remove-title" class="w-full max-w-sm rounded-xl border border-hairline bg-surface-card p-lg shadow-xl">
+      <div class="flex items-start justify-between gap-sm">
+        <h2 id="remove-title" class="text-title-lg text-ink">Xoá khỏi nhóm?</h2>
+        <button type="button" aria-label="Đóng" class="grid size-8 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-soft hover:text-ink" @click="removing = null"><i data-lucide="x" class="size-4"></i></button>
+      </div>
+      <p class="mt-xxs text-body-sm break-words text-muted" x-text="removing ? `${removing.name} sẽ mất quyền truy cập ngay.` : ''"></p>
+      <div class="mt-lg flex justify-end gap-xs">
+        <button type="button" class="h-9 rounded-md px-md text-button text-body hover:bg-surface-soft" @click="removing = null">Huỷ</button>
+        <button type="button" class="h-9 rounded-md bg-error px-md text-button text-on-primary" @click="remove()">Xoá</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Dữ liệu giả: sinh lại khi đổi "Số người" hay "Tên dài". Thêm, xoá chỉ sống trên page (không gọi API).
+  const firstNames = ["Lan", "Minh", "Hà", "Quân", "Thảo", "Tuấn", "Vy", "Khoa", "Ngọc", "Bảo"];
+  const lastNames = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Võ", "Đặng", "Bùi"];
+  const longName = "Nguyễn Hoàng Bảo Ngọc Thanh Thuỷ (Phòng Kế hoạch và Phát triển Sản phẩm khu vực phía Nam)";
+
+  function makeMembers(count, withLongNames) {
+    return Array.from({ length: count }, (_, index) => {
+      const name = withLongNames && index % 3 === 0 ? longName : `${lastNames[index % lastNames.length]} ${firstNames[(index * 7) % firstNames.length]}`;
+      const slug = name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().split(" ").slice(0, 2).join(".");
+      return {
+        id: index + 1,
+        name,
+        email: `${slug}${index}@congty.vn`,
+        role: index % 4 === 0 ? "admin" : "viewer",
+        joined: `${String((index % 27) + 1).padStart(2, "0")}/0${(index % 9) + 1}/2026`,
+        // Một phần người không có ảnh để thấy chỗ rơi về chữ cái đầu.
+        avatar: index % 3 === 1 ? null : `https://randomuser.me/api/portraits/${index % 2 ? "men" : "women"}/${(index * 11) % 90}.jpg`,
+      };
+    });
+  }
+
+  function membersPage() {
+    return {
+      members: [],
+      query: "",
+      filter: "all",
+      inviteOpen: false,
+      removing: null,
+      draft: { email: "", role: "viewer" },
+      tabs: [{ value: "all", label: "Tất cả" }, { value: "admin", label: "Quản trị" }, { value: "viewer", label: "Chỉ xem" }],
+      init() {
+        this.$watch(() => [this.$store.design.count, this.$store.design.longNames].join(), () => this.reset());
+        this.reset();
+      },
+      reset() { this.members = makeMembers(Math.max(0, Number(this.$store.design.count) || 0), this.$store.design.longNames); },
+      isAdmin() { return this.$store.design.role === "admin"; },
+      isFiltered() { return this.query !== "" || this.filter !== "all"; },
+      countFor(value) { return value === "all" ? this.members.length : this.members.filter((member) => member.role === value).length; },
+      visible() {
+        const query = this.query.trim().toLowerCase();
+        return this.members.filter((member) => (this.filter === "all" || member.role === this.filter)
+          && (!query || member.name.toLowerCase().includes(query) || member.email.includes(query)));
+      },
+      subtitle() {
+        if (this.$store.design.state !== "data") return "Quản lý người được vào nhóm và quyền của họ";
+        return `${this.members.length.toLocaleString("vi-VN")} người · ${this.countFor("admin")} quản trị`;
+      },
+      emptyTitle() { return this.isFiltered() && this.$store.design.state === "data" ? "Không ai khớp bộ lọc" : "Nhóm chưa có thành viên"; },
+      emptyHint() {
+        if (this.isFiltered() && this.$store.design.state === "data") return "Thử từ khoá khác hoặc xoá bộ lọc.";
+        return this.isAdmin() ? "Mời đồng nghiệp để cùng làm việc trong nhóm này." : "Quản trị viên chưa mời ai vào nhóm.";
+      },
+      gridClass() { return this.$store.design.layout === "grid" ? "sm:grid-cols-2 lg:grid-cols-3" : ""; },
+      rowPadding() { return this.$store.design.density === "compact" ? "px-sm py-xs" : "p-md"; },
+      initials(name) { return name.split(" ").filter(Boolean).slice(-2).map((part) => part[0]).join("").toUpperCase(); },
+      openInvite() {
+        this.draft = { email: "", role: "viewer" };
+        this.inviteOpen = true;
+        this.$nextTick(() => this.$refs.inviteEmail.focus());
+      },
+      invite() {
+        const id = Math.max(0, ...this.members.map((member) => member.id)) + 1;
+        const name = this.draft.email.split("@")[0].replace(/[._]/g, " ");
+        this.members.unshift({ id, name, email: this.draft.email, role: this.draft.role, joined: "Vừa mời", avatar: null });
+        if (this.$store.design.state !== "data") this.$store.design.state = "data";
+        this.inviteOpen = false;
+      },
+      remove() {
+        this.members = this.members.filter((member) => member.id !== this.removing.id);
+        this.removing = null;
+      },
+    };
+  }
+</script>
+</body>
+</html>
