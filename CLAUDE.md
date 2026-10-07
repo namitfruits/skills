@@ -1,5 +1,18 @@
 # CLAUDE.md
 
+## SKILL.md và SPEC.md
+
+Skill có SPEC.md thì hai file chia việc như sau:
+
+- **SPEC.md là tư tưởng thiết kế**, viết cho người sửa skill: vấn đề skill giải quyết, mental model, lý do của từng
+  quyết định, thứ không thuộc phạm vi. Agent không cần đọc khi chạy.
+- **SKILL.md là phần vận hành**, viết cho agent đang chạy skill: từng bước, luật, bảng tra, ví dụ, dấu hiệu làm sai.
+  File phải đủ để chạy, không trỏ sang SPEC để lấy luật — khi chạy agent chỉ load SKILL.md.
+
+Phân vân một đoạn nên để đâu thì hỏi: agent đang chạy có cần đoạn này để làm đúng không? Cần thì để ở SKILL.md; chỉ
+để hiểu vì sao thì để ở SPEC.md. Hai file được nhắc cùng một khái niệm, nhưng luật chi tiết chỉ nằm ở SKILL.md — viết
+hai nơi thì sửa một bên sẽ quên bên kia.
+
 ## Chạy thử skill
 
 Chạy skill qua `.claude/skills`, symlink trỏ về `skills/` của repo. Như vậy thứ được chạy là bản
