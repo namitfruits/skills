@@ -1,13 +1,13 @@
 # Module — khung hỏi và gợi ý feature
 
-Dùng ở Bước 1 (tách module, tick feature) và Bước 3 (làm rõ từng module) của `SKILL.md`. Gợi ý ở đây là **đáp án để
+Dùng ở Bước 2 (tách module, tick feature) và Bước 4 (làm rõ từng module) của `SKILL.md`. Gợi ý ở đây là **đáp án để
 người dùng tick**, không phải danh sách phải làm hết, và không phải danh sách đóng: module nào trong đề không có ở đây
 thì dựng feature từ **khung chung**. Đề thật thì chữ của người dùng thắng chữ ở đây — họ gọi "đơn hàng" thì đừng đổi
 thành "đối tượng".
 
 ## Khung chung — dùng cho mọi module, mọi feature
 
-**Tìm feature của một module** (Bước 1) — một module thường gồm feature thuộc các loại sau, dùng để đoán đáp án khi module
+**Tìm feature của một module** (Bước 2) — một module thường gồm feature thuộc các loại sau, dùng để đoán đáp án khi module
 không có trong danh sách gợi ý:
 
 | Loại feature | Câu hỏi gợi ra feature |
@@ -20,7 +20,7 @@ không có trong danh sách gợi ý:
 | xuất / nối ra ngoài | đưa đi đâu: file, email, hệ thống khác |
 | cấu hình | thứ gì admin / người dùng tự chỉnh, không cần dev |
 
-**Làm rõ một module** (Bước 3) — mục tiêu hỏi một lần cho cả module, bốn khía cạnh và ví dụ hỏi cho từng feature.
+**Làm rõ một module** (Bước 4) — mục tiêu hỏi một lần cho cả module, bốn khía cạnh và ví dụ hỏi cho từng feature.
 Khía cạnh nào lời kể đã rõ thì không hỏi.
 
 | Khía cạnh | Hỏi gì | Ghi vào |
@@ -46,7 +46,8 @@ làm rõ; câu "bao lâu / bao nhiêu / sai thì sao" để bước phân tích.
 
 ## Gợi ý theo module hay gặp
 
-Mỗi bảng: cột **Feature** là đáp án cho câu checkbox ở Bước 1; cột **Hỏi để làm rõ** dùng ở Bước 3.
+Mỗi bảng: cột **Feature** là đáp án cho câu checkbox ở Bước 2; cột **Hỏi để làm rõ** dùng ở Bước 4. Bảng ở đây chỉ dùng cho
+module đã có trong scope — có bảng cho một module không phải lý do để thêm module đó.
 
 ### Tài khoản & đăng nhập
 

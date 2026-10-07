@@ -5,3 +5,4 @@ __pycache__/
 skills/fetch-page/logs/
 .env
 .refer/
+.brainstorm/

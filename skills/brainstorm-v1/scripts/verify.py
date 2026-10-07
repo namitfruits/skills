@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Lint file brief của skill brainstorm-v1.
 
-Kiểm phần cấu trúc kiểm được bằng code: khung section (Tổng quan · Ai dùng · Module · … · Nhật ký), bảng module ở
-Tổng quan khớp các section `## Module · …` và các feature `### …` trong đó, mỗi module có mục tiêu, mỗi ý ghi lại có
+Kiểm phần cấu trúc kiểm được bằng code: khung section (Tổng quan · Hiện trạng · Ai dùng · Module · … · Nhật ký), bảng module
+ở Tổng quan khớp các section `## Module · …` và các feature `### …` trong đó, mỗi module có mục tiêu, mỗi ý ghi lại có
 nguồn trỏ về câu hỏi có thật, ID không trùng, cột Module trỏ đúng tên module, không còn chỗ trống của template, và
 file không trượt sang phân tích (user story, AC, luật đánh số). Chỗ người dùng nói chưa khớp nhau thì agent tự đọc ở
-Bước 4 của SKILL.md.
+Bước 5 của SKILL.md.
 
-    python3 verify.py <brief.md> [<brief.md> ...]
+Kèm theo là `checklist.md` cùng thư mục với `brief.md`: đủ 5 section bước, item đúng dạng `[ ]` / `[x]` / `[-]`,
+item đã đóng có nguồn trỏ về câu hỏi có thật, mỗi module và feature của brief có khối item ở Bước 4, file `confirmed`
+thì không còn item mở. Brief `draft` thì in item mở đầu tiên — chỗ chạy tiếp khi bị ngắt.
+
+    python3 verify.py <.brainstorm/NNN-slug/> [...]    # đưa thư mục, brief.md hay checklist.md đều được
 
 Thoát 0 khi không có ERROR, 1 khi có, 2 khi không thấy file.
 """
@@ -16,13 +20,15 @@ import re
 import sys
 from pathlib import Path
 
-HEAD = ["Tổng quan", "Ai dùng"]
+HEAD = ["Tổng quan", "Hiện trạng", "Ai dùng"]
 TAIL = ["Giả định", "Câu hỏi còn mở", "Nhật ký trao đổi"]
 MODULE = "Module · "
 STATUS_OK = ("draft", "confirmed")
 A_STATUS = ("chờ xác nhận", "đã xác nhận", "bị bác")
 SHARED = "chung"
 NONE = ("", "—", "-")
+BONUS = re.compile(r"\s*\(bổ sung\)\s*$")  # đuôi tên module bổ sung ở bảng Tổng quan
+EXISTING = re.compile(r"^đã có\b", re.I)  # `đã có: <thứ>` ở cột Dựa vào trỏ về Hiện trạng
 
 H2 = re.compile(r"^## (.+?)\s*$")
 H3 = re.compile(r"^### (.+?)\s*$")
@@ -37,6 +43,14 @@ EXAMPLE = re.compile(r"^Ví dụ:")
 # dấu hiệu file đang làm việc của bước phân tích
 ANALYSIS = re.compile(r"^#{2,4} US-\d+|\bAC-\d+\.\d+|\bBR-\d+|\bNFR-\d+|^Ưu tiên:\s*(Must|Should|Could)")
 PLACEHOLDER = re.compile(r"<(?!/?br\b)[^<>`\n]{2,}>|YYYY-MM-DD")
+
+# checklist
+BRIEF = "brief.md"
+CHECKLIST = "checklist.md"
+STEP = re.compile(r"^Bước (\d)\b")
+ITEM = re.compile(r"^- \[(.)\] (.+)$")
+OQ_REF = re.compile(r"^→\s*(OQ-\d+)$")
+MODULE_ITEMS = ("Người dùng kể", "Mục tiêu", 'Nói lại được "đúng"')
 
 
 def front_matter(lines):
@@ -117,7 +131,7 @@ def lint(text):
         err.append(f"`status: {status or '(trống)'}`: phải là draft hoặc confirmed")
     final = status == "confirmed"
 
-    # --- khung section: Tổng quan · Ai dùng · Module · … (≥ 1) · 3 section cuối
+    # --- khung section: Tổng quan · Hiện trạng · Ai dùng · Module · … (≥ 1) · 3 section cuối
     secs = split(lines, start, H2)
     names = [n for n, _ in secs]
     modules = [n[len(MODULE):].strip() for n in names if n.startswith(MODULE)]
@@ -132,7 +146,7 @@ def lint(text):
             err.append("section lạ: " + " · ".join(f"`## {n}`" for n in stray) +
                        f" — section module phải bắt đầu bằng `## {MODULE}`")
         if not missing and not stray:
-            err.append("sai thứ tự section: Tổng quan · Ai dùng · các `Module · …` · " + " · ".join(TAIL))
+            err.append("sai thứ tự section: " + " · ".join(HEAD) + " · các `Module · …` · " + " · ".join(TAIL))
     if not modules:
         err.append(f"chưa có section `## {MODULE}<tên>` nào")
     sec = {n: b for n, b in secs}
@@ -145,6 +159,8 @@ def lint(text):
         if allow_none and plain(raw) in NONE:
             return
         for m in refs(plain(raw)):
+            if EXISTING.match(m):
+                continue
             if m.lower() not in known_mod:
                 err.append(f"{where}: module `{m}` không có section `## {MODULE}{m}` (hay ghi `{SHARED}`)")
 
@@ -154,7 +170,7 @@ def lint(text):
     for r in table(overview):
         if not plain(r[0]) or PLACEHOLDER.search(r[0]):
             continue
-        m = plain(r[0])
+        m = BONUS.sub("", plain(r[0]))
         feats = r[1] if len(r) > 1 else ""
         listed[m] = [] if PLACEHOLDER.search(feats) else refs(plain(feats), r"·")
         if len(r) > 2:
@@ -202,6 +218,17 @@ def lint(text):
         st = plain(r[3]) if len(r) > 3 else ""
         if not PLACEHOLDER.search(st) and st not in A_STATUS:
             err.append(f"{plain(r[0])}: trạng thái `{st}` phải là " + " · ".join(A_STATUS))
+
+    # --- Hiện trạng: Đã có · Chưa có, mỗi ý có nguồn
+    now = [b for b in bullets(body("Hiện trạng")) if not PLACEHOLDER.search(b)]
+    if "Hiện trạng" in sec and not bullets(body("Hiện trạng")):
+        err.append("mục Hiện trạng trống: ghi hệ thống đang có gì, chưa có gì cho những việc trong đề")
+    for b in now:
+        t = SRC_TAIL.search(b)
+        if not t:
+            err.append(f"Hiện trạng: ý `{b[:50]}` thiếu nguồn ở cuối, vd `(đề)`")
+        else:
+            check_src("Hiện trạng", t.group(1))
 
     # --- Ai dùng
     who = table(body("Ai dùng"))
@@ -252,8 +279,8 @@ def lint(text):
             n_feat += 1
             items = bullets(fb)
             if not items:
-                # lúc mới chốt tổng quan (Bước 2) feature chưa có ý nào là bình thường
-                (err if final else warn).append(f"{tag_f}: chưa có ý nào — chưa qua Bước 3?")
+                # lúc mới chốt tổng quan (Bước 3) feature chưa có ý nào là bình thường
+                (err if final else warn).append(f"{tag_f}: chưa có ý nào — chưa qua Bước 4?")
                 continue
             for b in items:
                 if PLACEHOLDER.search(b):
@@ -306,6 +333,106 @@ def lint(text):
 
     info.append(f"{len(modules)} module · {n_feat} feature ({n_example} có ví dụ) · {len(log)} câu hỏi · "
                 f"{len(oq)} câu hỏi còn mở")
+    ctx = {
+        "final": final,
+        "src": known_src,
+        "oq": {plain(r[0]) for r in oq},
+        "features": {m: [f for f, _ in split(body(MODULE + m), 0, H3) if not PLACEHOLDER.search(f)]
+                     for m in real_modules},
+    }
+    return err, warn, info, ctx
+
+
+def lint_checklist(text, ctx):
+    """Kiểm checklist đi kèm brief. `ctx` lấy từ lint() của brief."""
+    err, warn, info = [], [], []
+    lines = text.splitlines()
+    fm, start = front_matter(lines)
+    final = ctx["final"]
+    if fm.get("type") != "brainstorm-checklist":
+        err.append("checklist: front matter thiếu `type: brainstorm-checklist`")
+
+    secs = split(lines, start, H2)
+    steps = [int(STEP.match(n).group(1)) for n, _ in secs if STEP.match(n)]
+    if steps != [1, 2, 3, 4, 5]:
+        err.append("checklist: phải có đúng 5 section `## Bước 1` … `## Bước 5`, theo thứ tự")
+
+    def name_of(raw):
+        """Tên item: bỏ đuôi nguồn và phần `— lý do`."""
+        t = SRC_TAIL.search(raw)
+        core = raw[:t.start()] if t else raw
+        return core.split(" — ")[0].strip()
+
+    first_open, n_open, n_done = None, 0, 0
+    by_module = {}  # module trong Bước 4 → [tên item]
+    for n, b in secs:
+        m_step = STEP.match(n)
+        if not m_step:
+            continue
+        step = m_step.group(1)
+        current = None
+        for ln in b:
+            h3 = H3.match(ln)
+            if h3:
+                title = h3.group(1).strip()
+                current = title[len(MODULE):].strip() if title.startswith(MODULE) else None
+                if step != "4" or current is None:
+                    err.append(f"checklist Bước {step}: heading `### {title}` — chỉ Bước 4 có `### {MODULE}<tên>`")
+                elif not PLACEHOLDER.search(current):
+                    by_module[current] = []
+                continue
+            if not ln.startswith("- "):
+                continue
+            it = ITEM.match(ln.strip())
+            if not it or it.group(1) not in " x-":
+                err.append(f"checklist Bước {step}: dòng `{ln.strip()[:50]}` không phải `- [ ]` / `- [x]` / `- [-]`")
+                continue
+            mark, raw = it.groups()
+            where = f"checklist Bước {step} · {name_of(raw)[:40]}"
+            if current in by_module:
+                by_module[current].append(name_of(raw))
+            if mark == " ":
+                n_open += 1
+                if first_open is None:
+                    first_open = f"Bước {step}" + (f" · {current}" if current else "") + f" · {raw}"
+                continue
+            n_done += 1
+            if mark == "-" and " — " not in raw:
+                err.append(f"{where}: `[-]` phải ghi lý do sau ` — `")
+            t = SRC_TAIL.search(raw)
+            if not t:
+                err.append(f"{where}: item đã đóng thiếu nguồn ở cuối, vd `(Q3)`")
+                continue
+            for r in refs(t.group(1), r","):
+                oq = OQ_REF.match(r)
+                if oq:
+                    if oq.group(1) not in ctx["oq"]:
+                        err.append(f"{where}: `{oq.group(1)}` không có ở Câu hỏi còn mở")
+                elif not SRC.match(r):
+                    err.append(f"{where}: nguồn `{r}` không phải Q<n> / A-<n> / `đề` / `→ OQ-<n>`")
+                elif r != "đề" and r not in ctx["src"]:
+                    err.append(f"{where}: nguồn `{r}` không có ở Nhật ký hay Giả định")
+
+    # Bước 4 khớp module và feature của brief
+    for m, feats in ctx["features"].items():
+        if m not in by_module:
+            err.append(f"checklist Bước 4: thiếu khối `### {MODULE}{m}`")
+            continue
+        names = by_module[m]
+        for need in MODULE_ITEMS + tuple(feats):
+            if need not in names:
+                err.append(f"checklist Bước 4 · {m}: thiếu item `{need}`")
+    for m in by_module:
+        if m not in ctx["features"]:
+            err.append(f"checklist Bước 4: khối `### {MODULE}{m}` không có section `## {MODULE}{m}` ở brief")
+
+    if n_open and final:
+        err.append(f"brief đã `confirmed` mà checklist còn {n_open} item mở, đầu tiên: {first_open}")
+    left = [ln.strip() for ln in lines if PLACEHOLDER.search(re.sub(r"`[^`]*`", "", ln))]
+    if left:
+        (err if final else warn).append(f"checklist còn {len(left)} dòng chưa điền chỗ trống của khuôn, vd: {left[0][:70]}")
+    info.append(f"checklist: {n_done} item đã đóng · {n_open} item mở"
+                + (f" · kế tiếp: {first_open}" if first_open else ""))
     return err, warn, info
 
 
@@ -316,11 +443,21 @@ def main():
     rc = 0
     for raw in a.path:
         path = Path(raw)
+        if path.is_dir():
+            path = path / BRIEF
+        elif path.name == CHECKLIST:  # đưa checklist thì kiểm brief đi kèm
+            path = path.with_name(BRIEF)
         if not path.is_file():
             print(f"không thấy file: {path}")
             rc = 2
             continue
-        err, warn, info = lint(path.read_text(encoding="utf-8"))
+        err, warn, info, ctx = lint(path.read_text(encoding="utf-8"))
+        cpath = path.with_name(CHECKLIST)
+        if cpath.is_file():
+            e2, w2, i2 = lint_checklist(cpath.read_text(encoding="utf-8"), ctx)
+            err, warn, info = err + e2, warn + w2, info + i2
+        else:
+            err.append(f"không thấy `{CHECKLIST}` cạnh brief")
         print(f"\n=== {path} — {len(err)} ERROR · {len(warn)} WARN")
         for i in info:
             print(f"  INFO   {i}")

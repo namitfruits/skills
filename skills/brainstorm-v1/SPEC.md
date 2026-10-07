@@ -41,29 +41,30 @@ flowchart TB
   subgraph P1["`**Tổng quan** — chốt scope`"]
     direction LR
     U0(["người dùng<br/>đưa đề"])
-    S1["1 · Tách module<br/>tick feature = scope"]
-    S2["2 · In bức tranh<br/>tổng quan"]
+    F[("tạo brief<br/>+ checklist")]
+    S0["1 · Nói lại đề<br/>hỏi hiện trạng"]
+    S1["2 · Module chính từ đề<br/>phụ thuộc → hỏi bổ sung<br/>tick feature = scope"]
+    S2["3 · In bức tranh<br/>tổng quan"]
     U1(["người dùng<br/>nói 'đúng'"])
-    U0 --> S1 --> S2 --> U1
+    U0 --> F --> S0 --> S1 --> S2 --> U1
   end
   subgraph P2["`**Làm rõ** — lặp từng module`"]
     direction LR
-    F[("tạo file<br/>.brainstorm/")]
     K(["người dùng<br/>kể trước"])
-    S3["3 · Hỏi mục tiêu,<br/>chỗ hở, ví dụ"]
+    S3["4 · Hỏi mục tiêu,<br/>chỗ hở, ví dụ"]
     R{"nói lại —<br/>đúng ý?"}
-    F --> K --> S3 --> R
+    K --> S3 --> R
     R -->|"chưa"| S3
     R -->|"còn module"| K
   end
   subgraph P3["`**Chốt**`"]
     direction LR
-    S4["4 · Soát chỗ<br/>chưa khớp"]
+    S4["5 · Soát chỗ<br/>chưa khớp"]
     U2(["người dùng<br/>nói 'đúng'"])
     N[/"bước phân tích<br/>skill khác"/]
     S4 --> U2
   end
-  U1 --> F
+  U1 --> K
   R -->|"hết module"| S4
   U2 -.->|"đề xuất"| N
   linkStyle default color:#1b2230
@@ -73,7 +74,7 @@ flowchart TB
   classDef core  fill:#2b6cb0,stroke:#173f66,stroke-width:2px,color:#ffffff,font-weight:bold
   classDef ext   fill:#ECE7E1,stroke:#7a6a55,stroke-width:1.6px,color:#1b2230
   class U0,U1,K,U2 actor
-  class S1,S2,S3,R,S4 fe
+  class S0,S1,S2,S3,R,S4 fe
   class F core
   class N ext
   style P1 fill:#F2F7FD,stroke:#2b6cb0,stroke-width:1.2px,stroke-dasharray: 4 3
@@ -83,8 +84,15 @@ flowchart TB
 
 Hộp bo tròn là việc của người dùng, hộp chữ nhật là việc của agent.
 
-- **Tổng quan.** Agent tách đề thành module, gợi ý 2–4 feature mỗi module. Người dùng tick, cái được tick là scope.
-  Agent in bức tranh tổng quan; người dùng nói "đúng" thì mới tạo file.
+Mỗi bước trong hình là một vòng chứ không phải một lượt hỏi: agent hỏi, ghi, điểm lại cho người dùng thấy, còn chỗ hở
+thì hỏi tiếp. Bước chỉ xong khi checklist của bước đó không còn item mở. Checklist mọc theo cuộc trao đổi: người dùng
+thêm một module thì checklist có thêm các item để làm rõ module đó.
+
+- **Tổng quan.** Agent nói lại đề bằng lời mình để người dùng sửa chỗ hiểu sai; cùng tin đó người dùng tả hiện
+  trạng: đang có gì, chưa có gì cho những việc trong đề. Agent lấy module chính từ
+  chữ trong đề, rồi xét mỗi module cần thứ gì khác mới chạy được; thứ chưa rõ đã có chưa thì hỏi người dùng có thêm
+  module bổ sung không. Agent gợi ý 2–4 feature mỗi module, người dùng tick, cái được tick là scope. Agent in bức
+  tranh tổng quan; người dùng nói "đúng" thì mới viết module vào brief.
 - **Làm rõ.** Mỗi module: người dùng kể trước, agent hỏi mục tiêu, rồi hỏi chỗ còn hở theo *cái gì · ai · khi nào ·
   nhận lại gì*, xin một ví dụ thật. Xong thì agent nói lại bằng lời mình; người dùng thấy chưa đúng thì hỏi tiếp chỗ đó.
 - **Chốt.** Agent soát chỗ nói chưa khớp giữa các module, chỗ lệch mục tiêu, feature chưa có ví dụ. Thấy gì thì quay
@@ -115,6 +123,10 @@ nói ra, không phải tra hỏi tới khi có đáp án; chỗ còn trống có
 
 | Quyết định | Lý do |
 | --- | --- |
+| tin đầu tiên nói lại đề | mọi bước sau dựa vào cách agent đọc đề; đọc sai một chữ ("insight" là gì) thì cả bảng module sai theo. Người dùng thấy cách hiểu ngay tin đầu thì sửa được trước khi nó lan ra. Câu hỏi hiện trạng đi kèm cũng có ngữ cảnh hơn. Gộp chung một tin với hiện trạng, không đòi "đúng" riêng, vì bức tranh tổng quan còn một lần xác nhận; chỉ nói lại đề, không tách module, để bước này không lấn sang bước tách module |
+| hiện trạng trước khi tách module | không biết người dùng đang có gì thì agent dễ biến thứ đã có thành module để làm lại, và module mới không biết dựa vào đâu |
+| module chính chỉ lấy từ đề, module bổ sung phải được người dùng chọn | coi đề là đúng: bảng module mà có dòng người dùng không nêu thì họ phải đọc kỹ để gỡ ra, và dễ bỏ sót. Phụ thuộc (phân quyền cần đăng nhập) là chỗ agent giúp được, nhưng chỉ người dùng biết thứ đó đã có chưa |
+| ví dụ trong skill không phải nguồn | đề thật giống ví dụ thì agent dễ chép nguyên bảng mẫu, kéo theo module mẫu có mà đề không nêu. Ví dụ dùng chung một lĩnh vực (phòng khám đặt lịch) và có luật cấm lấy module, feature từ ví dụ |
 | tách module, cho tick feature trước | người dùng chọn dễ hơn tự nghĩ ra. Cái không tick ghi vào Ngoài phạm vi, để sau này không ai tưởng là có |
 | tổng quan trước chi tiết | hỏi sâu một module khi scope chưa chốt thì scope đổi là phải hỏi lại |
 | người dùng kể trước | họ biết module muốn chạy thế nào hơn mọi đáp án agent đoán; agent chỉ hỏi chỗ còn hở |
@@ -122,27 +134,34 @@ nói ra, không phải tra hỏi tới khi có đáp án; chỗ còn trống có
 | một ví dụ thật mỗi feature | hai người đọc cùng một câu mô tả có thể hiểu hai kiểu; ví dụ có tên người, có số thì không |
 | nói lại bằng lời agent | người dùng nhận ra "không phải thế" dễ hơn tự nói ra "phải thế này". Đây là chỗ bắt hiểu lầm chính |
 | mọi ý có nguồn `Q<n>` | đọc lại biết ý nào người dùng nói, ý nào agent đoán (`A-NN`, phải được xác nhận) |
+| mỗi bước là một vòng, checklist quyết định khi nào đi tiếp | trả lời xong một câu mà đi tiếp ngay thì chỗ còn hở trôi qua, người dùng cũng không thấy mình vừa chốt được gì. Điểm lại sau mỗi lượt cho người dùng thấy; item mở cho agent biết còn phải hỏi gì. Điểm lại không dừng chờ "đúng", vì chỗ cần "đúng" (tổng quan, nói lại module, tóm tắt cuối) đã là item riêng — dừng sau mỗi lượt thì số lượt gần như gấp đôi |
+| checklist thêm được item | việc phải làm lộ ra dần: người dùng thêm module ở Bước 2, thêm feature qua Other, câu trả lời chọi câu trước. Danh sách cố định từ đầu thì không chứa được những việc đó |
+| checklist ở file riêng | brief là sản phẩm cho bước phân tích đọc; checklist là trạng thái của cuộc trao đổi. Để chung thì bước phân tích phải gạt phần trạng thái ra, và sửa checklist dễ đụng vào nội dung brief |
+| tạo cả hai file ngay Bước 1 | bị ngắt ở đâu cũng chạy tiếp được: câu trả lời Bước 1–2 đã nằm ở Nhật ký, checklist chỉ ra chỗ làm tiếp. Module chỉ được viết vào brief sau khi tổng quan được "đúng", nên scope đổi ở Bước 2–3 không phải sửa brief |
+| mỗi feature một item | đủ để biết làm tiếp từ đâu. Tách mỗi khía cạnh (cái gì, ai, khi nào…) một item thì checklist dài gấp bốn mà không giúp gì thêm cho việc chạy tiếp |
 
 ## 6. I/O
 
 | | |
 | --- | --- |
 | **Input** | đề người dùng đưa trong chat và các câu trả lời. Chưa đọc code, docs dự án |
-| **Output** | một file brief `.brainstorm/NNN-slug.md` theo `templates/brief.md`: đề nguyên văn, module + feature đã chọn, ai dùng, mỗi module có mục tiêu và các ý đã rõ của từng feature (kèm ví dụ), giả định, câu hỏi còn mở, nhật ký trao đổi |
-| **Verify** | `python3 scripts/verify.py <brief.md>` — khung section, bảng Tổng quan khớp module và feature, nguồn trỏ về câu hỏi có thật, feature thiếu ví dụ, dấu hiệu trượt sang phân tích |
-| **Mutate** | chỉ tạo và sửa file brief. Không sửa code dự án, không gọi skill khác |
+| **Output** | thư mục `.brainstorm/NNN-slug/`. File brief `brief.md` theo `templates/brief.md`: đề nguyên văn, module + feature đã chọn, hiện trạng (đã có · chưa có), ai dùng, mỗi module có mục tiêu và các ý đã rõ của từng feature (kèm ví dụ), giả định, câu hỏi còn mở, nhật ký trao đổi. File checklist `checklist.md` cùng thư mục, theo `templates/checklist.md`: việc phải xong của từng bước, cái nào đã đóng, nguồn |
+| **Verify** | `python3 scripts/verify.py <thư mục NNN-slug>` — khung section, bảng Tổng quan khớp module và feature, nguồn trỏ về câu hỏi có thật, feature thiếu ví dụ, dấu hiệu trượt sang phân tích; checklist đủ 5 bước, item đã đóng có nguồn, mỗi module và feature có item, brief `confirmed` thì không còn item mở. Brief `draft` thì in item mở đầu tiên |
+| **Mutate** | chỉ tạo và sửa brief và checklist. Không sửa code dự án, không gọi skill khác |
 
 | File | Vai trò |
 | --- | --- |
 | `SKILL.md` | phần vận hành: luật hỏi, cách trao đổi, từng bước, cách viết file, dấu hiệu làm sai — đủ để agent chạy mà không cần đọc SPEC |
 | `SPEC.md` | file này: tư tưởng thiết kế — vấn đề, mental model, lý do của từng quyết định, ranh giới phạm vi |
 | `templates/brief.md` | khuôn file brief |
+| `templates/checklist.md` | khuôn file checklist: item cố định của từng bước, khối item mẫu cho một module |
 | `templates/modules.md` | khung hỏi chung, thứ tự module, gợi ý feature cho các module hay gặp |
 | `scripts/verify.py` | lint file brief |
 
 ## 7. Không thuộc phạm vi
 
 - User story, AC, luật có con số, trường hợp lỗi, phi chức năng, ưu tiên — việc của bước phân tích.
-- Giải pháp kỹ thuật: bảng nào, API nào, framework nào. Hệ thống người dùng đang có thì ghi được, vì đó là sự thật của đề.
+- Giải pháp kỹ thuật: bảng nào, API nào, framework nào. Hệ thống người dùng đang có thì ghi vào Hiện trạng, vì đó là
+  sự thật của đề — chỉ ghi có hay chưa, đang dùng vào việc gì, không đào cách nó chạy.
 - Đọc code, docs, tài liệu đính kèm của dự án — chưa thiết kế.
 - Nghĩ sản phẩm khác thay người dùng. Agent gợi ý module và feature để tick, nhưng coi đề là đúng.

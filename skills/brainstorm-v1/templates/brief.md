@@ -1,7 +1,7 @@
 ---
 type: brainstorm
 title: <tên sản phẩm / tính năng>
-status: draft # draft → confirmed (người dùng nói "đúng" ở Bước 4)
+status: draft # draft → confirmed (người dùng nói "đúng" ở Bước 5)
 updated: YYYY-MM-DD
 ---
 
@@ -11,9 +11,19 @@ updated: YYYY-MM-DD
 
 | Module | Feature đã chọn | Dựa vào |
 | --- | --- | --- |
-| <tên module, trùng tên trong heading Module> | <tên feature, trùng heading feature, ngăn bằng ·> | <module nó dựa vào, hoặc —> |
+| <tên module, trùng tên trong heading Module; module bổ sung thêm *(bổ sung)*> | <tên feature, trùng heading feature, ngăn bằng ·> | <module nó dựa vào, `đã có: <thứ>` cho thứ ở Hiện trạng, hoặc —> |
 
 **Ngoài phạm vi:** <module / feature không chọn mà dễ bị tưởng là có, ngăn bằng ·>
+
+## Hiện trạng
+
+**Đã có:**
+
+- <thứ đang có, đang dùng vào việc gì — giữ chữ người dùng> (đề)
+
+**Chưa có:**
+
+- <việc trong đề hiện chưa có gì làm> (Q1)
 
 ## Ai dùng
 
