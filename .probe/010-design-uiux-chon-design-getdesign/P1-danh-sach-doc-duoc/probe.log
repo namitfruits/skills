@@ -1,0 +1,14 @@
+2026-10-08 · node v24.14.1 · getdesign 0.6.25
+getdesign list: 76 dòng · manifest.json: 76 mục · file .md trong templates/: 76
+site agent-skills index: 76 mục
+site design ngoài gói (aerotime): HTTP 404
+site bản kraken, dòng đầu: # Design System Inspired by Kraken
+tokens.mjs đọc được: 68/76
+  ✗ kraken: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ lamborghini: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ lovable: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ mastercard: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ spotify: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ starbucks: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ tesla: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)
+  ✗ theverge: DESIGN.md không có YAML ở đầu file (khối giữa hai dòng ---)

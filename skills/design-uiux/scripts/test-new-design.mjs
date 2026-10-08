@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Kiểm hai lệnh lấy design của getdesign trong new-design.mjs: designs và init --getdesign. Mỗi ca chạy lệnh trong một
 // thư mục tạm là git repo, rồi so mã thoát, stdout, stderr và thư mục .design/ với mong đợi. Cần mạng để npx tải gói
-// getdesign; ca mất mạng trỏ npm vào một cổng không có gì nghe. Chạy sau mỗi lần sửa phần getdesign của new-design.mjs.
+// getdesign; ca npx hỏng (exit 2) trỏ npm vào một cổng không có gì nghe. Chạy sau mỗi lần sửa phần getdesign của new-design.mjs.
 //
 //   node test-new-design.mjs
 //
-// spec: F3.6 F3.8 F3.9
+// spec: F3.6 F3.8
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
@@ -65,7 +65,7 @@ const cases = [
     const { code, err } = run(cwd, ["init", "thu", "--getdesign", "kraken"]);
     return [[code === 1, `exit ${code}, mong 1`], [/kraken chỉ có phần chữ/.test(err), `stderr: ${err.trim()}`], [designDirs(cwd).length === 0, "có thư mục design"]];
   }],
-  ["G5 mất mạng: designs và init --getdesign exit 2, không tạo thư mục", () => {
+  ["G5 npx hỏng: designs và init --getdesign exit 2, không tạo thư mục", () => {
     const cwd = workDir();
     const list = run(cwd, ["designs"], offline);
     const init = run(cwd, ["init", "thu", "--getdesign", "claude"], offline);

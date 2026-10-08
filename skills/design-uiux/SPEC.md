@@ -58,8 +58,6 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
     án: bốn design hợp đề nhất.
   - `F3.8` Khi người dùng chọn một design của getdesign, page lấy màu, chữ, khoảng cách từ `DESIGN.md` của design đó,
     tải vào thư mục design.
-  - `F3.9` Nếu không lấy được danh sách design hay không tải được design đã chọn, thì agent dựng bằng
-    `shell/default-design.md` và nói lý do trong chat.
   - `F3.2` Khi người xem bấm tab, lọc, modal, thêm hay xoá, page đổi theo trên dữ liệu giả.
   - `F3.3` Page có đủ trạng thái: có dữ liệu, đang tải, rỗng, lỗi, và trạng thái riêng của đề.
   - `F3.4` Nếu tài liệu hay component của design system làm khác một giới hạn `G`, thì page theo design system và
@@ -137,7 +135,7 @@ nằm ở `brief.md` và `tokens.js`, không nằm trong từng page.
 
 ### 3.2 Design system thành token
 
-**Scope:** `F3.1` `F3.5` `F3.6` `F3.7` `F3.8` `F3.9`
+**Scope:** `F3.1` `F3.5` `F3.6` `F3.7` `F3.8`
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontSize':'14px','titleColor':'#1b2230','textColor':'#1b2230','nodeTextColor':'#1b2230','lineColor':'#64748b','edgeLabelBackground':'#ffffff','clusterBkg':'#F7F8FA','clusterBorder':'#8a93a5'},'flowchart':{'curve':'basis','nodeSpacing':45,'rankSpacing':55,'padding':12,'subGraphTitleMargin':{'top':6,'bottom':14}}}}%%
@@ -161,7 +159,7 @@ flowchart TB
   S1 -->|"ưu tiên 1"| G
   S2 -->|"ưu tiên 2"| G
   S4 -->|"không có<br/>hai nguồn trên"| G
-  S3 -.->|"chọn bộ mặc định<br/>hay mất mạng"| G
+  S3 -.->|"init không cờ<br/>(test, script)"| G
   G -->|"sinh"| T
   linkStyle default color:#1b2230
 
@@ -191,7 +189,10 @@ flowchart TB
     thư mục design và chép `DESIGN.md` vào đó. `tokens.js` ghi nguồn `getdesign <tên>`.
   - Đề tự ghi lệnh `npx getdesign@latest add <tên>` cũng đi qua `init --getdesign`, để không file nào nằm ngoài
     `.design/`.
-  - Hai lệnh thoát mã 2 khi `npx` hỏng (mất mạng, gói đổi cấu trúc); agent dựng bằng `default-design.md`.
+  - Hai lệnh thoát mã 2 khi `npx` hỏng (gói đổi cấu trúc, registry lỗi); agent dừng, in dòng lỗi vào chat, không
+    dựng page.
+- `default-design.md` chỉ là token khi `init` không có `--tokens` hay `--getdesign`: các script kiểm của skill dùng nó.
+  Agent không dựng page bằng bộ này.
 - Sáng tối là biến thể `dark` của Tailwind, bật bằng `[data-theme="dark"]`.
 - Nếu design system chỉ có một giao diện, thì `tokens.mjs` suy giao diện kia theo vai màu:
   - nền, chữ, viền: đảo độ sáng;
@@ -427,10 +428,10 @@ flowchart TB
 | mọi quyết định ghi vào brief kèm ai quyết (`người dùng` · `--auto` · `AI đoán`) | người đọc thấy ngay chỗ nào AI đoán để soi, thay vì quyết định rải ở nhiều mục |
 | không có design system thì hỏi chọn một bộ của getdesign, không lặng lẽ dùng bộ mặc định | bộ mặc định làm mọi prototype không có design system trông như nhau dù đề là app gì; người dùng không biết có lựa chọn khác |
 | danh sách chỉ gồm design `tokens.mjs` đọc được | 8/76 bộ của getdesign chỉ có phần chữ, không có YAML. Chọn rồi mới báo không dựng được thì người dùng phải chọn lại. Agent tự chép màu từ phần chữ thì dễ gán sai vai màu |
-| câu chọn design có bốn design getdesign hợp đề, không có đáp án bộ mặc định; tên khác gõ qua "Other" | AskUserQuestion cho tối đa 4 đáp án. Bộ mặc định chỉ là chỗ lùi khi mất mạng: nó nằm sẵn trong skill và qua kiểm tương phản. `claude` của getdesign không thay được vai đó: 19 cặp màu dưới 4.5 : 1, chữ trắng trên nút chính 3.28 : 1 |
+| câu chọn design có bốn design getdesign hợp đề, không có đáp án bộ mặc định; tên khác gõ qua "Other" | AskUserQuestion cho tối đa 4 đáp án. Bộ mặc định làm mọi prototype trông như nhau, đúng thứ việc chọn design muốn tránh |
 | câu chọn design đi chung lượt hỏi đầu, không tính vào 3 lượt | hỏi lượt riêng là thêm một lần chờ; câu này không làm rõ đề nên không ăn vào số lượt dành cho đề |
 | danh sách in đủ vào chat, trước câu hỏi | ba gợi ý không cho người dùng biết còn gì để chọn |
-| mất mạng thì dựng bằng bộ mặc định, không hỏi lại | hỏi lại không làm có mạng hơn; người dùng vẫn có page để xem, kèm một dòng lý do |
+| getdesign lỗi thì dừng, báo lỗi, không lùi về bộ mặc định | máy chạy skill luôn có mạng; getdesign lỗi là việc phải sửa, dựng bằng bộ mặc định thì che mất lỗi |
 | `--auto` vẫn soạn đủ câu hỏi và phương án, chỉ không dừng | chạy thử không phải ngồi trả lời, mà vẫn để lại dấu đã tự chọn gì để so với lần hỏi thật |
 
 ### Dựng
@@ -516,9 +517,9 @@ flowchart TB
 | `scripts/check.mjs` · `principles-check.mjs` | máy kiểm page; phép kiểm của từng luật trong `references/page-principles.md` |
 | `scripts/test-shell.mjs` | kiểm shell trên một thư mục design mẫu, gồm nhãn tiến độ và tự tải lại |
 | `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, vòng góp ý, chèn bước, ghi qua file tạm |
-| `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, mất mạng |
-| `samples/` | ba đề cố định để chạy thử sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm bảng checklist theo mã SPEC; agent chạy skill không đọc |
-| `samples/lint.mjs` · `prepare.mjs` | soát mọi sub-scope có bài hay phép kiểm nhìn tới và chữ trong bảng checklist; tạo thư mục chạy thử cho một bài |
+| `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, `npx` hỏng (exit 2) |
+| `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc |
+| `samples/lint.mjs` · `prepare.mjs` | soát hình dạng checklist: danh sách ngắn, không mã yêu cầu, không chữ cảm tính; tạo thư mục chạy thử cho một bài |
 | `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |
 
 ## 6. Không thuộc phạm vi

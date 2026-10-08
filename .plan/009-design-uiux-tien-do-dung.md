@@ -379,7 +379,7 @@ SKILL.md:
 | `scripts/test-check.mjs` + `scripts/fixtures/check/` | page bước dựng 1 xong mà `state=error` chưa dựng → `--quick` exit 0, đầy đủ exit 1; file tiến độ còn bước 3 chưa xong → đầy đủ exit 1 `còn bước chưa xong`; chỉ còn bước `final` → không báo; `--quick` đưa thư mục → exit 2 |
 | `scripts/test-progress.mjs` | `progress --done` sai thứ tự exit 1; `--round` khi vòng trước dở exit 1; `--insert` chèn trước `final`; `rev` tăng đúng 1 mỗi lần ghi; xong mỗi lệnh không còn `<file>.tmp` |
 | `samples/watch-progress.mjs` | đọc mọi `*.progress.js` của một thư mục design mỗi 2s; mỗi lần `rev` của một page đổi thì ghi một dòng vào `progress.log`: giờ, file page, `rev`, tên bước vừa xong |
-| `samples/` | dòng quan sát cho `F6.*` · `F4.4` · `F5.6` · `F5.7` đọc `progress.log` và `chat.md`; `lint.mjs` exit 0 |
+| bảng "Tiêu chí từng yêu cầu" ở Phase 4 | tiêu chí đạt của `F4.4` · `F5.6` · `F5.7` · `F6.*` nằm trong plan này, đọc `progress.log`, `chat.md`, file của thư mục design; bài mẫu không mang tiêu chí theo mã SPEC |
 
 **Baseline:** lần chạy 020 (màn đăng nhập, 2 page) — 13 phút tổng; agent con 556s và 588s; lần ghi page đầu tiên ở
 giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026-10-07.
@@ -465,7 +465,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 **Actions:**
 
 - [x] 🤖 `SKILL.md` theo DS5, kèm dòng `spec:` (D6) — 2026-10-08: mục "Dựng một page theo bước", in link trong "Gọi agent con", gọi lại riêng agent bị ngắt, Vòng sau theo `--round`, 6 dòng bẫy; viết lại lỗi gài `samples/faults/L2.patch` · `L4.patch` cho SKILL.md mới (L3 · L5 · L7 đã hỏng từ 008, để 007)
-- [x] 🤖 `samples/watch-progress.mjs`; dòng quan sát trong ba bài mẫu và `samples/README.md` theo DS6 — 2026-10-08: bài 01 thêm 5 dòng, bài 02 thêm 2; `F5.7` · `F6.3`–`F6.6` vào "Phủ ở chỗ khác"
+- [x] 🤖 `samples/watch-progress.mjs`; dòng quan sát trong ba bài mẫu và `samples/README.md` theo DS6 — 2026-10-08: `watch-progress.mjs` có; README ghi cách bật. Dòng quan sát theo mã đã thêm vào bài 01, 02 rồi bỏ, theo quyết định của người dùng: tiêu chí nằm ở bảng "Tiêu chí từng yêu cầu" của Phase 4
 - [x] 🤖 nếu plan 008 đã ghép: gộp phần trùng file theo DS7, thêm điều kiện bước dựng 4 cho page của màn — 2026-10-08: hai plan cùng sửa một cây làm việc, không có bước gộp; bước 4 có điều kiện `next()` · `prev()` · `form`
 
 **Gate:**
@@ -481,10 +481,25 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 **Actions:**
 
-- [ ] 🤖 chạy bài 01 và bài 02 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.test/design-uiux/<NNN>-nghiem-thu-009-*/`
+- [ ] 🤖 chạy bài 01 và bài 02 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.test/design-uiux/<NNN>-nghiem-thu-009-*/`. Lúc agent chính in khối link, người chạy ghi thêm một dòng `<giờ>  link` vào `progress.log` (`node -e 'console.log(new Date().toTimeString().slice(0,8)+"  link")' >> progress.log`)
 - [ ] 🤖 chạy hai góp ý của bài 01 kèm `watch-progress.mjs`
 - [ ] 🤖 chạy thử ngắt trên bài 01: dừng agent con của page A sau khi bước dựng 2 của nó được đánh dấu, để agent của page B chạy tiếp, rồi gọi lại agent A cùng lời giao; ghi lượt sửa đầu tiên của agent A
 - [ ] 👤 gọi `/design-uiux` với một đề thật, mở link ngay khi có, để page mở suốt lúc dựng; góp ý một ý
+
+**Tiêu chí từng yêu cầu** — người chấm đọc thư mục chạy thử, mỗi dòng ghi `đạt` hay `trượt` kèm file và dòng làm bằng chứng:
+
+| Mã | Mở file | Đạt khi |
+| --- | --- | --- |
+| `F6.1` | `progress.log`, `chat.md` | `progress.log` có dòng `link` đứng trước dòng `rev 1` đầu tiên của mọi page; `chat.md` có dòng `Đang dựng, mở ngay được` và ngay dưới nó `file://` của mọi file `NN-*.html`, trong cùng một tin |
+| `F6.2` | `.design/*/NN-*.progress.js`, `progress.log` | mỗi file `NN-*.html` có đúng một `NN-*.progress.js`; trước góp ý, mọi bước `"round":1` có `"done":true`; mỗi page có ≥ 4 dòng `progress.log` với giờ khác nhau; tên bước trong các dòng của một page đi đúng thứ tự trong danh sách |
+| `F5.6` | `.design/*/shots/`, `progress.log` | mỗi page có ảnh `<NN-slug>--quick.png`, giờ sửa của ảnh muộn hơn dòng `rev 1` của page đó |
+| `F5.7` | `check.log`, `scripts/test-check.mjs` | `check.log` cả thư mục không có `còn bước chưa xong`; `test-check.mjs` C11 · C12 ✓ |
+| `F6.3` | `scripts/test-shell.mjs`, lượt 👤 | phép "bước mới xong → page tự tải lại …" ✓; lượt 👤 ở Gate bullet 5 đạt |
+| `F6.4` | `scripts/test-shell.mjs`, lượt 👤 | hai phép "đang gõ … không tải lại" (desktop, iframe mobile) ✓; lượt 👤 ở Gate bullet 6 đạt |
+| `F6.5` | `scripts/test-shell.mjs`, lượt 👤 | ba phép nhãn "Đang dựng", "Xong", "Đang sửa" ✓; lượt 👤 ở Gate bullet 7 đạt |
+| `F6.6` | `progress.log` của lần chạy ngắt | sau lúc agent A bị dừng, dòng kế tiếp của page A mang bước 3 và `rev` nối tiếp (không có dòng `thấy lần đầu` mới của page A, không có file `NN-*.html` mới) |
+| `F6.7` | `progress.log`, `subagent-*.md` của lần chạy ngắt | giữa lúc agent A bị dừng và lúc gọi lại, page B có ≥ 1 dòng mới; chỉ agent A được gọi lại: số file `subagent-*.md` = số page + 1 |
+| `F4.4` | `.design/*/NN-*.progress.js` sau hai góp ý của bài 01 | page A có ≥ 1 bước `"round":2` bắt đầu bằng `Góp ý:` và một bước `"round":2` có `"final":true`; góp ý 2 chạm mọi page nên mọi page có ≥ 1 bước `Góp ý:`; mọi bước `"round":1` vẫn `"done":true` |
 
 **Gate** — một dòng ứng một bullet §2:
 
@@ -496,4 +511,5 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 - [ ] 👤 §2 bullet 6: lượt chạy thật — gõ vào một ô nhập lúc agent đang dựng, ở khổ desktop rồi ở khổ mobile; cả hai lần page không tải lại cho tới khi rời ô — <ngày + ai xác nhận> · BH3 · BH11
 - [ ] 👤 §2 bullet 7: nhãn đi đúng "Đang dựng a/6" → "✓ Xong · <ngày>" → "Đang sửa a/b" → "✓ Xong · <ngày mới>"; bấm vào thấy nhóm "Dựng" và "Góp ý vòng 2" — <ngày + ai xác nhận> · BH5 · BH6
 - [ ] 🤖 §2 bullet 8: bài 01 (hai page A, B) và bài 02 (mỗi màn một page) — trong `progress.log`, mốc `rev 1` của mọi page đều đến trước mốc bước dựng cuối của page xong sớm nhất, tức các page dựng chồng thời gian; link mọi page có trong `chat.md` trong cùng một tin — <giờ từng page> · BH9
+- [ ] 🤖 mọi dòng của bảng "Tiêu chí từng yêu cầu" là `đạt` — <bảng kết quả trong thư mục chạy thử> · BH1 · BH6 · BH7 · BH9 · BH10
 - [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/009-design-uiux-tien-do-dung.md` — 0 ERROR

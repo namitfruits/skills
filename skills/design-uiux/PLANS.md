@@ -214,9 +214,9 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
   - In vào chat danh sách design của getdesign mà skill đọc được: 68 trên 76 bộ của gói `getdesign`. 8 bộ còn lại chỉ
     có phần chữ, không có bảng màu đầu file. Các design khác trên site không tải được.
   - Hỏi người dùng chọn một trong bốn design hợp đề nhất. Người dùng gõ được tên khác trong danh sách. Không có đáp
-    án bộ mặc định: bộ đó chỉ dùng khi mất mạng.
+    án bộ mặc định.
   - Tải design đã chọn vào thư mục design và dựng page theo nó. Đề tự ghi lệnh `getdesign` cũng đi đường này.
-  - Nếu không lấy được danh sách hay tải hỏng, thì dựng bằng bộ mặc định và nói lý do trong chat.
+  - Nếu getdesign báo lỗi, thì dừng và in lỗi vào chat, không lùi về bộ mặc định: máy chạy skill luôn có mạng.
 
   Với `--auto`, agent lấy đáp án khuyên dùng. Việc lấy từ `PQ-05`.
 
@@ -225,7 +225,6 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F3.6` | new      | không có design system thì in danh sách design của getdesign |
 | `F3.7` | new      | hỏi chọn một trong bốn design hợp đề |
 | `F3.8` | new      | page lấy token từ design đã chọn, tải vào thư mục design |
-| `F3.9` | new      | không lấy được danh sách hay tải hỏng thì dùng bộ mặc định, nói lý do |
 | `F3.1` | fix      | đề ghi lệnh getdesign thì tải vào thư mục design, không ra `./DESIGN.md` |
 
 ## Plan Queue
@@ -249,6 +248,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F4.3` | fix      | giới hạn 3–5 số kiểm chéo khi góp ý thêm số mới |
 | `F4`   | fix      | vòng sau nói rõ kiểm page hay cả thư mục, ai sửa page khi đổi dữ liệu chung, có `touch` không, có ghi `## Quyết định` không, giao lại những gì; page không có thứ góp ý dữ liệu chung nhắc tới thì làm sao; `touch` giữ mọi góp ý; xoá ảnh cũ trong `shots/` |
 | `F5.1` | fix      | `check.mjs` không đọc "PR #482" thành mã màu |
+| `F5.4` | fix      | `check.mjs` có lượt không chụp ảnh `--bam-*` nào cho một page có nút bấm (bài mẫu 02, lượt `036` của plan 007) |
 
 ### PQ-04 · Các page cùng thư mục giống nhau ở khối dùng chung
 

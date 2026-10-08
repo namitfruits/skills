@@ -319,14 +319,16 @@ SKILL.md:
 
 **Actions:**
 
-- [ ] 🤖 chạy bài 01 (một màn), 02 (một luồng), 03 (đề mơ hồ) `--auto` theo `samples/README.md`, vào `.test/design-uiux/<NNN>-nghiem-thu-008-*/`
-- [ ] 🤖 chạy thêm bài 01 với đề sửa thành "cho tôi 3 phương án", và một góp ý "muốn xem hướng C thay B"
+- [x] 🤖 chạy bài 01 (một màn), 02 (một luồng), 03 (đề mơ hồ) `--auto` theo `samples/README.md`, vào `.test/design-uiux/<NNN>-nghiem-thu-008-*/` — 2026-10-08: `046-mau-01-…`, `047-mau-02-…`, `048-mau-03-…`, bản skill chụp `SKILL.md 30b362ba`; chạy bằng `chuan-bi.mjs` trước khi `samples/` đổi tên, nên file trong các thư mục này giữ tên cũ (`agent-con-*.md`, `check-truoc-gop-y.log`)
+- [x] 🤖 chạy thêm bài 01 với đề sửa thành "cho tôi 3 phương án", và một góp ý "muốn xem hướng C thay B" — 2026-10-08: `049-mau-01-…-ba-pa`; tin giao không còn hướng `chưa chọn` nên góp ý gửi là "Cho tôi thêm một phương án thứ ba."
 - [ ] 👤 gọi `/design-uiux` với một đề thật một màn và một đề thật một luồng; đi hết luồng trên trình duyệt
 
 **Gate** — một dòng ứng một bullet §2:
 
-- [ ] 🤖 §2 bullet 1: bài 01 `chat.md` có "một màn", bài 02 có "một luồng"; bài 03 — câu hỏi đã soạn có "một màn hay cả luồng", `brief.md` có dòng `Loại đề` · `--auto` — <kết quả> · BH6
-- [ ] 🤖 §2 bullet 2: bài 01 — `chat.md` không có câu hỏi chọn phương án; thư mục có đúng 2 `NN-*.html`, `pages.js` có A và B, 2 file `subagent-*.md`; bản "3 phương án" vẫn 2 page, chat có dòng "Đề xin 3"; góp ý "hướng C thay B" xong vẫn 2 page — <kết quả> · BH1 · BH2 · BH3 · BH7
-- [ ] 🤖 §2 bullet 3: bài 02 — `chat.md` có bảng Luồng 3 dòng; 3 page, `pages.js` có `screen` — <kết quả> · BH4
+- [x] 🤖 §2 bullet 1: bài 01 `chat.md` có "một màn", bài 02 có "một luồng"; bài 03 — câu hỏi đã soạn có "một màn hay cả luồng", `brief.md` có dòng `Loại đề` · `--auto` — 2026-10-08: 046 "Một màn: dựng A và B song song", `Loại đề` `một màn` · `AI đoán`; 047 "Một luồng: một phương án, 3 màn…"; 048 `chat.md` dòng 16 "3. Loại đề · Một màn hay cả luồng?", `brief.md` `Loại đề` · `một luồng…` · `--auto` · BH6
+- [x] 🤖 §2 bullet 2: bài 01 — `chat.md` không có câu hỏi chọn phương án; thư mục có đúng 2 `NN-*.html`, `pages.js` có A và B, 2 file `subagent-*.md`; bản "3 phương án" vẫn 2 page, chat có dòng "Đề xin 3"; góp ý "hướng C thay B" xong vẫn 2 page — 2026-10-08: 046 2 page, `option` A · Hàng đợi theo hạn bàn giao, B · Theo chuyến; `agent-con-a.md` · `agent-con-b.md` (tên cũ) gọi cùng một lượt; 049 `chat.md` dòng 61 "Đề xin 3 phương án; mỗi màn tối đa hai…", sau góp ý `pages.js` có A và C (C dựng đè `02-…`), vẫn 2 page; 0 lỗi cả bốn lần `check.mjs` · BH1 · BH2 · BH7
+  BH3 (ba phép thử chỉ còn một hướng → một page, dòng `Chỉ một hướng:`) chưa lượt nào gặp: cả 046 và 049 đều còn ≥ 2 hướng sau ba phép thử. Luật nằm ở bảng "Sau ba phép thử" của SKILL.md Bước 3, chưa có bằng chứng chạy.
+- [x] 🤖 §2 bullet 3: bài 02 — `chat.md` có bảng Luồng 3 dòng; 3 page, `pages.js` có `screen` — 2026-10-08: 047 bảng màn Welcome · Đăng ký · Hồ sơ trong `chat.md` trước link đầu tiên; `## Luồng` 3 dòng có `.html`; 3 page, 3 mục `screen`, 0 mục `option`; 3 agent con gọi cùng một lượt · BH4
 - [ ] 👤 §2 bullet 4: bài 02 và đề luồng thật — `check.mjs` cả thư mục exit 0 gồm lượt đi luồng; trên trình duyệt đi từ màn 1 tới màn cuối bằng nút trong page, quay lại thấy chữ đã gõ — <ngày + ai xác nhận> · BH5
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/008-design-uiux-mot-man-luong.md` — 0 ERROR
+  Phần máy (2026-10-08): 047 `✓ 3 page · 232 tổ hợp · 0 lỗi`, 048 `✓ 3 page · 314 tổ hợp · 0 lỗi`, cả hai gồm lượt đi luồng (đi tới màn cuối, quay lại màn trước ô còn chữ). Còn chờ người dùng đi hết luồng trên trình duyệt.
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/008-design-uiux-mot-man-luong.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN

@@ -26,9 +26,9 @@
 //
 // Không có design system thì người dùng chọn một bộ của getdesign: designs in các bộ tokens.mjs đọc được (stdout
 // `tên - mô tả`), init --getdesign tải bộ đã chọn vào thư mục design. Exit 1 là lỗi chọn (tên lạ, bộ chỉ có chữ);
-// exit 2 là không chạy được getdesign (mất mạng, gói đổi cấu trúc), agent dựng bằng bộ mặc định.
+// exit 2 là không chạy được getdesign (gói đổi cấu trúc, registry lỗi), agent dừng và báo lỗi.
 //
-// spec: F1.2 F1.17 F4 F3.6 F3.8 F3.9 F6.2 F6.6
+// spec: F1.2 F1.17 F4 F3.6 F3.8 F6.2 F6.6
 
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";

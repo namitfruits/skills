@@ -1,0 +1,4 @@
+2026-10-08 · node v24.14.1 · getdesign 0.6.25
+add claude --out .design/x/DESIGN.md: exit 0 · file có: true · gốc repo có DESIGN.md: false
+chạy lại khi đích đã có, không --force: exit 1 · Error: Target already exists: /private/var/folders/14/c3pxbg_n4mvc9f4jct4h6pfh0000gn/T/probe-010-p2-aHiRwe/.design/x/DESIGN.md
+tên lạ: exit 1 · Error: Unknown brand: khong-co

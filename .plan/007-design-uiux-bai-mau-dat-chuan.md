@@ -3,7 +3,7 @@ doc: 007
 type: plan
 title: design-uiux — bài mẫu đạt chuẩn để chạy thử skill
 status: approved # draft → approved → done
-version: 0.1
+version: 0.2
 updated: 2026-10-08
 implements: []
 sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/samples/README.md, .plan/005-design-uiux-spec-skill-dong-bo.md, .plan/006-design-uiux-sua-loi-nghiem-thu-005.md]
@@ -178,7 +178,7 @@ node skills/design-uiux/samples/prepare.mjs <bài> --skills $SNAP --slug lan-1  
 ```
 
 3 bài × 2 lượt trên cùng `$SNAP`; mỗi lượt một agent chạy, một agent chấm. Lượt `lan-1` của bài 01 có thêm một agent
-chấm thứ hai, ghi `result-2.md`. `lint.mjs --so` so từng cặp.
+chấm thứ hai, ghi `result-2.md`. `lint.mjs --compare` so từng cặp.
 
 ### DS6 — Chuẩn bị thư mục chạy thử
 
@@ -206,6 +206,8 @@ node skills/design-uiux/samples/prepare.mjs <bài> [--skills <thư mục chứa 
 | L4 | Vòng sau: bỏ bullet "Góp ý đổi dữ liệu chung" | 01 | `F4.3`: `## Dữ liệu chung` đổi, mọi page đổi |
 
 Patch không áp được vì SKILL.md đã đổi thì viết lại patch, giữ mã `L<n>`.
+
+**Đổi (2026-10-08):** thêm `L5` (bỏ mọi chỉ dẫn hỏi, bài 03), `L6` (bỏ câu mở đầu "Chạy `--auto`, đã tự trả lời:", bài 03), `L7` (bỏ mọi chỉ dẫn bề rộng trang, bài 01) — L1, L3, L4 không làm bài trượt.
 
 ## 7. Phases
 
@@ -262,26 +264,32 @@ Patch không áp được vì SKILL.md đã đổi thì viết lại patch, gi�
 - [x] 🤖 `lint.mjs` exit 0, không ô `Đạt khi` nào có chữ cảm tính — DS3 — 2026-10-08; gài thử "trông giống" và mã `F5` → exit 1, in cả hai
 - [x] 🤖 `prepare.mjs 01-orders-screen` tạo thư mục có `src/routes/orders.tsx`, không có `sample.md`, `.claude/skills/design-uiux/SKILL.md` đọc được; JSON có `prompt` và 2 `feedback` — DS6 — 2026-10-08, symlink `../../../../skills`
 - [x] 🤖 `prepare.mjs 03-vague-prompt` tạo thư mục chỉ có `.claude/`; `feedback` rỗng — DS6 — 2026-10-08; `--skills /tmp` → exit 2 "không thấy …/SKILL.md"
-- [x] 🤖 `lint.mjs --so` trên hai `result.md` mẫu, một dòng khác kết quả → exit 1, in dòng đó — DS4 — 2026-10-08, in `Q2 "đạt" · "trượt"`; cùng file → `✓ 2 dòng`
+- [x] 🤖 `lint.mjs --compare` trên hai `result.md` mẫu, một dòng khác kết quả → exit 1, in dòng đó — DS4 — 2026-10-08, in `Q2 "đạt" · "trượt"`; cùng file → `✓ 2 dòng`
 
 ### Phase 3 — chạy lặp
 
 **Goal:** biết mỗi bài cho cùng kết luận khi chạy lại trên cùng bản skill.
 **Cover:** DS5
 
+Thư mục chạy thử của plan này tạo trước khi `samples/` đổi tên tiếng Anh, nên vẫn dùng tên cũ: `NNN-mau-<bài>-<slug>/`,
+`ket-qua.md`, `agent-con-*.md`, `check-truoc-gop-y.log`. Chấm bằng bảng cố định cho bản skill `a07e3f8a` ở
+`.test/design-uiux/mau-a07e3f8a/` (bài 01, 03) và bảng lúc chấm (bài 02): plan 008 viết lại bảng trong repo theo hành vi
+skill mới, chấm bản cũ bằng bảng mới thì trượt oan.
+
 **Actions:**
 
 - [x] 🤖 chụp skill vào `$SNAP`, ghi sha256 của `SKILL.md` (D8) — 2026-10-08, `3d95ecd` + working tree của plan 006, SKILL.md `a07e3f8a`
-- [ ] 🤖 3 bài × 2 lượt, mỗi lượt một agent chạy `--auto`, một agent chấm ra `result.md` (D5)
-- [ ] 🤖 lượt `lan-1` bài 01: agent chấm thứ hai ra `result-2.md`
-- [ ] 🤖 6 dòng vào `samples/history.md`
-- [ ] 🤖 dòng lệch: sửa câu quan sát, hay ghi sang PQ-03 nếu do SKILL.md (D6)
+- [x] 🤖 3 bài × 2 lượt, mỗi lượt một agent chạy `--auto`, một agent chấm ra `result.md` (D5) — 2026-10-08, `033`–`038`; `033` kẹt, `034` dừng vì lỗi API sau khi dựng page, một agent khác làm tiếp từ Bước 5 ở cả hai
+- [x] 🤖 lượt `lan-1` bài 01: agent chấm thứ hai ra `result-2.md` — 2026-10-08, `033/ket-qua-2.md`
+- [x] 🤖 6 dòng vào `samples/history.md` — 2026-10-08
+- [x] 🤖 dòng lệch: sửa câu quan sát, hay ghi sang PQ-03 nếu do SKILL.md (D6) — 2026-10-08; sửa câu: bài 01 G1, G2, G3; bài 02 `F3.3` (≥ 2 → ≥ 1 theo SPEC), `F1.7`, `F1.2`, `F2.1`, dòng email; bài 03 `F1.1` ×2, `F1.3`, `F1.6`, `F1.7`. Do skill: bài 02 Q4 → dòng `F5.4` ở PQ-03
 
 **Gate:**
 
-- [ ] 🤖 `lint.mjs --so` từng cặp `lan-1` / `lan-2` exit 0 cho cả ba bài — DS5 · BH3
-- [ ] 🤖 `lint.mjs --compare result.md result-2.md` bài 01 exit 0 — DS5 · BH3
-- [ ] 🤖 `history.md` có 6 dòng, mỗi dòng trỏ thư mục có thật
+- [ ] 🤖 `lint.mjs --compare` từng cặp `lan-1` / `lan-2` exit 0 cho cả ba bài — DS5 · BH3
+  Bài 01 (`033`/`034`) ✓ 20 dòng; bài 03 (`037`/`038`) ✓ 9 dòng; bài 02 (`035`/`036`) lệch Q4 `F3.2`: `check.mjs` không chụp ảnh `--bam-*` nào cho page A ở `036`. Câu quan sát đọc đúng; đầu ra skill khác nhau giữa hai lượt → PQ-03.
+- [x] 🤖 `lint.mjs --compare result.md result-2.md` bài 01 exit 0 — DS5 · BH3 — 2026-10-08, `033` ✓ 20 dòng cùng kết quả
+- [x] 🤖 `history.md` có 6 dòng, mỗi dòng trỏ thư mục có thật — 2026-10-08, `033`–`038` đều có
 
 ### Phase 4 — gài lỗi
 
@@ -291,16 +299,20 @@ Patch không áp được vì SKILL.md đã đổi thì viết lại patch, gi�
 **Actions:**
 
 - [x] 🤖 `samples/faults/L1.patch`…`L4.patch` theo DS7, viết trên `$SNAP` (D4) — 2026-10-08, cả bốn `patch` áp được lên bản chép
-- [ ] 🤖 mỗi lỗi một lượt chạy và một lượt chấm; 4 dòng vào `history.md`, cột `Lỗi gài` ghi `L<n>`
-- [ ] 🤖 lỗi không làm bài trượt: sửa dòng quan sát hay bài rồi chạy lại, hay thay lỗi khác cùng bài
+- [x] 🤖 mỗi lỗi một lượt chạy và một lượt chấm; 4 dòng vào `history.md`, cột `Lỗi gài` ghi `L<n>` — 2026-10-08, `039`–`042`
+- [x] 🤖 lỗi không làm bài trượt: sửa dòng quan sát hay bài rồi chạy lại, hay thay lỗi khác cùng bài — 2026-10-08, thêm `L5` (`043`), `L6` (`051`) cho bài 03, `L7` (`054`) cho bài 01
 
 **Gate:**
 
 - [ ] 🤖 L1 → bài 01 trượt dòng `F3.1` — DS7 · BH2
-- [ ] 🤖 L2 → bài 02 trượt dòng `F3.3` — DS7
+  Không trượt (`039` cùng kết quả với `033`): `DESIGN.md` bài 01 không có token, agent tự quay về `tokens.css`.
+- [x] 🤖 L2 → bài 02 trượt dòng `F3.3` — DS7 — 2026-10-08, `040` lệch `035` đúng Q6 `F3.3`, mọi dòng khác giữ
 - [ ] 🤖 L3 → bài 03 trượt dòng `F1.1` — DS7
+  Không trượt (`041` = `037`): bỏ mục Bước 2 nhưng dòng "Bước 2" của bảng `--auto` còn chỉ cách hỏi. L5 bỏ cả dòng đó: vẫn không trượt (`043` = `037`), agent hỏi theo sơ đồ mermaid và khuôn `brief.md`.
 - [ ] 🤖 L4 → bài 01 trượt dòng `F4.3` — DS7
+  Không trượt (`042` = `033`): agent vẫn sửa `brief.md` trước rồi mọi page.
 - [ ] 🤖 mỗi bài có ít nhất một lỗi gài làm nó trượt đúng dòng; các dòng khác của lượt đó giữ kết quả như `lan-1`
+  Bài 02 ✓ L2; bài 03 ✓ L6 (`051` lệch `037` đúng Q6 `F1.10`); bài 01 ✗: L1, L4, L7 đều không làm trượt (L7 bỏ mọi chỉ dẫn bề rộng trang, agent vẫn tự lấy `1152px` từ `AppShell`). Lỗi kiểu xoá chỉ dẫn không đủ: agent tự suy lại. Bài 01 cần lỗi kiểu chỉ dẫn sai (vd "bề rộng luôn để mặc định").
 
 ### Phase 5 — nghiệm thu
 
@@ -309,13 +321,15 @@ Patch không áp được vì SKILL.md đã đổi thì viết lại patch, gi�
 
 **Actions:**
 
-- [ ] 🤖 đọc lại `history.md` và các `result.md`, đối chiếu từng bullet §2
+- [x] 🤖 đọc lại `history.md` và các `result.md`, đối chiếu từng bullet §2 — 2026-10-08
 
 **Gate:**
 
-- [ ] 🤖 §2 bullet 1: `lint.mjs` exit 0 trên repo; bỏ một mã hay thêm mã mới vào SPEC bản chép → exit 1 · BH1
-- [ ] 🤖 §2 bullet 2: mọi ô `Đạt khi` qua `lint.mjs`; hai agent chấm bài 01 `lan-1` cùng kết luận · BH3
+- [x] 🤖 §2 bullet 1: `lint.mjs` exit 0 trên repo; bỏ một mã hay thêm mã mới vào SPEC bản chép → exit 1 · BH1 — 2026-10-08, `✓ 52 sub-scope · 4 bài · 68 dòng checklist`; lúc plan 008 thêm 10 sub-scope, lệnh báo đủ 10 mã cho tới khi có bài nhìn tới
+- [x] 🤖 §2 bullet 2: mọi ô `Đạt khi` qua `lint.mjs`; hai agent chấm bài 01 `lan-1` cùng kết luận · BH3 — 2026-10-08, `033` hai người chấm ✓ 20/20
 - [ ] 🤖 §2 bullet 3: ba bài đều có lỗi gài làm trượt đúng dòng · BH2
+  Hai trên ba bài: 02 (L2), 03 (L6). Bài 01 chưa có lỗi bắt được, xem Gate Phase 4.
 - [ ] 🤖 §2 bullet 4: ba cặp `lan-1` / `lan-2` cùng kết luận
-- [ ] 🤖 §2 bullet 5: `history.md` có 10 dòng, mỗi dòng đủ cột · BH4
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR
+  Hai trên ba cặp; bài 02 lệch Q4 do skill (PQ-03).
+- [x] 🤖 §2 bullet 5: `history.md` có 10 dòng, mỗi dòng đủ cột · BH4 — 2026-10-08, 13 dòng (6 lượt gốc, 7 lượt gài lỗi)
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN

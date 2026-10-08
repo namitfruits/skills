@@ -176,7 +176,7 @@ Mỗi câu đã tự trả lời là một dòng trong bảng `## Quyết địn
 
 ## Bước 1 — Đọc đề và dự án
 
-<!-- spec: F1.1 F1.3 F1.7 F3.1 F3.4 F3.5 F3.6 F3.9 -->
+<!-- spec: F1.1 F1.3 F1.7 F3.1 F3.4 F3.5 F3.6 -->
 
 Không hỏi những gì tự tìm được.
 
@@ -189,9 +189,8 @@ Không hỏi những gì tự tìm được.
      `grep` không chạy. Lệnh báo lỗi là chưa tìm được gì, không có nghĩa dự án không có file `@theme`;
   3. `DESIGN.md` ở gốc dự án;
   4. không có gì thì chạy `node $SKILL/scripts/new-design.mjs designs`, giữ stdout cho mục "Chọn design của
-     getdesign" ở bước 2. Lệnh thoát mã 2 (mất mạng, getdesign hỏng) thì bỏ qua việc chọn: để trống `--tokens`, skill
-     dùng `shell/default-design.md`, và in vào chat dòng `Không lấy được design của getdesign (<dòng lỗi stderr>); dựng
-     bằng bộ mặc định.`
+     getdesign" ở bước 2. Lệnh thoát mã 2 (getdesign hỏng) thì **dừng**: in vào chat dòng lỗi stderr, không dựng page.
+     Không dùng `shell/default-design.md` thay.
 
   File CSS có `@theme` thắng `DESIGN.md` khi cả hai cùng có, vì đó là giá trị app đang chạy.
 - **Màn liên quan** (đề cải thiện một màn): tìm route (`grep -rn "<đường dẫn>" --include='*.tsx' .`), đọc file màn và component nó dùng. Ghi lại các khối đang có, chữ, trạng thái, số liệu thật, chỗ đang vướng. Không tự chạy app; người dùng đưa ảnh hay URL đang chạy thì dùng cái đó.
@@ -240,7 +239,7 @@ Người dùng chọn "Other" kèm chữ thì lấy chữ đó làm câu trả l
 
 ### Chọn design của getdesign
 
-<!-- spec: F3.6 F3.7 F3.9 F1.4 F1.6 -->
+<!-- spec: F3.6 F3.7 F1.4 F1.6 -->
 
 Chỉ làm khi bước 1 đã chạy `designs` và lệnh thoát mã 0. Việc này chạy **kể cả khi đề không mơ hồ**.
 
@@ -256,7 +255,7 @@ Chỉ làm khi bước 1 đã chạy `designs` và lệnh thoát mã 0. Việc n
 | `question` | `Dựng page theo design nào? Gõ tên khác trong danh sách nếu muốn.` |
 | đáp án 1–4 | `label` là tên design đúng như danh sách; đáp án 1 thêm ` (Khuyên dùng)`. `description` là mô tả của getdesign và một câu vì sao hợp đề |
 
-Không có đáp án "bộ mặc định": `shell/default-design.md` chỉ dùng khi `designs` hay `init --getdesign` thoát mã 2.
+Không có đáp án "bộ mặc định": agent không dựng page bằng `shell/default-design.md`.
 
 Chọn bốn design trong danh sách đã in, xét theo thứ tự:
 
@@ -363,7 +362,7 @@ Sai màn thì người dùng góp ý ở vòng sau.
 
 ### Agent chính chuẩn bị (tuần tự)
 
-<!-- spec: F1.2 F1.3 F1.5 F1.6 F1.8 F1.16 F1.17 F3.1 F3.4 F3.5 F3.8 F3.9 -->
+<!-- spec: F1.2 F1.3 F1.5 F1.6 F1.8 F1.16 F1.17 F3.1 F3.4 F3.5 F3.8 -->
 
 Đề một màn: mỗi phương án một page.
 
@@ -397,9 +396,7 @@ bảng "Cặp màu không đủ đọc" của brief.
 
 - exit 1 (`getdesign không có <tên>`, `<tên> chỉ có phần chữ`): tên sai. Hỏi lại câu chọn design như mục "Chọn design
   của getdesign" ở bước 2.
-- exit 2 (`không tải được <tên> từ getdesign`): chạy lại `init` không có `--getdesign`, in vào chat dòng `Không lấy được
-  design của getdesign (<dòng lỗi>); dựng bằng bộ mặc định.`, sửa dòng `Design system` của `## Quyết định` thành `bộ
-  mặc định` · `AI đoán`.
+- exit 2 (`không tải được <tên> từ getdesign`): getdesign hỏng. Dừng, in dòng lỗi vào chat, không dựng page.
 
 `## Design system` của brief ghi `getdesign <tên> (DESIGN.md trong thư mục này)`; đọc `$D/DESIGN.md` như mọi
 `DESIGN.md` khác (bề rộng trang, giới hạn nhường).
@@ -631,14 +628,13 @@ bước chưa xong ngoài bước kiểm đầy đủ của vòng đang mở; pa
 
 ## Bước 6 — Giao
 
-<!-- spec: F1.2 F1.4 F1.6 F1.10 F1.13 F1.14 F1.16 F3.1 F3.4 F3.5 F3.8 F3.9 F5.3 -->
+<!-- spec: F1.2 F1.4 F1.6 F1.10 F1.13 F1.14 F1.16 F3.1 F3.4 F3.5 F3.8 F5.3 -->
 
 Theo tiếng người dùng đang viết, ngắn:
 
 1. Link `file://` của từng page vừa dựng hay vừa sửa (đường dẫn tuyệt đối), page nào là phương án nào. Đề một luồng:
    link màn 1 trước (người xem đi tiếp bằng nút trong page hay dãy màn), rồi bảng các màn kèm link từng màn.
-2. `Đọc:` lấy design system ở đâu (design của getdesign thì ghi `getdesign <tên>` và ai chọn; không tải được thì ghi
-   lại dòng `Không lấy được design của getdesign`); giao diện nào suy ra; font nào thay (`window.DESIGN_THEME.fonts`
+2. `Đọc:` lấy design system ở đâu (design của getdesign thì ghi `getdesign <tên>` và ai chọn); giao diện nào suy ra; font nào thay (`window.DESIGN_THEME.fonts`
    trong `tokens.js`).
 3. Nút vặn: data-panel (variables chung, preset), config-panel (tweaks của từng page).
 4. Các dòng `AI đoán` và `--auto` trong `## Quyết định` của `brief.md`, mỗi dòng kèm "muốn khác thì nói". Chạy `--auto` thì mở đầu bằng "Chạy `--auto`, đã tự trả lời:" rồi liệt kê. Kèm link `brief.md`.
