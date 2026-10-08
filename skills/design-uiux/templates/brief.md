@@ -24,7 +24,7 @@ Bề rộng trang: <giá trị `--page-width`, lấy từ đâu (layout nào c�
 
 ### Giới hạn nhường cho design system
 
-Giới hạn `G` nào trong `principles.md` mà design system nói khác: tài liệu của nó viết ra, hay component của dự án
+Giới hạn `G` nào trong `references/page-principles.md` mà design system nói khác: tài liệu của nó viết ra, hay component của dự án
 đang làm vậy. Chỉ có token thì chưa tính. Có dòng `G<n>` thì `check.mjs` bỏ kiểm của giới hạn đó cho cả thư mục.
 Không giới hạn nào nhường thì xoá bảng, ghi `Không có.`
 

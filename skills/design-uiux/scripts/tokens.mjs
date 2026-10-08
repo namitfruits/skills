@@ -4,6 +4,8 @@
 //
 // Design system chỉ có một giao diện thì giao diện còn lại suy ra theo vai màu: nền, chữ, viền đảo độ sáng;
 // màu nhấn giữ sắc, chỉnh độ sáng tới khi đủ tương phản với nền mới; primary giữ nguyên.
+//
+// spec: F3.1
 
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";

@@ -14,6 +14,8 @@
 // Mọi thư mục design trong .design/ dùng chung một shell ở .design/_shell/, page nạp ../_shell/. shell chỉ bọc quanh
 // page (toolbar, panel), không đụng vào bản thiết kế, nên cập nhật nó không đổi hình design cũ. init và lệnh shell chép
 // bản mới nhất của skill đè lên; lệnh shell còn chuyển thư mục design kiểu cũ (có _shell/ riêng) sang dùng shell chung.
+//
+// spec: F1.2 F4
 
 import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

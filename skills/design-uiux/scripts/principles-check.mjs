@@ -1,5 +1,5 @@
-// Kiểm bằng code phần đo được của nguyên tắc (N) và giới hạn (G) trong ../principles.md. check.mjs gọi file này;
-// mỗi lỗi mang ID luật để agent mở đúng mục trong principles.md. Phần máy không đo được là dòng "Tự kiểm" ở đó.
+// Kiểm bằng code phần đo được của nguyên tắc (N) và giới hạn (G) trong ../references/page-principles.md. check.mjs gọi file này;
+// mỗi lỗi mang ID luật để agent mở đúng mục trong references/page-principles.md. Phần máy không đo được là dòng "Tự kiểm" ở đó.
 //
 // Bốn lượt:
 //   - tĩnh: đọc từng dòng page (staticIssues)
@@ -8,7 +8,9 @@
 //   - bấm: rê và bấm từng loại thứ bấm được (hoverShift, rowRects, afterClick)
 //   - thư mục: gom kết quả mọi page (folderIssues)
 //
-// Luật nào trong principles.md cũng phải có ít nhất một dòng trong `checks`; check.mjs so hai bên, lệch thì dừng.
+// Luật nào trong references/page-principles.md cũng phải có ít nhất một dòng trong `checks`; check.mjs so hai bên, lệch thì dừng.
+//
+// spec: F5.2
 
 export const checks = [
   { rule: "G1", pass: "tĩnh", what: "class màu của bảng Tailwind" },
@@ -71,14 +73,14 @@ export function readTokens(source) {
 export function readYielded(brief, knownRules) {
   const problems = [];
   const part = brief.split(/^### Giới hạn nhường cho design system\s*$/m)[1];
-  if (part === undefined) return { yielded: [], problems: ['thiếu "### Giới hạn nhường cho design system" trong ## Design system (principles.md, "Thứ tự ưu tiên")'] };
+  if (part === undefined) return { yielded: [], problems: ['thiếu "### Giới hạn nhường cho design system" trong ## Design system (references/page-principles.md, "Thứ tự ưu tiên")'] };
   const section = part.split(/^##+ /m)[0];
   const rows = section.split("\n").filter((line) => line.trim().startsWith("|")).slice(2)
     .map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim().replace(/`/g, "")));
   if (!rows.length && !/Không có\./.test(section)) problems.push('bảng "Giới hạn nhường cho design system" trống mà không ghi "Không có."');
   const yielded = [];
   for (const [rule = "", says = "", proof = ""] of rows) {
-    if (!/^G\d+$/.test(rule) || !knownRules.includes(rule)) problems.push(`giới hạn nhường "${rule}" không phải một G trong principles.md (nguyên tắc N không nhường được)`);
+    if (!/^G\d+$/.test(rule) || !knownRules.includes(rule)) problems.push(`giới hạn nhường "${rule}" không phải một G trong references/page-principles.md (nguyên tắc N không nhường được)`);
     else if (!proof || !says) problems.push(`giới hạn nhường ${rule} thiếu "Design system nói" hay "Dẫn chứng"`);
     else yielded.push(rule);
   }

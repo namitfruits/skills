@@ -1,5 +1,7 @@
 # Nguyên tắc và giới hạn khi dựng page
 
+<!-- spec: F5.2 -->
+
 File này cho agent dựng page: agent con, hay agent chính khi chỉ có một phương án. Đọc hết trước khi viết page.
 
 Mỗi luật có hai phần:

@@ -20,10 +20,12 @@
 //   - đổi giá trị không tải lại trang; URL ghi lại mở ở tab mới ra đúng giá trị
 //   - khổ tablet / mobile: iframe đúng bề rộng, không toolbar bên trong, vặn nút ở panel thì iframe đổi
 //   - giao diện suy ra có ghi "(suy ra)" ở view-controller; option-switcher đủ số page
-// Nguyên tắc và giới hạn của ../principles.md: kiểm trong principles-check.mjs, chạy ở lượt tĩnh, mỗi tổ hợp, lượt bấm
+// Nguyên tắc và giới hạn của ../references/page-principles.md: kiểm trong principles-check.mjs, chạy ở lượt tĩnh, mỗi tổ hợp, lượt bấm
 // (rê, bấm) và cả thư mục; lỗi mang ID luật ([N13], [G4]). Giới hạn G ghi trong bảng "Giới hạn nhường cho design system"
-// của brief.md thì bỏ qua. Luật trong principles.md không có kiểm thì dừng ngay (exit 2).
+// của brief.md thì bỏ qua. Luật trong references/page-principles.md không có kiểm thì dừng ngay (exit 2).
 // Exit 0 khi sạch, 1 khi có lỗi, 2 khi không chạy được (thiếu Playwright, không mở được page).
+//
+// spec: F1.3 F5.1
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -57,15 +59,15 @@ const targetPath = resolve(target);
 const designDir = statSync(targetPath).isDirectory() ? targetPath : dirname(targetPath);
 const onlyFile = statSync(targetPath).isDirectory() ? null : basename(targetPath);
 
-// Luật trong principles.md và kiểm trong principles-check.mjs phải khớp nhau: luật không có kiểm thì chỉ nằm trên giấy.
-const principlesPath = join(dirname(fileURLToPath(import.meta.url)), "../principles.md");
+// Luật trong references/page-principles.md và kiểm trong principles-check.mjs phải khớp nhau: luật không có kiểm thì chỉ nằm trên giấy.
+const principlesPath = join(dirname(fileURLToPath(import.meta.url)), "../references/page-principles.md");
 const ruleIds = [...readFileSync(principlesPath, "utf8").matchAll(/^\*\*([NG]\d+)\./gm)].map((match) => match[1]);
 const checkedRules = [...new Set(checks.map((check) => check.rule))];
 const unchecked = ruleIds.filter((rule) => !checkedRules.includes(rule));
 const orphan = checkedRules.filter((rule) => !ruleIds.includes(rule));
 if (unchecked.length || orphan.length) {
   if (unchecked.length) console.error(`skill lệch: ${unchecked.join(", ")} chưa có kiểm trong scripts/principles-check.mjs`);
-  if (orphan.length) console.error(`skill lệch: kiểm trỏ luật không có trong principles.md: ${orphan.join(", ")}`);
+  if (orphan.length) console.error(`skill lệch: kiểm trỏ luật không có trong references/page-principles.md: ${orphan.join(", ")}`);
   process.exit(2);
 }
 const ruleTag = (rule, message) => `[${rule}] ${message}`;
@@ -136,7 +138,7 @@ if (existsSync(join(designDir, "brief.md"))) {
     const unknown = listed.filter((file) => !pages.some((page) => page.file === file));
     if (notListed.length) report("brief.md", "", `bảng ## Pages thiếu page có trong pages.js: ${notListed.join(", ")}`);
     if (unknown.length) report("brief.md", "", `bảng ## Pages có file mà pages.js không có: ${unknown.join(", ")}`);
-    // Giới hạn G nào design system nói khác thì kiểm của nó tắt cho cả thư mục (principles.md, "Thứ tự ưu tiên").
+    // Giới hạn G nào design system nói khác thì kiểm của nó tắt cho cả thư mục (references/page-principles.md, "Thứ tự ưu tiên").
     const table = readYielded(brief, ruleIds.filter((rule) => rule.startsWith("G")));
     yielded = table.yielded;
     for (const problem of table.problems) report("brief.md", "", problem);

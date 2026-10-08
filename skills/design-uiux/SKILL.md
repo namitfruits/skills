@@ -16,6 +16,8 @@ description: >-
 
 ## Mental model
 
+<!-- spec: — -->
+
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontSize':'14px','titleColor':'#1b2230','textColor':'#1b2230','nodeTextColor':'#1b2230','lineColor':'#64748b','edgeLabelBackground':'#ffffff','clusterBkg':'#F7F8FA','clusterBorder':'#8a93a5'},'flowchart':{'curve':'basis','nodeSpacing':55,'rankSpacing':60,'padding':14,'subGraphTitleMargin':{'top':6,'bottom':14}}}}%%
 flowchart TB
@@ -79,14 +81,29 @@ Một **thư mục design** `.design/NNN-slug/` cho mỗi đề, ở thư mục 
 
 | File | Ai viết | Vai |
 | ---- | ------- | --- |
-| `.design/_shell/` | `new-design.mjs init` (hay `shell`) chép bản mới nhất từ skill | shell: toolbar và panel (mục "Các khối điều khiển" ngay dưới), khung mobile / tablet, ghi URL. Dùng chung cho mọi thư mục design; chỉ bọc quanh page nên cập nhật không đổi hình design cũ |
+| `.design/_shell/` | `new-design.mjs init` (hay `shell`) chép bản mới nhất từ skill | shell: toolbar và panel (mục "Các khối điều khiển"), khung mobile / tablet, ghi URL. Dùng chung cho mọi thư mục design; chỉ bọc quanh page nên cập nhật không đổi hình design cũ |
 | `tokens.js` | `new-design.mjs init --tokens --page-width` | mọi màu, chữ, bo góc, khoảng cách, bề rộng trang; giao diện còn thiếu do suy ra |
 | `brief.md` | agent chính, từ khuôn `templates/brief.md` | bốn mục đầu cho người đọc: tóm tắt đề, quyết định kèm ai quyết, design system, pages; các mục sau cho agent con: tình huống, dữ liệu chung, nút dữ liệu chung, số kiểm chéo |
 | `pages.js` | `new-design.mjs page` | danh sách page: chữ và tên phương án, câu hỏi trung tâm, đơn vị chính, cái hy sinh; option-switcher hiện thành nút A B C, đưa chuột vào thấy mô tả |
 | `NN-slug.html` | agent con (hay agent chính khi chỉ một phương án), từ khuôn `templates/details.html` | mỗi phương án được chọn đúng một page |
 | `shots/` | `check.mjs` | ảnh từng tổ hợp và từng cú bấm để soi bằng mắt |
 
+Sản phẩm là **HTML prototype**, không nối gì với code dự án. Đọc code dự án chỉ để lấy design system và biết màn hiện có trông ra sao. **Không ghi vào repo dự án** ngoài `.design/` ở thư mục làm việc.
+
+Lệnh, `$SKILL` là thư mục chứa `SKILL.md`:
+
+```bash
+node $SKILL/scripts/new-design.mjs init <slug> [--root .design] [--tokens <DESIGN.md | file CSS có @theme>] [--page-width <1280px | 80rem | full>]
+node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<tên>" --option "<A · tên phương án>" --question "<câu hỏi trung tâm>" [--unit "<đơn vị chính>"] [--tradeoff "<cái hy sinh>"]
+node $SKILL/scripts/new-design.mjs touch <thư mục design> <file> --note "<góp ý vừa sửa>"
+node $SKILL/scripts/new-design.mjs shell [--root .design]   # chép shell mới nhất; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
+node $SKILL/scripts/check.mjs <thư mục design | page.html> [--pw <thư mục có playwright>]
+node $SKILL/scripts/test-shell.mjs [--pw <thư mục có playwright>] [--out <thư mục ảnh>]
+```
+
 ### Các khối điều khiển
+
+<!-- spec: F2 -->
 
 **shell** là mọi thứ `_shell/` vẽ quanh page, nằm ngoài bản thiết kế: **toolbar** và **panel**. Gọi đúng các tên
 này trong SKILL.md, code, comment, plan và lúc nói chuyện với người dùng.
@@ -104,26 +121,17 @@ này trong SKILL.md, code, comment, plan và lúc nói chuyện với người d
   thanh; thanh không vừa một dòng thì hai nút này lên dòng trên, toolbar nguyên khối ở dòng dưới.
 - shell cùng sáng tối với page nhưng nền xám, viền ngoài rõ vừa, để tách khỏi giao diện đang thiết kế mà không chói
   như đảo màu.
+- Mọi giá trị đang xem (phương án, khổ màn, sáng tối, variables, tweaks) nằm trên URL: chép link gửi đi hay tải lại
+  trang thì mở ra đúng giá trị đó. Page đọc giá trị qua `$store.design`, không tự ghi URL.
 - Nguyên tắc thiết kế shell (màu, bố cục, cách data-panel và config-panel hiện từng loại ô vặn) ở
-  [`shell/PRINCIPLES.md`](shell/PRINCIPLES.md). Đọc trước khi sửa shell.
+  [`references/shell-principles.md`](references/shell-principles.md). Đọc trước khi sửa shell.
 - Sửa shell của skill (`shell/`) thì chạy `scripts/test-shell.mjs`: tự dựng một `.design/` mẫu trong thư mục tạm,
   kiểm toolbar và panel ở 1600 / 1280 / 700 / 375px, sáng và tối, trong vài giây. Không cần chạy `check.mjs`: lệnh
   đó kiểm page.
 
-Sản phẩm là **HTML prototype**, không nối gì với code dự án. Đọc code dự án chỉ để lấy design system và biết màn hiện có trông ra sao. **Không ghi vào repo dự án** ngoài `.design/` ở thư mục làm việc.
-
-Lệnh, `$SKILL` là thư mục chứa `SKILL.md`:
-
-```bash
-node $SKILL/scripts/new-design.mjs init <slug> [--root .design] [--tokens <DESIGN.md | file CSS có @theme>] [--page-width <1280px | 80rem | full>]
-node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<tên>" --option "<A · tên phương án>" --question "<câu hỏi trung tâm>" [--unit "<đơn vị chính>"] [--tradeoff "<cái hy sinh>"]
-node $SKILL/scripts/new-design.mjs touch <thư mục design> <file> --note "<góp ý vừa sửa>"
-node $SKILL/scripts/new-design.mjs shell [--root .design]   # chép shell mới nhất; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
-node $SKILL/scripts/check.mjs <thư mục design | page.html> [--pw <thư mục có playwright>]
-node $SKILL/scripts/test-shell.mjs [--pw <thư mục có playwright>] [--out <thư mục ảnh>]
-```
-
 ### Cờ `--auto`
+
+<!-- spec: F1.4 F1.6 -->
 
 Bật khi lời gọi có `--auto` (`/design-uiux --auto <đề>`), hay người dùng nói rõ "tự chọn hết, đừng hỏi". Dùng để chạy thử.
 
@@ -135,6 +143,8 @@ Bật khi lời gọi có `--auto` (`/design-uiux --auto <đề>`), hay người
 Mỗi câu đã tự trả lời là một dòng trong bảng `## Quyết định` của `brief.md`, cột "Ai quyết" ghi `--auto`. Mọi bước khác giữ nguyên.
 
 ## Bước 1 — Đọc đề và dự án
+
+<!-- spec: F1.1 F1.3 F1.7 F3.1 F3.4 F3.5 -->
 
 Không hỏi những gì tự tìm được.
 
@@ -154,8 +164,8 @@ Không hỏi những gì tự tìm được.
   hết phần còn lại thì `full`. Không có codebase thì bỏ cờ, mặc định `64rem` (1024px). Giá trị này đi vào
   `init --page-width`; mọi page cùng dùng nên đặt cạnh nhau so được.
 - **Giới hạn nhường cho design system**: đọc xong design system thì so với các giới hạn `G1`–`G10` trong
-  `principles.md`. Giới hạn nào tài liệu design system viết khác, hay component dự án đang làm khác, thì ghi vào brief ở
-  bước 4, kèm câu trích hay đường dẫn component. Chỉ có token thì chưa tính là nói khác (`principles.md`, "Thứ tự ưu
+  `references/page-principles.md`. Giới hạn nào tài liệu design system viết khác, hay component dự án đang làm khác, thì ghi vào brief ở
+  bước 4, kèm câu trích hay đường dẫn component. Chỉ có token thì chưa tính là nói khác (`references/page-principles.md`, "Thứ tự ưu
   tiên").
 
 Ra một dòng `Đọc:`, in ở đầu tin của bước 3 (hay bước 2 nếu phải hỏi):
@@ -163,6 +173,8 @@ Ra một dòng `Đọc:`, in ở đầu tin của bước 3 (hay bước 2 nếu
 > Đọc: design system từ `packages/ui/src/tokens.css` (chỉ có tối, sáng sẽ suy ra); bề rộng trang `80rem` theo `AppLayout.tsx`; màn `/insights` ở `routes/insights.tsx`, 6 khối; vẽ theo `StatTile`, `DataTable`, `BarChart` của dự án.
 
 ## Bước 2 — Đề mơ hồ thì hỏi
+
+<!-- spec: F1.1 F1.6 F1.7 -->
 
 Đề **mơ hồ** khi một trong hai điều còn chưa trả lời được từ đề hay từ dự án:
 
@@ -182,6 +194,8 @@ Không mơ hồ thì sang bước 3. Mơ hồ thì hỏi bằng AskUserQuestion:
 Người dùng chọn "Other" kèm chữ thì lấy chữ đó làm câu trả lời. Câu hỏi nào cũng thành một dòng trong `## Quyết định` của `brief.md`, cột "Ai quyết" ghi `người dùng`.
 
 ## Bước 3 — Tìm phương án theo tình huống dùng
+
+<!-- spec: F1.2 -->
 
 Phương án là **một câu trả lời khác nhau cho "màn này phục vụ ai trước, lúc nào, để biết gì"**, không phải một kiểu bày khác.
 
@@ -214,7 +228,11 @@ Rồi hỏi bằng AskUserQuestion: `multiSelect: true`, mỗi phương án mộ
 
 ## Bước 4 — Dựng: brief chung, mỗi phương án một agent con
 
+<!-- spec: — -->
+
 ### Agent chính chuẩn bị (tuần tự)
+
+<!-- spec: F1.2 F1.3 F1.5 F1.6 F1.8 F3.1 F3.4 F3.5 -->
 
 ```bash
 D=$(node $SKILL/scripts/new-design.mjs init <slug> --tokens <nguồn> [--page-width <bề rộng ở bước 1>])
@@ -252,20 +270,22 @@ Ba mục quyết việc so được giữa các page:
 
 ### Gọi agent con
 
+<!-- spec: F1.3 F1.5 F5.1 F5.2 F5.5 -->
+
 Từ 2 phương án trở lên: gọi **mọi agent con trong cùng một lượt** (Agent tool, `subagent_type: "general-purpose"`, mỗi phương án một lần gọi, cùng một tin). Một phương án thì agent chính tự dựng theo mục "Viết một page".
 
 Lời giao cho mỗi agent con:
 
 ```
 Dựng page cho phương án <A · tên> trong thư mục design <$D>.
-Đọc trước: <$SKILL>/SKILL.md, mục "Viết một page" và "Bước 5"; <$SKILL>/principles.md (hết file); <$D>/brief.md.
+Đọc trước: <$SKILL>/SKILL.md, mục "Viết một page" và "Bước 5"; <$SKILL>/references/page-principles.md (hết file); <$D>/brief.md.
 Chỉ sửa đúng file <$D>/<NN-slug.html>. Không đụng brief.md, pages.js, tokens.js, ../_shell/ hay page khác.
 Phương án: trung tâm là "<câu hỏi>"; đơn vị chính <…>; hy sinh <…>. Bản phác:
 <bản phác đã in cho người dùng>
 variables khai đúng bảng "Nút dữ liệu chung"; dữ liệu giả theo "Dữ liệu chung"; tweaks tự chọn cho phương án này.
 Xong thì chạy: node <$SKILL>/scripts/check.mjs <$D>/<NN-slug.html> [--pw <dir>] tới khi exit 0, tối đa ba vòng;
-mở ảnh <$D>/shots/<NN-slug>--* ra, đi danh sách tự kiểm của principles.md.
-Trả về: dòng cuối của check.mjs; khối "Tự kiểm" theo principles.md; variables, tweaks, preset; trạng thái riêng đã thêm;
+mở ảnh <$D>/shots/<NN-slug>--* ra, đi danh sách tự kiểm của references/page-principles.md.
+Trả về: dòng cuối của check.mjs; khối "Tự kiểm" theo references/page-principles.md; variables, tweaks, preset; trạng thái riêng đã thêm;
 chỗ còn lấn cấn.
 ```
 
@@ -273,10 +293,12 @@ Lệnh `check.mjs` của các agent con chạy song song được: mỗi page m�
 
 ### Viết một page
 
+<!-- spec: F1.3 F1.9 F2.1 F2.2 F3.1 F3.2 F3.3 F5.2 -->
+
 Sửa file page theo khuôn `templates/details.html`, giữ nguyên thứ tự nạp script ở `<head>`.
 
 **Màu dùng vào đâu, cỡ chữ, khoảng cách, bóng, nút chính, đánh dấu `h1` / `aria-*` / `data-chart`**: theo
-`principles.md`. Đọc hết file đó trước khi viết; luật không chép lại ở đây.
+`references/page-principles.md`. Đọc hết file đó trước khi viết; luật không chép lại ở đây.
 
 **Khai nút: `window.DESIGN`**
 
@@ -331,6 +353,8 @@ window.DESIGN = {
 
 ## Bước 5 — Kiểm bằng code, bắt buộc
 
+<!-- spec: F3.4 F3.5 F5.1 F5.2 F5.3 F5.4 F5.5 -->
+
 ```bash
 node $SKILL/scripts/check.mjs "$D"
 ```
@@ -341,17 +365,19 @@ Agent con kiểm page của mình; agent chính, sau khi mọi agent con trả v
 - **file**: thứ tự nạp, mã màu, `pages.js`, `brief.md` đủ mục, hết chỗ trống, cột "Ai quyết" hợp lệ, bảng `## Pages` khớp `pages.js`, variables đúng bảng "Nút dữ liệu chung", `state` đủ bốn giá trị;
 - **khi chạy**: lỗi console, nút khai mà vặn không đổi UI, nút câm, URL mở lại đúng giá trị, khung tablet / mobile đúng bề rộng, nhãn "(suy ra)", khối ngoài cùng đúng bề rộng trang;
 - **bố cục**: cuộn ngang, chữ đè chữ, chữ bị ép mỗi dòng một chữ, khung nổi lọt ra ngoài màn hình hay nằm dưới toolbar, ô số trong data-panel bị cắt;
-- **nguyên tắc và giới hạn**: phần **Máy kiểm** của từng luật trong `principles.md` (`scripts/principles-check.mjs`), ở
+- **nguyên tắc và giới hạn**: phần **Máy kiểm** của từng luật trong `references/page-principles.md` (`scripts/principles-check.mjs`), ở
   từng dòng file, mọi tổ hợp, lượt rê và bấm, và cả thư mục. Lỗi mở đầu bằng ID luật (`[N13]`, `[G4]`): mở đúng mục
-  đó để sửa. Giới hạn có trong bảng nhường của `brief.md` thì không kiểm. Luật trong `principles.md` mà chưa có kiểm thì
+  đó để sửa. Giới hạn có trong bảng nhường của `brief.md` thì không kiểm. Luật trong `references/page-principles.md` mà chưa có kiểm thì
   lệnh dừng với exit 2.
 
 - Sửa tới khi **exit 0**, tối đa ba vòng. Còn lỗi sau ba vòng thì lúc giao ghi từng dòng lỗi và vì sao chưa sửa; không giao như thể đã sạch.
 - Exit 0 xong vẫn **mở ảnh trong `shots/` ra**: 1280 và 375, sáng và tối, `state` rỗng và lỗi, preset ca biên, ảnh
-  `--bam-*` của modal và panel. Trên các ảnh đó đi hết dòng **Tự kiểm** của `principles.md` (phần máy không đo được),
+  `--bam-*` của modal và panel. Trên các ảnh đó đi hết dòng **Tự kiểm** của `references/page-principles.md` (phần máy không đo được),
   trả về theo mục "Trả về danh sách tự kiểm".
 
 ## Bước 6 — Giao
+
+<!-- spec: F1.2 F1.4 F1.6 F1.10 F3.1 F3.4 F3.5 F5.3 -->
 
 Theo tiếng người dùng đang viết, ngắn:
 
@@ -367,11 +393,14 @@ Theo tiếng người dùng đang viết, ngắn:
 
 ## Vòng sau
 
+<!-- spec: F1.2 F1.5 F1.6 F1.8 F4 -->
+
 **Mỗi phương án đúng một page. Góp ý thì sửa thẳng page đó** tới khi người dùng thấy xong.
 
 - Góp ý đổi bố cục, khối, nút, dữ liệu, chữ → sửa page của phương án đó, chạy lại `check.mjs`, rồi
   `new-design.mjs touch "$D" <file> --note "<góp ý>"` để khung mô tả của nút phương án ghi ngày sửa và góp ý cuối.
-- Góp ý đổi dữ liệu chung hay nút dữ liệu chung → sửa `brief.md` trước, rồi sửa **mọi** page cho khớp.
+- Góp ý đổi dữ liệu chung hay nút dữ liệu chung → sửa `brief.md` trước, tính lại `## Số kiểm chéo ở mặc định`,
+  rồi sửa **mọi** page cho khớp và chạy `check.mjs` cả thư mục: các page vẫn cùng bộ key, cùng con số.
 - Thêm một phương án chưa chọn (người dùng nói, hay tick ở câu hỏi nhắc lại các dòng `chưa chọn` trong
   `## Pages`) → `new-design.mjs page … --option --question --unit --tradeoff`, điền file và đổi trạng thái dòng đó trong `brief.md`, thêm một dòng
   vào `## Quyết định`, gọi một agent con.
@@ -381,6 +410,8 @@ Theo tiếng người dùng đang viết, ngắn:
   page nào là bản đang làm.
 
 ## Bẫy đã gặp
+
+<!-- spec: F1.2 F1.3 F1.5 F2 F3.1 F3.2 F5.1 F5.4 F5.5 -->
 
 | Bẫy | Hậu quả | Cách tránh |
 | --- | ------- | ---------- |

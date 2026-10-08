@@ -2,6 +2,8 @@
 // config-panel vặn tweaks), đọc ghi URL, khung mobile / tablet. Tên các khối: SKILL.md, mục "Các khối điều khiển".
 // Page khai window.DESIGN rồi nạp file này; tokens.js và pages.js nạp trước, Alpine nạp sau bằng defer. toolbar và
 // panel ghi giá trị vào Alpine.store("design"); page đọc $store.design.<key>.
+//
+// spec: F2 F4.2
 (() => {
   const design = window.DESIGN ?? {};
   const theme = window.DESIGN_THEME ?? { base: "light", derived: null, fonts: [] };
