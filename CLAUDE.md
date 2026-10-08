@@ -115,6 +115,48 @@ Plan để ở `.plan/NNN-<tên-skill>-<slug>.md`. `NNN` đếm chung cho cả t
 `ls .plan` là biết plan thuộc skill nào, vd `004-design-uiux-dung-theo-buoc.md`. Plan đụng nhiều skill thì lấy tên
 skill chính của plan.
 
+## Probe
+
+Probe là script thăm dò một câu hỏi kỹ thuật trước khi plan chốt quyết định, ứng với một mục `### P<n>` trong §4
+Probe của plan. Mỗi plan có một thư mục probe; mỗi `P<n>` là một thư mục con:
+
+```text
+.probe/009-design-uiux-tien-do-dung/
+  P1-quick-check/
+    probe.mjs
+    probe.log
+  P2-poll-file/
+    probe.mjs
+    probe.log
+    page.html
+```
+
+- Tên thư mục plan là tên file plan bỏ đuôi `.md`. Nhờ vậy `ls .probe` khớp từng dòng với `ls .plan`.
+- Tên thư mục con là mã `P<n>` trong plan, thêm vài chữ tả câu hỏi.
+- Khi probe chạy trước lúc có file plan, agent lấy số kế tiếp trong `.plan/` và slug định đặt cho plan. File plan
+  viết sau dùng đúng tên đó. Nếu đổi tên plan, thì đổi tên thư mục probe theo.
+
+Luật cho từng probe:
+
+- Thư mục probe chứa mọi thứ script cần: script, page thử, file đầu vào chép từ chỗ khác. Probe không ghi ra `.test/`
+  hay `.design/`. Nhờ vậy khi skill đổi, probe vẫn chạy lại được trên đúng đầu vào lúc đo.
+- Script tìm file theo thư mục của chính nó (`import.meta.url`), nên chạy từ đâu cũng được.
+- Dòng **Cách chạy lại:** trong plan ghi lệnh chạy từ gốc repo, vd
+  `node .probe/009-design-uiux-tien-do-dung/P2-poll-file/probe.mjs`.
+- Nếu script cần thứ nằm ngoài repo (Playwright, Chrome), thì script nhận đường dẫn qua biến môi trường hoặc tham
+  số. Dòng **Cách chạy lại:** ghi luôn biến đó, vd `PW_DIR=<thư mục có node_modules/playwright>`.
+- Script ghi kết quả ra file cùng tên, đuôi `.log` (`probe.mjs` ra `probe.log`). Dòng đầu log ghi ngày chạy và version
+  của thứ được đo: Node, Chrome, Alpine…
+- Dòng **Kết quả:** trong plan nêu số đo và tên file log chứa số đó.
+- Khi cần đo thêm một biến thể, agent viết script và log mới (`probe2.mjs`, `probe2.log`). Log mà plan đã trích không
+  bị ghi đè.
+- Khi plan sau dùng lại probe của plan trước, dòng **Cách chạy lại:** của plan sau trỏ vào thư mục của plan trước.
+  Agent không chép probe sang thư mục plan mới.
+- `.probe/` được commit cùng plan. Plan trong git trỏ tới lệnh nào thì lệnh đó phải có trong git.
+
+Probe khác chạy thử skill: probe hỏi thiết kế có đứng được không, chạy trước khi chốt plan. Chạy thử gọi skill thật để
+nghiệm thu, kết quả để ở `.test/`.
+
 ## Chạy thử skill
 
 Chạy skill qua `.claude/skills`, symlink trỏ về `skills/` của repo. Như vậy thứ được chạy là bản

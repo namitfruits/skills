@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C3 · nút chỉ hiện khi mục tiêu bằng 0</title>
+<!-- Ca C3 của test-check.mjs: nút "Đặt mục tiêu" chỉ hiện khi target = 0, mở một panel z-50 sát mép trên nên
+     nằm dưới toolbar. Lượt bấm phải bấm tới nút này ở tổ hợp target = 0 và báo khung nổi nằm dưới toolbar. -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  window.DESIGN = {
+    lang: "vi",
+    variables: [
+      { key: "target", label: "Mục tiêu", type: "number", min: 0, max: 4000, step: 100, unit: "triệu ₫", default: 2000 },
+      { key: "state", label: "Trạng thái", type: "select", default: "data", options: ["data", "loading", "empty", "error"] },
+    ],
+    tweaks: [],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data="{ open: false }">
+  <div class="mx-auto max-w-page px-md py-lg">
+    <h1 class="font-display text-display-sm text-ink">Mục tiêu tháng</h1>
+    <section data-block="1" class="mt-lg grid gap-sm">
+      <p x-show="$store.design.state === 'loading'" class="text-body-sm text-muted">Đang tải…</p>
+      <div x-show="$store.design.state === 'error'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Không tải được mục tiêu.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Thử lại</button>
+      </div>
+      <div x-show="$store.design.state === 'empty'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Chưa có doanh thu tháng này.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Xem tháng trước</button>
+      </div>
+      <div x-show="$store.design.state === 'data'" class="grid gap-xs">
+        <p class="text-body text-ink" x-text="$store.design.target > 0 ? `Mục tiêu: ${$store.design.target} triệu ₫` : 'Chưa đặt mục tiêu'"></p>
+        <button type="button" x-show="$store.design.target == 0" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="open = true">Đặt mục tiêu</button>
+      </div>
+    </section>
+  </div>
+  <div x-show="open" class="fixed inset-x-0 top-0 z-50 border-b border-hairline bg-surface-card p-lg">
+    <form data-block="2" role="dialog" aria-modal="true" aria-labelledby="target-title" class="mx-auto max-w-md" @submit.prevent="open = false">
+      <div class="flex items-start justify-between gap-sm">
+        <h2 id="target-title" class="text-title-lg text-ink">Đặt mục tiêu</h2>
+        <button type="button" aria-label="Đóng" class="grid size-8 place-items-center rounded-md text-muted" @click="open = false"><i data-lucide="x" class="size-4"></i></button>
+      </div>
+      <div class="mt-md flex justify-end gap-xs">
+        <button type="button" class="h-9 rounded-md px-md text-button text-body" @click="open = false">Huỷ</button>
+        <button type="submit" class="h-9 rounded-md bg-primary px-md text-button text-on-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

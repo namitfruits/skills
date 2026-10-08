@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Kho Nhanh chỉ có giao diện tối: màn kho mở cả ca trên màn hình treo tường. */
+@theme {
+  --color-canvas: #111315;
+  --color-surface-card: #1a1d21;
+  --color-surface-soft: #22262b;
+  --color-hairline: #2e3238;
+  --color-ink: #f2f3f5;
+  --color-body: #c9ccd1;
+  --color-muted: #8b9099;
+  --color-primary: #3bc9db;
+  --color-primary-active: #22b8cf;
+  --color-on-primary: #0b1f23;
+  --color-success: #51cf66;
+  --color-warning: #fcc419;
+  --color-error: #ff6b6b;
+
+  --font-sans: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-card: 6px;
+  --radius-control: 4px;
+
+  --container-content: 1152px;
+}

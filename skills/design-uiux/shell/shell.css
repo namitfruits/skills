@@ -55,9 +55,10 @@
 .ds-bar svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ds-bar button, .ds-bar select, .ds-bar input { font: inherit; color: inherit; }
 .ds-bar :focus-visible { outline: 2px solid var(--ds-bar-accent); outline-offset: 1px; }
-/* toolbar ba cột: option-switcher ở giữa, view-controller bên phải. Cột phải luôn đủ cho view-controller, cột trái co
-   trước: đủ chỗ thì A B C nằm chính giữa, thiếu chỗ thì A B C dồn dần sang trái. */
-.ds-toolbar { display: grid; flex: 1 1 0; min-width: min-content; grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 12px; }
+/* toolbar ba cột: nhãn tiến độ bên trái, option-switcher ở giữa, view-controller bên phải. Hai cột ngoài luôn đủ cho
+   thứ trong nó: đủ chỗ thì A B C nằm chính giữa, thiếu chỗ thì A B C lệch về phía cột hẹp hơn. */
+.ds-toolbar { display: grid; flex: 1 1 0; min-width: min-content; grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 12px; }
+.ds-toolbar > .ds-status-wrap { grid-column: 1; justify-self: start; }
 .ds-toolbar > .ds-pages { grid-column: 2; }
 .ds-bar-view { display: flex; grid-column: 3; justify-self: end; align-items: center; gap: 8px; }
 /* Lề đủ chỗ: hai nút mở panel đứng ở lề ngoài trang, thẳng hàng với panel (12px cách mép màn hình). */
@@ -209,6 +210,56 @@
 }
 .ds-icon-button[aria-pressed="true"] { color: var(--ds-bar-fg); background: var(--ds-bar-field); }
 
+/* Nhãn tiến độ: đang dựng, đang sửa (chấm và chữ màu accent kèm số bước), xong (dấu tick kèm ngày sửa cuối). Bấm mở
+   danh sách bước theo vòng. Màn hẹp chỉ giữ dấu và số bước, bỏ chữ và ngày, để toolbar vẫn vừa một dòng. */
+.ds-status-wrap { position: relative; }
+.ds-status-wrap[hidden] { display: none; }
+.ds-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-bar-line);
+  border-radius: 8px;
+  background: var(--ds-bar-bg);
+  color: var(--ds-bar-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ds-status[data-state="building"], .ds-status[data-state="revising"] { color: var(--ds-bar-accent); font-weight: 600; }
+.ds-status[aria-expanded="true"] { border-color: var(--ds-bar-accent); }
+.ds-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ds-status-count { font-variant-numeric: tabular-nums; }
+.ds-status-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1001;
+  display: grid;
+  gap: 4px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 24px));
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ds-bar-edge);
+  border-radius: 10px;
+  background: var(--ds-bar-bg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  list-style: none;
+}
+.ds-status-list li { display: flex; gap: 8px; color: var(--ds-bar-fg); }
+.ds-status-list li span { width: 1em; flex-shrink: 0; text-align: center; }
+.ds-status-list li[data-step="done"] { color: var(--ds-bar-muted); }
+.ds-status-list li[data-step="current"] { color: var(--ds-bar-accent); font-weight: 600; }
+.ds-status-list .ds-status-round { margin-top: 4px; color: var(--ds-bar-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.ds-status-list .ds-status-round:first-child { margin-top: 0; }
+@media (max-width: 720px) {
+  .ds-status-label, .ds-status[data-state="done"] .ds-status-count { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ds-status-wrap { position: static; }
+  .ds-status-list { left: 12px; right: 12px; width: auto; max-width: none; }
+}
+
 /* option-switcher: nút A B C. Khung mô tả hiện khi đưa chuột, Tab tới, hay chạm giữ (data-tip). */
 .ds-pages { position: relative; display: inline-flex; align-items: center; gap: 10px; }
 .ds-options { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--ds-bar-field); }
@@ -247,6 +298,14 @@
 .ds-option-tip b { font-weight: 600; }
 .ds-option-tip small { color: var(--ds-bar-muted); font-size: 11px; }
 .ds-option-wrap:hover .ds-option-tip, .ds-option-wrap:focus-within .ds-option-tip, .ds-option-wrap[data-tip] .ds-option-tip { display: grid; }
+/* Dãy màn của thư mục luồng: nút rộng theo chữ "1 · Welcome", mũi tên mờ giữa hai nút. Màn hẹp chỉ còn số. */
+.ds-screens { align-items: center; }
+.ds-option.ds-screen { display: inline-flex; align-items: center; gap: 4px; width: auto; padding: 0 10px; font-weight: 500; white-space: nowrap; }
+.ds-option.ds-screen b { font-weight: 600; }
+.ds-screen-arrow { color: var(--ds-bar-muted); font-size: 12px; padding: 0 2px; }
+@media (max-width: 480px) {
+  .ds-screen-name { display: none; }
+}
 /* Màn hẹp: khung mô tả rộng hết toolbar, ngay dưới toolbar. Canh theo nút thì nút C đẩy khung ra ngoài màn 375. */
 @media (max-width: 720px) {
   .ds-pages, .ds-option-wrap { position: static; }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C1 · x-show cùng :style chuỗi</title>
+<!-- Ca C1 của test-check.mjs: vạch mục tiêu chỉ hiện ở cột đang chạy, ẩn bằng x-show, vị trí bằng :style chuỗi.
+     Vặn "Mục tiêu" thì :style tính lại, ghi đè style và xoá display:none: vạch hiện ở mọi cột. -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  window.DESIGN = {
+    lang: "vi",
+    variables: [
+      { key: "target", label: "Mục tiêu", type: "number", min: 0, max: 4000, step: 100, unit: "triệu ₫", default: 2000 },
+      { key: "state", label: "Trạng thái", type: "select", default: "data", options: ["data", "loading", "empty", "error"] },
+    ],
+    tweaks: [],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data="chartPage()">
+  <div class="mx-auto max-w-page px-md py-lg">
+    <h1 class="font-display text-display-sm text-ink">Doanh thu 6 tháng</h1>
+    <p class="mt-xxs text-body-sm text-muted" x-text="`Mục tiêu tháng 6: ${$store.design.target} triệu ₫`"></p>
+    <section data-block="1" class="mt-lg">
+      <p x-show="$store.design.state === 'loading'" class="text-body-sm text-muted">Đang tải…</p>
+      <div x-show="$store.design.state === 'error'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Không tải được số liệu.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Thử lại</button>
+      </div>
+      <div x-show="$store.design.state === 'empty'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Chưa có đơn nào.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Xem tháng trước</button>
+      </div>
+      <div x-show="$store.design.state === 'data'" data-chart class="flex h-48 items-end gap-xs">
+        <template x-for="col in cols" :key="col.label">
+          <div class="relative flex h-full flex-1 flex-col justify-end">
+            <div class="rounded-t-xs bg-primary" :style="`height:${col.value / 40}%`"></div>
+            <div x-show="col.running && $store.design.target > 0" class="absolute inset-x-0 border-t-2 border-dashed border-ink" :style="`bottom:${$store.design.target / 40}%`"></div>
+          </div>
+        </template>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+  function chartPage() {
+    return {
+      cols: [1200, 1500, 1350, 1800, 1650, 900].map((value, index) => ({ label: `T${index + 1}`, value, running: index === 5 })),
+    };
+  }
+</script>
+</body>
+</html>

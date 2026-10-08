@@ -1,0 +1,19 @@
+--- SKILL.md
++++ SKILL.md
+@@ -162,16 +162,11 @@
+   1. đề chỉ định. Đề ghi lệnh `npx getdesign@latest add <tên>` thì **không chạy lệnh đó**: ghi lại `<tên>`, bước 4
+      dùng `init --getdesign <tên>`. Chạy thẳng `getdesign add` thì file nằm ở gốc git repo hay thư mục làm việc, ngoài
+      `.design/`;
+-  2. file CSS có `@theme` của dự án (`grep -rl "@theme" --include='*.css' . | grep -v node_modules`).
+-     Mẫu `*.css` phải có nháy: zsh tự mở `*` trước khi tới `grep`, không khớp file nào thì báo `no matches found` và
+-     `grep` không chạy. Lệnh báo lỗi là chưa tìm được gì, không có nghĩa dự án không có file `@theme`;
+   3. `DESIGN.md` ở gốc dự án;
+   4. không có gì thì chạy `node $SKILL/scripts/new-design.mjs designs`, giữ stdout cho mục "Chọn design của
+      getdesign" ở bước 2. Lệnh thoát mã 2 (mất mạng, getdesign hỏng) thì bỏ qua việc chọn: để trống `--tokens`, skill
+      dùng `shell/default-design.md`, và in vào chat dòng `Không lấy được design của getdesign (<dòng lỗi stderr>); dựng
+      bằng bộ mặc định.`
+-
+-  File CSS có `@theme` thắng `DESIGN.md` khi cả hai cùng có, vì đó là giá trị app đang chạy.
+ - **Màn liên quan** (đề cải thiện một màn): tìm route (`grep -rn "<đường dẫn>" --include='*.tsx' .`), đọc file màn và component nó dùng. Ghi lại các khối đang có, chữ, trạng thái, số liệu thật, chỗ đang vướng. Không tự chạy app; người dùng đưa ảnh hay URL đang chạy thì dùng cái đó.
+ - **Component của dự án** (`ls` thư mục component dùng chung): page vẽ cho **trông giống** chúng (dáng, cỡ, trạng thái), không cần trùng code.
+ - **Bề rộng trang**: có codebase thì lấy theo app, không tự chọn. Tìm layout bọc màn (route cha, `Layout`, `AppShell`)

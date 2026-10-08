@@ -1,0 +1,33 @@
+--- SKILL.md
++++ SKILL.md
+@@ -161,12 +161,6 @@
+   File CSS có `@theme` thắng `DESIGN.md` khi cả hai cùng có, vì đó là giá trị app đang chạy.
+ - **Màn liên quan** (đề cải thiện một màn): tìm route (`grep -rn "<đường dẫn>" --include='*.tsx' .`), đọc file màn và component nó dùng. Ghi lại các khối đang có, chữ, trạng thái, số liệu thật, chỗ đang vướng. Không tự chạy app; người dùng đưa ảnh hay URL đang chạy thì dùng cái đó.
+ - **Component của dự án** (`ls` thư mục component dùng chung): page vẽ cho **trông giống** chúng (dáng, cỡ, trạng thái), không cần trùng code.
+-- **Bề rộng trang**: có codebase thì lấy theo app, không tự chọn. Tìm layout bọc màn (route cha, `Layout`, `AppShell`)
+-  và `max-w-*` / `max-width` của khung chứa nội dung (`grep -rn "max-w-\|max-width" <thư mục layout>`). Khung tràn
+-  hết phần còn lại thì `full`. Không có codebase mà tài liệu design system ghi bề rộng nội dung (`max-width`, "content
+-  width", "Max content width: ~1200px") thì dùng số đó, bỏ dấu `~`. Không nguồn nào ghi thì bỏ cờ, mặc định `64rem`
+-  (1024px). Giá trị này đi vào `init --page-width`; mọi page cùng dùng nên đặt cạnh nhau so được. `## Design system`
+-  của `brief.md` ghi bề rộng lấy từ đâu.
+ - **Giới hạn nhường cho design system**: đọc xong design system thì so với các giới hạn `G1`–`G10` trong
+   `references/page-principles.md`. Giới hạn nào tài liệu design system viết khác, hay component dự án đang làm khác, thì ghi vào brief ở
+   bước 4, kèm câu trích hay đường dẫn component. Chỉ có token thì chưa tính là nói khác (`references/page-principles.md`, "Thứ tự ưu
+@@ -174,7 +168,7 @@
+ 
+ Ra một dòng `Đọc:`, in ở đầu tin của bước 3 (hay bước 2 nếu phải hỏi):
+ 
+-> Đọc: design system từ `packages/ui/src/tokens.css` (chỉ có tối, sáng sẽ suy ra); bề rộng trang `80rem` theo `AppLayout.tsx`; màn `/insights` ở `routes/insights.tsx`, 6 khối; vẽ theo `StatTile`, `DataTable`, `BarChart` của dự án.
++> Đọc: design system từ `packages/ui/src/tokens.css` (chỉ có tối, sáng sẽ suy ra); màn `/insights` ở `routes/insights.tsx`, 6 khối; vẽ theo `StatTile`, `DataTable`, `BarChart` của dự án.
+ 
+ ## Bước 2 — Đề mơ hồ thì hỏi
+ 
+@@ -260,7 +254,7 @@
+ - **`## Tóm tắt đề`**: 2–4 dòng, màn gì, cho ai, để làm gì. Đề nguyên văn để ở `## Đề gốc` cuối file.
+ - **`## Quyết định`**: bảng `Câu hỏi` · `Chọn` · `Ai quyết`, mỗi câu hỏi làm rõ, bước chọn phương án và mỗi điều phải
+   đoán là một dòng. "Ai quyết" chỉ là `người dùng`, `--auto` hay `AI đoán`.
+-- **`## Design system`**: nguồn token, giao diện gốc và suy ra, font thay, component vẽ theo, bề rộng trang lấy từ đâu.
++- **`## Design system`**: nguồn token, giao diện gốc và suy ra, font thay, component vẽ theo.
+   Bảng **"Cặp màu không đủ đọc"**: `init` in ra stderr các cặp màu dưới 4.5 : 1 ở cả giao diện gốc và giao diện suy ra.
+   Cặp nào page sẽ dùng làm chữ (nút chính, chữ phụ, link) thì ghi một dòng, chốt một cách dùng thay lấy từ token của
+   chính design system (chữ `ink` trên nền `primary`, nút chính dạng viền). Cặp chỉ dùng làm nền (cột biểu đồ, chấm

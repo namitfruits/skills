@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -404,7 +404,7 @@
+ 1. Link `file://` của từng page vừa dựng hay vừa sửa (đường dẫn tuyệt đối), page nào là phương án nào.
+ 2. `Đọc:` lấy design system ở đâu; giao diện nào suy ra; font nào thay (`window.DESIGN_THEME.fonts` trong `tokens.js`).
+ 3. Nút vặn: data-panel (variables chung, preset), config-panel (tweaks của từng page).
+-4. Các dòng `AI đoán` và `--auto` trong `## Quyết định` của `brief.md`, mỗi dòng kèm "muốn khác thì nói". Chạy `--auto` thì mở đầu bằng "Chạy `--auto`, đã tự trả lời:" rồi liệt kê. Kèm link `brief.md`.
++4. Các dòng `AI đoán` và `--auto` trong `## Quyết định` của `brief.md`, mỗi dòng kèm "muốn khác thì nói". Kèm link `brief.md`.
+ 5. Kết quả `check.mjs` cả thư mục: số page, số tổ hợp, số lỗi.
+ 6. Giới hạn đã nhường cho design system (bảng trong `## Design system` của `brief.md`), mỗi dòng kèm dẫn chứng; không
+    có thì bỏ mục này.

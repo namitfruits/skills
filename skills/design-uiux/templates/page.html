@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page</title>
+<!-- Thứ tự nạp cố định: token → danh sách page → khai nút → shell → Tailwind → icon → Alpine (defer). -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  // Page mới tạo, chưa dựng gì. Dựng theo danh sách bước dựng cạnh page (<file>.progress.js): lấy bước bằng
+  // new-design.mjs progress, dựng, kiểm nhanh, rồi progress --done. Cách khai variables, tweaks, presets và viết khối:
+  // templates/example.html của skill.
+  window.DESIGN = {
+    lang: "vi",
+    variables: [],
+    tweaks: [],
+    presets: [],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<script>
+  // Mở thẳng file khuôn trong templates/ thì thiếu tokens.js, pages.js, ../_shell/: báo rõ thay vì hiện page vỡ.
+  if (!window.DESIGN_THEME) document.write('<p style="font:16px/1.5 system-ui;padding:24px;max-width:640px">Đây là <b>khuôn</b> của skill design-uiux, không mở trực tiếp được. Tạo page bằng <code>node scripts/new-design.mjs page &lt;thư mục design&gt; &lt;slug&gt; --title "…"</code>, rồi mở file trong thư mục <code>.design/</code>.</p>');
+</script>
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data>
+  <div class="mx-auto max-w-page px-6 py-16">
+    <!-- Khối chờ: bước dựng 1 "Khung các khối" thay cả khối này bằng các khối thật. -->
+    <section data-ds-waiting class="flex flex-col items-center gap-2 text-center">
+      <p class="text-sm text-muted">Đang dựng</p>
+      <h1 class="font-display text-3xl text-ink">{{name}}</h1>
+      <p class="text-sm text-muted">Page tự hiện phần mới mỗi khi một bước dựng xong. Bấm nhãn tiến độ trên thanh công cụ để xem các bước.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

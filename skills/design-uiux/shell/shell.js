@@ -2,8 +2,12 @@
 // config-panel vặn tweaks), đọc ghi URL, khung mobile / tablet. Tên các khối: SKILL.md, mục "Các khối điều khiển".
 // Page khai window.DESIGN rồi nạp file này; tokens.js và pages.js nạp trước, Alpine nạp sau bằng defer. toolbar và
 // panel ghi giá trị vào Alpine.store("design"); page đọc $store.design.<key>.
+// Thư mục luồng (pages.js có `screen`): option-switcher thành dãy màn; page gọi $store.design.next() · prev() để sang
+// màn kề, chữ người xem gõ nằm ở $store.design.form, lưu trong sessionStorage của thư mục design.
+// Tiến độ dựng: nhãn trạng thái ở cột trái toolbar đọc danh sách bước dựng `<file>.progress.js`; có bước mới xong thì
+// tự tải lại, giữ vị trí cuộn, đợi người xem gõ xong.
 //
-// spec: F2 F4.2
+// spec: F2 F4.2 F6.3 F6.4 F6.5
 (() => {
   const design = window.DESIGN ?? {};
   const theme = window.DESIGN_THEME ?? { base: "light", derived: null, fonts: [] };
@@ -14,11 +18,15 @@
   const text = {
     vi: { variables: "Dữ liệu", tweaks: "Cấu hình", presets: "Bộ dữ liệu…", reset: "Về mặc định", light: "Sáng", dark: "Tối",
       derived: "suy ra", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Số khối",
-      options: "Phương án", unit: "Đơn vị chính", tradeoff: "hy sinh", updated: "sửa",
+      options: "Phương án", screens: "Các màn", unit: "Đơn vị chính", tradeoff: "hy sinh", updated: "sửa",
+      status: "Tiến độ dựng page", building: "Đang dựng", revising: "Đang sửa", done: "Xong",
+      roundBuild: "Dựng", roundFeedback: "Góp ý vòng", noBuild: "Page dựng trước khi có danh sách bước",
       presetsHelp: "Một bộ giá trị dựng sẵn cho ca hay gặp hay ca biên. Chọn là đổi cả bộ; ô nào đổi sẽ nháy lên." },
     en: { variables: "Data", tweaks: "Config", presets: "Presets…", reset: "Reset", light: "Light", dark: "Dark",
       derived: "derived", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Section numbers",
-      options: "Options", unit: "Main unit", tradeoff: "trade-off", updated: "edited",
+      options: "Options", screens: "Screens", unit: "Main unit", tradeoff: "trade-off", updated: "edited",
+      status: "Page build progress", building: "Building", revising: "Revising", done: "Done",
+      roundBuild: "Build", roundFeedback: "Feedback round", noBuild: "Built before step lists existed",
       presetsHelp: "A ready-made set of values for a common or edge case. Picking one changes them all; changed fields flash." },
   }[lang];
 
@@ -57,6 +65,29 @@
   applyRootAttributes(state);
   if (isFrame) root.dataset.frame = "1";
 
+  // Luồng: next() · prev() sang page của màn kề theo thứ tự pages.js, giữ mọi giá trị trên URL. Trong khung mobile /
+  // tablet thì nhờ trang cha chuyển, để toolbar đổi theo. Chữ người xem gõ (`form`) không lên URL: link chép không mang
+  // theo mật khẩu mẫu. sessionStorage dùng chung giữa các file và iframe cùng tab khi mở bằng file://.
+  const currentFile = decodeURIComponent(location.pathname.split("/").pop());
+  const isFlow = pages.some((page) => page.screen);
+  const formKey = `ds-form:${decodeURIComponent(location.pathname.split("/").slice(0, -1).join("/"))}`;
+  const readForm = () => {
+    try {
+      return JSON.parse(sessionStorage.getItem(formKey) ?? "{}") ?? {};
+    } catch {
+      return {};
+    }
+  };
+  function go(offset) {
+    const target = pages[pages.findIndex((page) => page.file === currentFile) + offset];
+    if (!target) return;
+    if (isFrame) parent.postMessage({ type: "design:go", file: target.file }, "*");
+    else location.href = `${target.file}${location.search}`;
+  }
+  state.form = readForm();
+  state.next = () => go(1);
+  state.prev = () => go(-1);
+
   function queryFor(values, extra = {}) {
     const query = new URLSearchParams();
     for (const control of allControls) {
@@ -80,6 +111,7 @@
     dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
     info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
     hash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
   };
 
   // Icon ⓘ cạnh nhãn, mang lời giải thích ô vặn (help). Khung giải thích là một phần tử chung, vẽ bằng helpTip().
@@ -149,8 +181,9 @@
   // option-switcher: mỗi page một nút chữ (A, B, C lấy từ `option` = "A · tên"). Đưa chuột, Tab tới, hay chạm giữ một nút thì hiện
   // khung mô tả: tên, câu hỏi trung tâm, đơn vị chính, cái hy sinh, lần sửa cuối. Thư mục một page thì không có nút.
   function pagesMenuHtml() {
-    const current = decodeURIComponent(location.pathname.split("/").pop());
+    const current = currentFile;
     if (pages.length < 2) return "";
+    if (isFlow) return screensMenuHtml(current);
     const buttons = pages
       .map((page, index) => {
         const letter = page.option?.match(/^\s*([A-Za-z])\s*·/)?.[1]?.toUpperCase() ?? String(index + 1);
@@ -169,9 +202,142 @@
     </div>`;
   }
 
+  // Dãy màn của thư mục luồng: "1 · Welcome → 2 · Đăng ký"; bấm thì sang page đó, giữ mọi giá trị trên URL. Rê vào
+  // thấy việc của màn (`purpose`). Màn hẹp chỉ còn số.
+  function screensMenuHtml(current) {
+    const items = pages
+      .map((page, index) => {
+        const [, number, name] = page.screen?.match(/^\s*(\d+)\s*·\s*(.*)$/) ?? [null, String(index + 1), page.screen ?? page.title];
+        const file = escapeHtml(page.file).replace(/'/g, "");
+        const edited = [page.updated && `${text.updated} ${page.updated}`, page.note].filter(Boolean).join(" · ");
+        const tip = `<span class="ds-option-tip" id="ds-tip-${index}" role="tooltip"><b>${escapeHtml(page.screen ?? page.title)}</b>${page.purpose ? `<span>${escapeHtml(page.purpose)}</span>` : ""}${edited ? `<small>${escapeHtml(edited)}</small>` : ""}</span>`;
+        const arrow = index ? '<span class="ds-screen-arrow" aria-hidden="true">→</span>' : "";
+        return `${arrow}<span class="ds-option-wrap" :data-tip="tip === ${index} ? '' : null">
+          <a class="ds-option ds-screen" data-ds-screen aria-label="${escapeHtml(page.screen ?? page.title)}" href="${file}" @click.prevent="location.href = '${file}' + location.search" aria-describedby="ds-tip-${index}" ${page.file === current ? 'aria-current="page"' : ""}
+            @touchstart.passive="held = false; clearTimeout(hold); hold = setTimeout(() => { tip = ${index}; held = true }, 450)" @touchend="clearTimeout(hold)"><b>${escapeHtml(number)}</b><span class="ds-screen-name">· ${escapeHtml(name)}</span></a>${tip}</span>`;
+      })
+      .join("");
+    return `<div class="ds-pages" data-ds-pages x-data="{ tip: null, held: false, hold: null }" @click.outside="tip = null" @keydown.escape.window="tip = null">
+      <nav class="ds-options ds-screens" aria-label="${text.screens}">${items}</nav>
+    </div>`;
+  }
+
+  // Tiến độ dựng. Danh sách bước dựng của page nằm ở `<file>.progress.js` cạnh page, chỉ agent dựng page đó ghi (qua
+  // new-design.mjs progress: ghi file tạm rồi rename). Trang cha đọc lại file mỗi 2 giây bằng một thẻ <script> mới: trên
+  // file:// đây là cách duy nhất đọc lại một file mà không tải page. `rev` đổi là có bước mới được đánh dấu xong: tải
+  // lại, trừ khi người xem đang gõ thì đợi rời ô. Lần đọc đầu mà thẻ script báo lỗi nạp là page không có danh sách
+  // (dựng trước khi có danh sách bước): coi như xong, thôi đọc. Nạp được mà thiếu dữ liệu là đọc trúng lúc file đang
+  // ghi: bỏ lượt đó, đọc lại lượt sau.
+  const progressFile = `${currentFile.replace(/\.html?$/, "")}.progress.js`;
+  let progress = null; // null: chưa đọc được lần nào · false: page không có danh sách · object: lần đọc gần nhất
+  let progressTimer = null;
+  let pendingReload = false;
+  let frameTyping = false;
+  // Chỉ ô gõ chữ: select, thanh kéo, ô tick giữ con trỏ sau khi chọn, tính chúng vào thì page đợi mãi không tải lại.
+  const typingSelector = ["textarea", "[contenteditable]:not([contenteditable='false'])", "input:not([type])", ...["text", "search", "email", "password", "tel", "url", "number"].map((type) => `input[type=${type}]`)].join(", ");
+  const isTyping = () => frameTyping || Boolean(document.activeElement?.matches?.(typingSelector));
+  function reloadWhenIdle() {
+    if (isTyping()) pendingReload = true;
+    else location.reload();
+  }
+  // focusout chạy trước khi con trỏ sang ô kế: đợi một nhịp rồi mới xem còn gõ không.
+  const reloadIfDoneTyping = () => setTimeout(() => pendingReload && !isTyping() && location.reload(), 0);
+
+  function readProgress() {
+    const slot = (window.DESIGN_PROGRESS ||= {});
+    delete slot[currentFile];
+    const tag = document.createElement("script");
+    tag.src = `${encodeURIComponent(progressFile)}?t=${Date.now()}`;
+    tag.onload = () => {
+      tag.remove();
+      const entry = slot[currentFile];
+      if (!entry || typeof entry.rev !== "number" || !Array.isArray(entry.build)) return;
+      if (progress && entry.rev !== progress.rev) return reloadWhenIdle();
+      progress = entry;
+      renderStatus();
+    };
+    tag.onerror = () => {
+      tag.remove();
+      if (progress !== null) return;
+      progress = false;
+      clearInterval(progressTimer);
+      renderStatus();
+    };
+    document.head.append(tag);
+  }
+  function watchProgress() {
+    // Lỗi cú pháp của lượt đọc trúng file đang ghi là chuyện đã tính: không để nó thành lỗi JS của page.
+    window.addEventListener("error", (event) => event.filename?.includes(".progress.js") && event.preventDefault(), true);
+    readProgress();
+    progressTimer = setInterval(() => document.visibilityState === "visible" && readProgress(), 2000);
+    document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && progress !== false && readProgress());
+    document.addEventListener("focusout", reloadIfDoneTyping);
+  }
+
+  // Nhãn trạng thái: còn bước vòng 1 chưa xong là đang dựng, còn bước vòng góp ý (round ≥ 2) chưa xong là đang sửa,
+  // không còn gì (hay page không có danh sách) là xong kèm ngày sửa cuối trong pages.js. Bấm mở danh sách bước theo vòng.
+  function progressStatus() {
+    const steps = progress ? progress.build.map((item) => ({ ...item, round: Number(item.round) || 1 })) : null;
+    const open = steps?.find((item) => !item.done);
+    if (!open) {
+      const updated = pages.find((page) => page.file === currentFile)?.updated;
+      const [, month, day] = String(updated ?? "").match(/^\d{4}-(\d{2})-(\d{2})/) ?? [];
+      return { state: "done", label: text.done, count: day ? `· ${day}/${month}` : "", steps, open: null };
+    }
+    const round = steps.filter((item) => item.round === open.round);
+    return { state: open.round === 1 ? "building" : "revising", label: open.round === 1 ? text.building : text.revising, count: `${round.filter((item) => item.done).length}/${round.length}`, steps, open };
+  }
+  const statusHtml = () => `<div class="ds-status-wrap" data-ds-status-wrap hidden x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+      <button type="button" class="ds-status" data-ds-status title="${text.status}" :aria-expanded="String(open)" aria-controls="ds-status-list" @click="open = !open"></button>
+      <ul class="ds-status-list" id="ds-status-list" data-ds-status-list x-show="open"></ul>
+    </div>`;
+  function renderStatus() {
+    const wrap = document.querySelector("[data-ds-status-wrap]");
+    if (!wrap) return;
+    const status = progressStatus();
+    const rounds = [...new Set((status.steps ?? []).map((item) => item.round))];
+    const button = wrap.querySelector("[data-ds-status]");
+    button.dataset.state = status.state;
+    button.innerHTML = `${status.state === "done" ? icons.check : '<i class="ds-status-dot"></i>'}<span class="ds-status-label">${status.label}</span>${status.count ? ` <span class="ds-status-count">${status.count}</span>` : ""}`;
+    wrap.querySelector("[data-ds-status-list]").innerHTML = status.steps
+      ? rounds.map((round) => `<li class="ds-status-round">${round === 1 ? text.roundBuild : `${text.roundFeedback} ${round}`}</li>${status.steps
+          .filter((item) => item.round === round)
+          .map((item) => `<li data-step="${item.done ? "done" : item === status.open ? "current" : "todo"}"><span aria-hidden="true">${item.done ? "✓" : item === status.open ? "●" : "○"}</span>${escapeHtml(item.task)}</li>`)
+          .join("")}`).join("")
+      : `<li>${text.noBuild}</li>`;
+    wrap.hidden = false;
+    alignBar(Alpine.store("design").viewport);
+  }
+
+  // Vị trí cuộn qua một lần tải lại. Trang cha ghi vào sessionStorage mỗi lần rời trang và chỉ cuộn lại khi lần mở này
+  // là tải lại (tự tải lại, F5, Cmd+R). Ở khổ tablet / mobile chỗ cuộn nằm trong iframe: iframe ghi của nó kèm giờ, lần
+  // mở iframe trong 10 giây sau thì cuộn lại. Tailwind và Alpine vẽ xong sau một lúc, trang chưa đủ cao thì cuộn chưa
+  // tới: thử lại tới khi tới, tối đa 2 giây.
+  const scrollKey = `ds-scroll${isFrame ? "-frame" : ""}:${currentFile}`;
+  window.addEventListener("pagehide", () => {
+    try {
+      sessionStorage.setItem(scrollKey, JSON.stringify({ y: window.scrollY, at: Date.now() }));
+    } catch {}
+  });
+  function restoreScroll() {
+    let saved = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem(scrollKey) ?? "null");
+      sessionStorage.removeItem(scrollKey);
+    } catch {}
+    const reloaded = isFrame ? Date.now() - (saved?.at ?? 0) < 10000 : performance.getEntriesByType("navigation")[0]?.type === "reload";
+    if (!reloaded || !Number.isFinite(saved?.y)) return;
+    const started = performance.now();
+    const step = () => {
+      window.scrollTo(0, saved.y);
+      if (Math.abs(window.scrollY - saved.y) > 1 && performance.now() - started < 2000) requestAnimationFrame(step);
+    };
+    step();
+  }
+
   // Nút vặn nằm ở panel: data-panel bên trái, config-panel bên phải, đè lên lề trống hai bên bản thiết kế. toolbar
-  // xếp theo đúng phía đó: trái là nút mở data-panel và option-switcher, phải là view-controller (khổ, sáng tối, số
-  // khối, về mặc định) và nút mở config-panel. Màn đủ rộng thì panel luôn mở, hai nút mở panel ẩn đi.
+  // xếp theo đúng phía đó: trái là nút mở data-panel và nhãn tiến độ, giữa là option-switcher, phải là view-controller
+  // (khổ, sáng tối, số khối, về mặc định) và nút mở config-panel. Màn đủ rộng thì panel luôn mở, hai nút mở panel ẩn đi.
   function toolbarHtml() {
     // Ô bộ dữ liệu hiện bộ đang khớp với giá trị hiện tại; vặn lệch đi thì về "Bộ dữ liệu…".
     const presets = design.presets?.length
@@ -192,12 +358,13 @@
     return `<header class="ds-bar" data-ds-bar x-data="{ panel: null }" @keydown.escape.window="panel = null">
       ${left ? toggleHtml(left) : ""}
       <div class="ds-toolbar" data-ds-toolbar>
+        ${statusHtml()}
         ${pagesMenuHtml()}
         <div class="ds-bar-view">
           ${segmentedHtml("viewport", ["desktop", "tablet", "mobile"].map((value) => [value, icons[value], text[value]]))}
           ${segmentedHtml("theme", ["light", "dark"].map((value) => [value, themeLabel(value), theme.derived === value ? `${text[value]} — ${text.derived}` : text[value]]))}
           <button type="button" class="ds-icon-button" title="${text.blocks}" :aria-pressed="String($store.design.sections)" @click="$store.design.sections = !$store.design.sections">${icons.hash}</button>
-          <button type="button" class="ds-icon-button" title="${text.reset}" @click="Object.assign($store.design, ${escapeHtml(JSON.stringify(Object.fromEntries(controls.map((control) => [control.key, defaultOf(control)]))))})">${icons.reset}</button>
+          <button type="button" class="ds-icon-button" title="${text.reset}" @click="Object.assign($store.design, ${escapeHtml(JSON.stringify({ ...Object.fromEntries(controls.map((control) => [control.key, defaultOf(control)])), form: {} }))})">${icons.reset}</button>
         </div>
       </div>
       ${right ? toggleHtml(right) : ""}
@@ -279,6 +446,23 @@
     frame.contentWindow?.postMessage({ type: "design:set", values: { ...values, viewport: "desktop" } }, "*");
   }
 
+  // Trang cha nhận từ khung mobile / tablet: sang màn khác, chữ vừa gõ, người xem vào hay rời ô gõ (để tự tải lại đợi).
+  window.addEventListener("message", (event) => {
+    if (isFrame || !window.Alpine) return;
+    if (event.data?.type === "design:go" && pages.some((page) => page.file === event.data.file)) location.href = `${event.data.file}${location.search}`;
+    if (event.data?.type === "design:form") Alpine.store("design").form = event.data.form;
+    if (event.data?.type === "design:typing") {
+      frameTyping = Boolean(event.data.typing);
+      reloadIfDoneTyping();
+    }
+  });
+  // Trang cha không đọc được vào iframe trên file://, nên khung mobile / tablet tự báo khi con trỏ vào hay rời ô gõ.
+  if (isFrame) {
+    const reportTyping = () => setTimeout(() => parent.postMessage({ type: "design:typing", typing: Boolean(document.activeElement?.matches?.(typingSelector)) }, "*"), 0);
+    document.addEventListener("focusin", reportTyping);
+    document.addEventListener("focusout", reportTyping);
+  }
+
   window.addEventListener("message", (event) => {
     if (!isFrame || event.data?.type !== "design:set" || !window.Alpine) return;
     const target = Alpine.store("design");
@@ -357,6 +541,13 @@
       helpTip();
     }
     Alpine.effect(() => {
+      const form = JSON.stringify(Alpine.store("design").form ?? {});
+      try {
+        sessionStorage.setItem(formKey, form);
+      } catch {}
+      if (isFrame) parent.postMessage({ type: "design:form", form: JSON.parse(form) }, "*");
+    });
+    Alpine.effect(() => {
       const values = JSON.parse(JSON.stringify(Alpine.store("design")));
       applyRootAttributes(values);
       if (isFrame) return;
@@ -374,5 +565,9 @@
       new ResizeObserver(() => alignBar(Alpine.store("design").viewport)).observe(document.body);
     }
   });
-  document.addEventListener("alpine:initialized", watchIcons);
+  document.addEventListener("alpine:initialized", () => {
+    watchIcons();
+    restoreScroll();
+    if (!isFrame) watchProgress();
+  });
 })();

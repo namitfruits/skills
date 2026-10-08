@@ -19,8 +19,8 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 ## Bố cục: theo trang, không theo màn hình
 
 - Hai mép thanh trên cùng thẳng mép chữ của trang, không sát mép màn hình.
-- toolbar là một khối liền: option-switcher ở giữa trang, view-controller bên phải, luôn cùng một dòng. Thiếu chỗ
-  thì A B C dồn dần sang trái, không chồng lên view-controller.
+- toolbar là một khối liền: nhãn tiến độ bên trái, option-switcher ở giữa trang, view-controller bên phải, luôn cùng
+  một dòng. Thiếu chỗ thì A B C lệch về phía cột hẹp hơn, không chồng lên hai cột ngoài.
 - Đủ chỗ thì panel luôn mở ở lề hai bên, không đè và không bóp khối trang (breakpoint của page vẫn đúng). Thiếu chỗ
   thì panel gập thành hai nút "Dữ liệu", "Cấu hình", hai nút rộng bằng nhau để toolbar cân giữa.
 - Hai nút mở panel đứng ở lề ngoài trang, ngay trên chỗ panel mở ra, khi lề đủ chỗ; lề hẹp mới vào trong thanh.
@@ -29,6 +29,30 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 - Thanh không vừa một dòng thì hai nút mở panel lên dòng trên, toolbar nguyên khối ở dòng dưới. Vừa hay không đo
   bằng bề rộng thật của từng nút, không đoán bằng breakpoint.
 - Khung nổi của shell (mô tả phương án, panel gập) luôn nằm trong màn hình, kể cả ở 375px.
+
+## Dãy màn: thấy mình đang ở đâu trong luồng
+
+- Thư mục luồng thay nút A B bằng dãy màn "1 · Welcome → 2 · Đăng ký → 3 · Hồ sơ", cùng chỗ với option-switcher.
+  Người xem đọc được cả luồng có mấy màn và đang ở màn nào mà không phải rê chuột.
+- Màn đang xem được tô như nút phương án đang chọn; mũi tên giữa hai màn mờ, chỉ để nói thứ tự.
+- Rê vào một màn thì thấy màn đó để làm gì, như khung mô tả của nút phương án.
+- Màn ≤ 480px chỉ còn số: tên màn làm dãy tràn khỏi toolbar ở 375px. Nhãn đủ chữ vẫn nằm ở `aria-label`.
+- Bấm một màn, hay nút "Tiếp tục", "Quay lại" trong page, thì sang page đó với mọi giá trị đang xem trên URL. Ở khung
+  mobile / tablet, trang cha chuyển theo, để dãy màn luôn tô đúng màn đang xem.
+- Nút về mặc định xoá cả chữ đã gõ ở các màn, để đi lại luồng từ đầu.
+
+## Nhãn tiến độ và tự tải lại: biết page đang tới đâu
+
+- **Nhãn tiến độ luôn có**, ở cột trái của toolbar, đối xứng với view-controller bên phải: "● Đang dựng 3/6",
+  "● Đang sửa 1/3" (chấm và chữ màu accent) hay "✓ Xong · 07/10" (chữ nhạt, ngày sửa cuối trong `pages.js`). Số đếm
+  bước của vòng đang mở, không đếm cả danh sách.
+- Bấm nhãn mở danh sách bước dựng, nhóm theo vòng ("Dựng", "Góp ý vòng 2"): ✓ xong, ● bước đang làm, ○ còn lại. Esc hay
+  bấm ngoài thì đóng. Page không có danh sách bước là page đã xong, danh sách ghi một dòng nói vậy.
+- **Không có nút tải lại.** Có bước mới được đánh dấu xong thì page tự tải lại: người xem để page mở là thấy page lớn
+  dần. Giá trị đang vặn nằm trên URL nên còn nguyên; vị trí cuộn cũng giữ, ở cả trang cha lẫn khung mobile / tablet.
+- **Không tải lại khi người xem đang gõ.** Con trỏ đang ở ô gõ chữ (kể cả trong khung mobile / tablet) thì đợi rời ô
+  mới tải. Ô chọn, thanh kéo không tính: chúng giữ con trỏ sau khi chọn, tính vào thì page đợi mãi.
+- Màn hẹp (≤ 720px) nhãn chỉ giữ dấu và số bước, bỏ chữ và ngày, để toolbar vẫn vừa một dòng.
 
 ## data-panel và config-panel: thấy ngay, khó nhập sai
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C10 · C11 · page mới xong bước dựng 1</title>
+<!-- Page A của ca C10 · C11 trong test-check.mjs: mới xong bước dựng 1 (khung các khối, dữ liệu mặc định). variable state
+     đã khai đủ bốn giá trị nhưng page chưa dựng loading, empty, error. Kiểm nhanh ở mặc định phải sạch; kiểm đầy đủ
+     phải báo nút state vặn mà UI không đổi, và còn bước dựng chưa xong. -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  window.DESIGN = {
+    lang: "vi",
+    variables: [
+      { key: "target", label: "Mục tiêu", type: "number", min: 0, max: 4000, step: 100, unit: "triệu ₫", default: 2000 },
+      { key: "state", label: "Trạng thái", type: "select", default: "data", options: ["data", "loading", "empty", "error"] },
+    ],
+    tweaks: [],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data="{ saved: false }">
+  <div class="mx-auto max-w-page px-md py-lg">
+    <h1 class="font-display text-display-sm text-ink">Mục tiêu tháng</h1>
+    <section data-block="1" class="mt-lg grid gap-sm">
+      <div class="grid gap-xs">
+        <p class="text-body text-ink" x-text="`Còn thiếu ${Math.max(0, $store.design.target - 1200)} triệu ₫ tới mục tiêu ${$store.design.target}`"></p>
+        <button type="button" class="h-9 w-fit rounded-md bg-primary px-md text-button text-on-primary" @click="saved = true" x-text="saved ? 'Đã gửi báo cáo' : 'Gửi báo cáo'"></button>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -4,13 +4,17 @@
 //
 //   node test-shell.mjs [--pw <thư mục có node_modules/playwright>] [--out <thư mục ảnh>]
 //
-// .design/ mẫu: 001-shell-test có 3 page A B C, 002-one-page có 1 page; cả hai dùng chung .design/_shell/.
+// .design/ mẫu: 001-shell-test có 3 page A B C, 002-one-page có 1 page, 003-luong là thư mục luồng 3 màn, 004-tien-do
+// có 1 page đang dựng dở; cả bốn dùng chung .design/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
+// đánh dấu xong mọi bước dựng, như page đã giao.
+//
+// spec: F2 F6.3 F6.4 F6.5
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -31,12 +35,41 @@ const options = [
   ["timeline", "B · Timeline tuần", "Quota đã dùng vào những lúc nào?", "session", "dự báo"],
   ["habit", "C · Lưới thói quen", "Ngày nào trong tuần dùng nặng?", "ngày", "giờ và từng session"],
 ];
+const example = readFileSync(join(here, "../templates/example.html"), "utf8");
+const progress = (dir, file, ...params) => run("progress", dir, file, ...params);
+function builtPage(dir, ...params) {
+  const file = run("page", dir, ...params);
+  writeFileSync(file, example);
+  for (let step = 1; step <= 6; step += 1) progress(dir, basename(file), "--done", String(step));
+}
 const multi = run("init", "shell-test", "--root", root);
 for (const [slug, option, question, unit, tradeoff] of options) {
-  run("page", multi, slug, "--title", option.slice(4), "--option", option, "--question", question, "--unit", unit, "--tradeoff", tradeoff);
+  builtPage(multi, slug, "--title", option.slice(4), "--option", option, "--question", question, "--unit", unit, "--tradeoff", tradeoff);
 }
 const single = run("init", "one-page", "--root", root);
-run("page", single, "settings", "--title", "Cài đặt");
+builtPage(single, "settings", "--title", "Cài đặt");
+
+// Thư mục luồng 3 màn: thân page thay bằng khối tối giản có nút "Tiếp tục", "Quay lại" và ô email ở màn 2.
+const flow = run("init", "luong", "--root", root);
+const screens = [
+  ["welcome", "1 · Welcome", "Biết app làm gì, bắt đầu", '<button data-next @click="$store.design.next()">Tiếp tục</button>'],
+  ["dang-ky", "2 · Đăng ký", "Tạo tài khoản", '<input data-email x-model="$store.design.form.email"><button data-prev @click="$store.design.prev()">Quay lại</button><button data-next @click="$store.design.next()">Tiếp tục</button>'],
+  ["ho-so", "3 · Hồ sơ", "Đặt tên, ngân sách", '<p data-echo x-text="$store.design.form.email"></p><button data-prev @click="$store.design.prev()">Quay lại</button>'],
+];
+for (const [slug, screen, purpose, body] of screens) {
+  const file = run("page", flow, slug, "--title", `Onboarding · ${screen.slice(4)}`, "--screen", screen, "--purpose", purpose);
+  const html = readFileSync(file, "utf8").replace(/<main id="design"[\s\S]*<\/main>/, `<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><h1>${screen}</h1>${body}</div></main>`);
+  writeFileSync(file, html);
+  for (let step = 1; step <= 6; step += 1) progress(flow, basename(file), "--done", String(step));
+}
+const refused = (...params) => {
+  try {
+    run(...params);
+    return false;
+  } catch {
+    return true;
+  }
+};
 const pageUrl = (dir, file, query = "") => pathToFileURL(join(dir, file)).href + query;
 
 // ---------- trình duyệt ----------
@@ -245,6 +278,54 @@ for (const width of [1600, 1280, 700, 375]) {
   await page.close();
 }
 
+// Thư mục luồng: dãy màn thay nút A B; next() · prev() sang màn kề giữ query; chữ đã gõ còn khi quay lại; khung mobile
+// bấm "Tiếp tục" thì cả trang cha sang màn sau; nút về mặc định xoá chữ đã gõ.
+{
+  expect("new-design: thêm --screen vào thư mục phương án, hay --option vào thư mục luồng → từ chối",
+    refused("page", multi, "x", "--title", "x", "--screen", "1 · X") && refused("page", flow, "y", "--title", "y", "--option", "D · Y") && refused("page", flow, "z", "--title", "z", "--screen", "Z"));
+  const page = await open(pageUrl(flow, "01-welcome.html", "?theme=dark"), 1280);
+  const menu = await page.$$eval("[data-ds-screen]", (items) => items.map((item) => item.getAttribute("aria-label")).join(" → "));
+  const current = await page.$eval("[data-ds-screen][aria-current]", (element) => element.getAttribute("aria-label"));
+  const letters = await page.$$eval("[data-ds-option]", (items) => items.length);
+  expect("thư mục luồng: dãy màn \"1 · Welcome → 2 · Đăng ký → 3 · Hồ sơ\", màn 1 được tô, không có nút A B", menu.startsWith("1 · Welcome → 2 · Đăng ký → 3 · Hồ sơ") && current === "1 · Welcome" && letters === 0, `${menu} · tô ${current} · ${letters} nút chữ`);
+  await page.screenshot({ path: join(out, "flow-1280.png") });
+  await page.click("[data-next]");
+  await page.waitForURL(/02-dang-ky\.html/);
+  await page.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-bar]"));
+  expect("bấm \"Tiếp tục\" ở màn 1 → sang màn 2, giữ theme=dark", new URL(page.url()).searchParams.get("theme") === "dark", page.url().split("/").pop());
+  await page.fill("[data-email]", "an@vidu.vn");
+  await page.click("[data-next]");
+  await page.waitForURL(/03-ho-so\.html/);
+  await page.waitForFunction(() => window.Alpine && document.querySelector("[data-echo]"));
+  await page.waitForTimeout(100);
+  const echo = await page.$eval("[data-echo]", (element) => element.textContent);
+  await page.click("[data-prev]");
+  await page.waitForURL(/02-dang-ky\.html/);
+  await page.waitForFunction(() => window.Alpine && document.querySelector("[data-email]"));
+  await page.waitForTimeout(100);
+  const kept = await page.inputValue("[data-email]");
+  expect("gõ email ở màn 2, sang màn 3 thấy email, quay lại màn 2 ô vẫn còn chữ", echo === "an@vidu.vn" && kept === "an@vidu.vn", `màn 3 "${echo}", màn 2 "${kept}"`);
+  const linkHasEmail = page.url().includes("vidu");
+  expect("chữ đã gõ không lên URL", !linkHasEmail, page.url().split("/").pop());
+  await page.click(".ds-bar-view .ds-icon-button >> nth=-1");
+  await page.waitForTimeout(100);
+  const cleared = await page.evaluate(() => ({ value: document.querySelector("[data-email]").value, stored: Object.values(sessionStorage).some((item) => item.includes("vidu")) }));
+  expect("nút về mặc định xoá chữ đã gõ ở mọi màn", cleared.value === "" && !cleared.stored, JSON.stringify(cleared));
+  await page.close();
+
+  const narrow = await open(pageUrl(flow, "02-dang-ky.html", "?viewport=mobile"), 375, true);
+  const names = await narrow.$$eval(".ds-screen-name", (items) => items.filter((item) => item.getClientRects().length).length);
+  const fits = await narrow.$eval("[data-ds-pages]", (element) => element.getBoundingClientRect().right <= 375);
+  expect("375px: dãy màn chỉ còn số, nằm trong màn hình", names === 0 && fits, `${names} tên còn hiện`);
+  await narrow.screenshot({ path: join(out, "flow-375.png") });
+  const frame = await narrow.waitForSelector(".ds-frame-wrap iframe").then((element) => element.contentFrame());
+  await frame.waitForFunction(() => window.Alpine && document.querySelector("[data-next]"));
+  await frame.click("[data-next]");
+  await narrow.waitForURL(/03-ho-so\.html/);
+  expect("khung mobile: bấm \"Tiếp tục\" trong page → trang cha sang màn 3, giữ viewport=mobile", new URL(narrow.url()).searchParams.get("viewport") === "mobile", narrow.url().split("/").pop());
+  await narrow.close();
+}
+
 // Thư mục một page: không có option-switcher, view-controller vẫn thẳng mép phải của trang.
 {
   const page = await open(pageUrl(single, "01-settings.html"), 1280);
@@ -253,6 +334,104 @@ for (const width of [1600, 1280, 700, 375]) {
   expect("thư mục một page: không có nút chữ, thanh vẫn thẳng mép phải của trang", count === 0 && Math.abs(bar.pageRight - bar.barRight) <= 1, `${count} nút, trang ${bar.pageRight}, thanh ${bar.barRight}`);
   await page.screenshot({ path: join(out, "one-page-1280.png") });
   await page.close();
+}
+
+// Tiến độ dựng: một page đang dựng dở (thân dài để cuộn, có một ô gõ). Đổi danh sách bước dựng trên đĩa bằng lệnh
+// progress như agent làm, rồi xem page đang mở tự tải lại hay đợi.
+{
+  const building = run("init", "tien-do", "--root", root);
+  const file = basename(run("page", building, "dang-nhap", "--title", "Đăng nhập"));
+  const body = '<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><input data-q placeholder="Tìm"><div style="height:3000px"></div></div></main>';
+  writeFileSync(join(building, file), readFileSync(join(building, file), "utf8").replace(/<main id="design"[\s\S]*<\/main>/, body));
+  const today = new Date().toISOString().slice(5, 10).split("-").reverse().join("/");
+  progress(building, file, "--done", "1");
+  progress(building, file, "--done", "2");
+  const page = await open(pageUrl(building, file, "?theme=dark"), 1280);
+  let loads = 0;
+  page.on("load", () => (loads += 1));
+  const ready = () => page.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
+  const label = () => page.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+  const quiet = async () => {
+    const before = loads;
+    await page.waitForTimeout(4500);
+    return loads === before;
+  };
+  await ready();
+  expect('tiến độ: page đang dựng hiện nhãn "Đang dựng 2/6"', (await label()) === "Đang dựng 2/6", await label());
+  await page.click("[data-ds-status]");
+  const marks = await page.$$eval("[data-ds-status-list] li[data-step] span", (items) => items.map((item) => item.textContent).join(""));
+  expect("tiến độ: bấm nhãn thấy danh sách ✓ ✓ ● ○ ○ ○", marks === "✓✓●○○○", marks);
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await page.waitForTimeout(100);
+  const started = Date.now();
+  progress(building, file, "--done", "3");
+  await page.waitForEvent("load", { timeout: 6000 }).catch(() => null);
+  await ready();
+  await page.waitForTimeout(400);
+  const after = { seconds: (Date.now() - started) / 1000, theme: new URL(page.url()).searchParams.get("theme"), scroll: await page.evaluate(() => window.scrollY), label: await label() };
+  expect("tiến độ: bước mới xong → page tự tải lại trong ≤ 4s, giữ giá trị trên URL và vị trí cuộn", loads === 1 && after.seconds <= 4 && after.theme === "dark" && Math.abs(after.scroll - 900) <= 1 && after.label === "Đang dựng 3/6", JSON.stringify(after));
+
+  await page.focus("[data-q]");
+  progress(building, file, "--done", "4");
+  expect("tiến độ: đang gõ trong ô nhập thì không tải lại", await quiet());
+  await page.evaluate(() => document.activeElement.blur());
+  await page.waitForEvent("load", { timeout: 3000 }).catch(() => null);
+  await ready();
+  expect("tiến độ: rời ô nhập thì tải lại", (await label()) === "Đang dựng 4/6", await label());
+
+  const progressFile = join(building, file.replace(/\.html$/, ".progress.js"));
+  const full = readFileSync(progressFile, "utf8");
+  writeFileSync(progressFile, full.slice(0, Math.floor(full.length / 2)));
+  const errorsBefore = errors.length;
+  const unchanged = await quiet();
+  // File ghi dở chạy ra lỗi cú pháp; Playwright vẫn bắt dù shell đã chặn nó khỏi console. Lỗi này là chính phép thử.
+  errors.splice(errorsBefore, errors.length - errorsBefore, ...errors.slice(errorsBefore).filter((message) => !/Unexpected end of input|Invalid or unexpected token/.test(message)));
+  expect("tiến độ: đọc trúng file ghi dở thì bỏ lượt đó, nhãn giữ nguyên", unchanged && (await label()) === "Đang dựng 4/6", await label());
+  writeFileSync(progressFile, full);
+  progress(building, file, "--done", "5");
+  await page.waitForEvent("load", { timeout: 6000 }).catch(() => null);
+  await ready();
+  expect("tiến độ: file đủ lại và có bước mới thì đọc tiếp, tải lại", (await label()) === "Đang dựng 5/6", await label());
+  await page.close();
+
+  const narrow = await open(pageUrl(building, file, "?viewport=mobile"), 1280);
+  let narrowLoads = 0;
+  narrow.on("load", () => (narrowLoads += 1));
+  const frame = await narrow.waitForSelector(".ds-frame-wrap iframe").then((element) => element.contentFrame());
+  await frame.waitForFunction(() => window.Alpine && document.querySelector("[data-q]"));
+  await frame.click("[data-q]");
+  await narrow.waitForTimeout(300);
+  progress(building, file, "--done", "6");
+  await narrow.waitForTimeout(4500);
+  expect("tiến độ: khổ mobile, đang gõ trong iframe thì không tải lại", narrowLoads === 0, `${narrowLoads} lần tải`);
+  await narrow.click("[data-ds-status]");
+  await narrow.waitForEvent("load", { timeout: 3000 }).catch(() => null);
+  await narrow.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
+  const done = await narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
+  expect(`tiến độ: rời ô trong iframe thì tải lại; xong hết → "Xong · ${today}"`, narrowLoads === 1 && done === `Xong · ${today}`, `${narrowLoads} lần tải · ${done}`);
+
+  progress(building, file, "--round", "nút to hơn", "đổi chữ nút");
+  await narrow.waitForEvent("load", { timeout: 6000 }).catch(() => null);
+  await narrow.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
+  await narrow.click("[data-ds-status]");
+  const revising = await narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
+  const rounds = await narrow.$$eval("[data-ds-status-list] .ds-status-round", (items) => items.map((item) => item.textContent).join(" | "));
+  expect('tiến độ: vòng góp ý → "Đang sửa 0/3", danh sách có nhóm "Góp ý vòng 2"', revising === "Đang sửa 0/3" && rounds === "Dựng | Góp ý vòng 2", `${revising} · ${rounds}`);
+  await narrow.screenshot({ path: join(out, "progress-revising.png") });
+  await narrow.close();
+
+  renameSync(progressFile, `${progressFile}.bak`);
+  const old = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  const reads = [];
+  old.on("request", (request) => request.url().includes(".progress.js") && reads.push(request.url()));
+  await old.goto(pageUrl(building, file));
+  await old.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
+  await old.waitForTimeout(4500);
+  const oldLabel = await old.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
+  expect(`tiến độ: page không có danh sách → "Xong · ${today}", đọc một lần rồi thôi`, oldLabel === `Xong · ${today}` && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
+  await old.close();
+  renameSync(`${progressFile}.bak`, progressFile);
 }
 
 expect("không có lỗi JS", errors.length === 0, errors.join(" · "));

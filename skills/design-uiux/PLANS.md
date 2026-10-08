@@ -114,40 +114,154 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F4.3` | new      | đổi dữ liệu chung thì mọi page đổi theo, tính lại số kiểm chéo |
 | `F5.1` | update   | chữ yêu cầu đúng phạm vi `check.mjs` chạy thật |
 
+### 006 · Sửa các lỗi nghiệm thu 005 làm hỏng đầu ra mà máy kiểm báo sạch
+
+- **Plan:** [006-design-uiux-sua-loi-nghiem-thu-005.md](../../.plan/006-design-uiux-sua-loi-nghiem-thu-005.md)
+- **Status:** done
+- **Mục tiêu:** nghiệm thu 005 đạt mọi yêu cầu, nhưng 5 chỗ làm đầu ra sai mà không ai hay: lệnh `grep` ở Bước 1 hỏng
+  trong zsh (3/4 lần chạy) nên agent tưởng dự án không có design system; `check.mjs` báo sạch khi `x-show` đi cùng
+  `:style` chuỗi vẽ sai, và không bấm tới nút chỉ hiện ở giá trị khác mặc định; các page dựng song song lệch số `data-block`
+  và lệch màu nút chính; không có codebase thì bỏ qua bề rộng `DESIGN.md` ghi. Xong thì mỗi chỗ có một phép thử tái
+  hiện được lỗi trước khi sửa và qua sau khi sửa; chạy lại K1–K3 của 005 không còn ghi 5 chỗ đó. Lấy từ `PQ-02`; 7
+  chỗ còn lại sang `PQ-03`.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F1.3` | update   | thêm bảng số khối và cách xử lý cặp màu không đủ đọc chung; không codebase thì lấy bề rộng từ design system |
+| `F3.1` | fix      | lệnh `grep --include` có nháy, chạy được trong zsh |
+| `F5.1` | fix      | so page vặn tại chỗ với page mở lại từ link |
+| `F5.4` | fix      | lượt bấm tới nút chỉ hiện ở giá trị khác mặc định |
+
+### 007 · Bài mẫu đạt chuẩn để chạy thử skill
+
+- **Plan:** [007-design-uiux-bai-mau-dat-chuan.md](../../.plan/007-design-uiux-bai-mau-dat-chuan.md)
+- **Status:** approved
+- **Mục tiêu:** skill có ba bài mẫu trong `samples/` để chạy thử sau mỗi lần sửa, nhưng chưa bài nào được chạy và
+  không ai biết chúng có bắt được lỗi không; bốn kịch bản của 005 từng báo đạt hết trong khi còn 5 lỗi. Xong thì một
+  lệnh soát báo yêu cầu SPEC nào chưa bài nào nhìn tới; mỗi dòng checklist chỉ ra file và điều đếm được; chạy lặp cùng
+  bản skill ra cùng kết luận; mỗi bài trượt đúng dòng khi gài một lỗi đã biết vào bản chép của skill; mỗi lượt chạy
+  thành một dòng trong `samples/history.md`. Không đổi yêu cầu nào trong SPEC.
+
+### 008 · Đề một màn ra A/B, đề một luồng ra từng màn
+
+- **Plan:** [008-design-uiux-mot-man-luong.md](../../.plan/008-design-uiux-mot-man-luong.md)
+- **Status:** approved
+- **Mục tiêu:** đề nào skill cũng tìm 2–3 phương án rồi hỏi tick, người dùng phải đọc bảng và chọn trước khi có gì để
+  xem; đề là một luồng nhiều màn cũng bị tìm phương án cho cả luồng, không tách thành từng màn, mỗi agent con tự quyết
+  gộp màn hay không. Xong thì skill xếp đề là một màn (làm việc trên đúng một màn hình) hay một luồng (đi qua nhiều
+  màn hình); một màn ra tối đa hai page A và B dựng cùng lúc, không hỏi; một luồng ra một phương án, bảng các màn in
+  trong chat, mỗi màn một page, đi qua được bằng nút trong page, chữ đã nhập còn khi quay lại. Chạy song song với 009.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F1.11` | new      | xếp đề là một màn hay một luồng |
+| `F1.12` | new      | chưa xếp được thì hỏi |
+| `F1.2`  | update   | đề một màn: dựng A và B, không hỏi chọn |
+| `F1.13` | new      | đề xin hơn hai phương án thì vẫn A/B, nói lý do |
+| `F1.14` | new      | còn một hướng thì một page, nói lý do |
+| `F1.15` | new      | đề một luồng: một phương án |
+| `F1.16` | new      | in bảng các màn của luồng trước khi dựng |
+| `F1.17` | new      | mỗi màn của luồng một page |
+| `F1.4`  | update   | `--auto` chỉ còn thay lượt hỏi làm rõ |
+| `F1.5`  | update   | từ hai page trở lên thì mỗi page một agent con |
+| `F2.4`  | update   | nút A B, bỏ C |
+| `F2.6`  | new      | chuyển màn bằng dãy màn và nút trong page |
+| `F2.7`  | new      | chữ đã nhập giữ nguyên khi chuyển màn |
+| `F5.8`  | new      | máy kiểm đi hết luồng bằng nút trong page |
+
+### 009 · Tiến độ dựng hiện liên tục trên page
+
+- **Plan:** [009-design-uiux-tien-do-dung.md](../../.plan/009-design-uiux-tien-do-dung.md)
+- **Status:** approved
+- **Mục tiêu:** lần chạy ngày 2026-10-07 (màn đăng nhập, hai phương án) mất 13 phút, và suốt 13 phút đó người dùng
+  không có gì để xem. Mỗi agent con đọc và nghĩ 3–5 phút, rồi ghi cả page một lần. Agent chính chỉ đưa link khi mọi
+  page đã xong và kiểm sạch. Nếu agent con bị ngắt giữa chừng, thì lần gọi lại phải dựng lại cả page. Xong plan thì
+  có ba thứ:
+  - **Checklist từng page.** Mỗi page có một danh sách bước dựng riêng: một màn của luồng, hoặc một phương án A/B của
+    đề một màn. Agent con đánh dấu từng bước khi xong. Khi agent con bị ngắt rồi được gọi lại, nó đọc danh sách này
+    và làm tiếp từ bước đầu tiên chưa xong.
+  - **Tiến độ trên page.** Link từng page có trong chat trước khi page có khối đầu tiên. Khi một bước dựng hay một
+    bước sửa theo góp ý xong, page đang mở tự tải lại và giữ giá trị đang vặn, vị trí cuộn. Nếu người xem đang gõ
+    trong ô nhập, thì page đợi người xem rời ô mới tải lại. Toolbar cho biết page đang dựng (kèm số bước đã xong),
+    đang sửa hay đã xong.
+  - **Các page dựng song song.** Đề một màn ra hai page A và B, dựng cùng lúc. Đề một luồng ra mỗi màn một page, các
+    page dựng cùng lúc. Việc mỗi page một agent con có sẵn từ 008 (`F1.5`). 009 giữ nguyên điều đó: checklist và tiến
+    độ là của riêng từng page, không page nào phải chờ page khác.
+
+  Việc lấy từ `PQ-01`. Đầu vào là plan 004 đã huỷ. Plan chạy song song với 008.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F4.4` | new      | mỗi ý góp ý thành một bước dựng mới |
+| `F5.6` | new      | kiểm nhanh trước khi đánh dấu bước dựng |
+| `F5.7` | new      | máy kiểm báo page còn bước dựng dở |
+| `F6.1` | new      | link page có trong chat trước khối đầu tiên |
+| `F6.2` | new      | dựng theo danh sách bước dựng, đánh dấu từng bước |
+| `F6.3` | new      | bước xong thì page đang mở tự tải lại, giữ giá trị và vị trí cuộn |
+| `F6.4` | new      | đang gõ trong ô nhập thì đợi rời ô mới tải lại |
+| `F6.5` | new      | toolbar nói đang dựng, đang sửa hay đã xong |
+| `F6.6` | new      | bị ngắt thì làm tiếp từ bước dựng đầu tiên chưa xong |
+| `F6.7` | new      | một agent con bị ngắt thì chỉ gọi lại agent đó |
+
+### 010 · Không có design system thì chọn một bộ từ getdesign
+
+- **Plan:** [010-design-uiux-chon-design-getdesign.md](../../.plan/010-design-uiux-chon-design-getdesign.md)
+- **Status:** approved
+- **Mục tiêu:** khi đề không chỉ định design system và thư mục làm việc không có file CSS có `@theme` hay `DESIGN.md`,
+  skill dựng page bằng `shell/default-design.md`. Bộ này nền trung tính, một màu nhấn xanh, nên mọi prototype không có
+  design system trông giống nhau; bốn lần chạy bài mẫu 02 đều ra bộ đó. Khi đề tự ghi lệnh `getdesign`, skill tải
+  file ra ngoài `.design/`. Xong thì trong trường hợp không có design system, agent làm bốn việc:
+  - In vào chat danh sách design của getdesign mà skill đọc được: 68 trên 76 bộ của gói `getdesign`. 8 bộ còn lại chỉ
+    có phần chữ, không có bảng màu đầu file. Các design khác trên site không tải được.
+  - Hỏi người dùng chọn một trong bốn design hợp đề nhất. Người dùng gõ được tên khác trong danh sách. Không có đáp
+    án bộ mặc định: bộ đó chỉ dùng khi mất mạng.
+  - Tải design đã chọn vào thư mục design và dựng page theo nó. Đề tự ghi lệnh `getdesign` cũng đi đường này.
+  - Nếu không lấy được danh sách hay tải hỏng, thì dựng bằng bộ mặc định và nói lý do trong chat.
+
+  Với `--auto`, agent lấy đáp án khuyên dùng. Việc lấy từ `PQ-05`.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F3.6` | new      | không có design system thì in danh sách design của getdesign |
+| `F3.7` | new      | hỏi chọn một trong bốn design hợp đề |
+| `F3.8` | new      | page lấy token từ design đã chọn, tải vào thư mục design |
+| `F3.9` | new      | không lấy được danh sách hay tải hỏng thì dùng bộ mặc định, nói lý do |
+| `F3.1` | fix      | đề ghi lệnh getdesign thì tải vào thư mục design, không ra `./DESIGN.md` |
+
 ## Plan Queue
 
-### PQ-01 · Xem được page trong lúc dựng
+### PQ-03 · Sửa 7 chỗ SKILL.md mơ hồ còn lại, tìm được khi nghiệm thu 005
 
 - **Status:** new
-- **Mục tiêu:** lần chạy ngày 2026-10-07 (thiết kế lại màn đăng nhập, hai phương án) mất 13 phút; mỗi agent con dựng
-  một page ~9,5 phút, 3–5 phút đầu chỉ đọc và nghĩ, rồi ghi cả page một lần. Suốt lúc đó người dùng không có gì để
-  xem, thấy sai hướng cũng không ngắt sớm được. Xong thì link từng page có ngay khi agent con bắt đầu, bản xem được
-  đầu tiên hiện trong vài phút, toolbar nói page đang dựng, đang sửa theo góp ý hay đã xong, agent con bị ngắt thì
-  làm tiếp từ bước dở. Đầu vào: plan 004 đã huỷ (§1–§3) và bản diff Phase 1 của nó ở
-  `.test/design-uiux/027-huy-004/` (chỉ có trên máy đã chạy).
-
-| Mã   | Thay đổi | Tóm tắt |
-| ---- | -------- | ------- |
-| `F6` | new      | xem page trong lúc dựng: link sớm, toolbar nói tiến độ, làm tiếp khi bị ngắt |
-| `F4` | update   | vòng góp ý cũng hiện tiến độ sửa trên toolbar |
-
-### PQ-02 · Sửa 12 chỗ SKILL.md mơ hồ hay sai, tìm được khi nghiệm thu 005
-
-- **Status:** new
-- **Mục tiêu:** mọi yêu cầu đạt, nhưng ở cùng một chỗ SKILL.md mỗi agent chạy lách một kiểu: các page trong cùng thư
-  mục lệch nhau (nút chính, số khối), một lệnh hỏng trong zsh làm agent tưởng dự án không có design system. Xong thì
-  chạy lại bốn kịch bản của 005, các agent không còn ghi những chỗ trong bảng dưới vào danh sách vấn đề. Đầu vào:
-  `ket-qua.md` và `K*/van-de.md` trong `.test/design-uiux/028-nghiem-thu-005/` và `029-nghiem-thu-005-k4/` (chỉ có
-  trên máy đã chạy).
+- **Mục tiêu:** nghiệm thu 005 gom 12 chỗ SKILL.md mơ hồ hay sai; plan 006 sửa 5 chỗ làm đầu ra sai mà máy kiểm vẫn
+  báo sạch. 7 chỗ còn lại không làm hỏng page nhưng mỗi agent hiểu một kiểu: tin giao và brief khác nhau giữa các lần
+  chạy, vòng góp ý thiếu bước. Xong thì chạy lại bốn kịch bản của 005, các agent không còn ghi những chỗ trong bảng
+  dưới vào danh sách vấn đề. Đầu vào: `ket-qua.md` và `K*/van-de.md` trong `.test/design-uiux/028-nghiem-thu-005/` và
+  `029-nghiem-thu-005-k4/` (chỉ có trên máy đã chạy).
 
 | Mã     | Thay đổi | Tóm tắt |
 | ------ | -------- | ------- |
 | `F1.1` | fix      | khuôn `brief.md` có chỗ cho `## Màn hiện có` |
 | `F1.2` | fix      | cách chọn "phương án thắng tình huống hay gặp nhất" khi không có số liệu tần suất |
-| `F1.3` | fix      | chốt số `data-block` chung trước khi dựng song song; variable chung phải đổi thấy được ở mọi page; không có codebase thì lấy bề rộng từ `DESIGN.md`; lời giao nói tiếng trả về, chỗ để ảnh tự chụp, số kiểm chéo |
+| `F1.3` | fix      | lời giao nói tiếng trả về, chỗ để ảnh tự chụp, số kiểm chéo |
 | `F1.4` | fix      | `--auto` có in câu hỏi đã soạn ra chat không; "mở đầu bằng" ở Bước 6 chỉ một nghĩa; dòng `Đọc:` in một lần |
-| `F3.1` | fix      | lệnh `grep --include` có nháy, chạy được trong zsh; cặp màu trượt `N13` do agent chính chốt một cách cho cả thư mục |
-| `F1.6` | fix      | cột Trạng thái của `## Pages` có giá trị cho lúc đang dựng |
+| `F1.6` | fix      | cột Trạng thái của `## Pages` có giá trị cho lúc đang dựng (plan 009 thêm trạng thái dựng ở `progress.js`, chưa đụng bảng này) |
 | `F4.3` | fix      | giới hạn 3–5 số kiểm chéo khi góp ý thêm số mới |
 | `F4`   | fix      | vòng sau nói rõ kiểm page hay cả thư mục, ai sửa page khi đổi dữ liệu chung, có `touch` không, có ghi `## Quyết định` không, giao lại những gì; page không có thứ góp ý dữ liệu chung nhắc tới thì làm sao; `touch` giữ mọi góp ý; xoá ảnh cũ trong `shots/` |
-| `F5.1` | fix      | `check.mjs` không đọc "PR #482" thành mã màu; lượt bấm phủ khung chỉ hiện ở giá trị khác mặc định; bắt `x-show` trong `x-for` hỏng |
+| `F5.1` | fix      | `check.mjs` không đọc "PR #482" thành mã màu |
+
+### PQ-04 · Các page cùng thư mục giống nhau ở khối dùng chung
+
+- **Status:** new
+- **Mục tiêu:** sau plan 006, các page dựng song song đã cùng số khối và cùng màu nút chính. Nhưng nghiệm thu
+  (`.test/design-uiux/032-nghiem-thu-006/ket-qua.md`) cho thấy ba lỗ còn lại:
+  - Cùng một số khối mà mỗi page dựng một kiểu (tiêu đề, nút, dòng phụ khác nhau), nên cả ba kịch bản để `[ ] N6`.
+  - Cặp màu không có trong danh sách `init` in ra thì agent con vẫn tự chọn, và hai page chọn khác nhau.
+  - `check.mjs` chạy lâu gấp đôi (K1 từ 96 giây lên 186 giây), vì mỗi giá trị vặn đều mở thêm một page.
+
+  Xong thì người xem so các phương án chỉ thấy khác ở hướng thiết kế, và máy kiểm không chậm hơn trước plan 006.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F1.3` | fix      | khối dùng chung giống nhau giữa các page; cặp màu ngoài danh sách `init` cũng chốt chung |
+| `F5.1` | fix      | phép so page vặn tại chỗ với page mở lại không làm `check.mjs` chậm gấp đôi |

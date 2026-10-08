@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C6 · C7 · màn của luồng</title>
+<!-- Khuôn một màn của ca C6 · C7 trong test-check.mjs: test-check.mjs thay chỗ NOI-DUNG bằng thân riêng của từng màn
+     (nút gọi $store.design.next() / prev(), ô x-model="$store.design.form.email"). -->
+<script src="tokens.js"></script>
+<script src="pages.js"></script>
+<script>
+  window.DESIGN = {
+    lang: "vi",
+    variables: [
+      { key: "state", label: "Trạng thái", type: "select", default: "data", options: ["data", "loading", "empty", "error"] },
+    ],
+    tweaks: [],
+  };
+</script>
+<link rel="stylesheet" href="../_shell/shell.css">
+<script src="../_shell/shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.552.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-canvas">
+<main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data>
+  <div class="mx-auto max-w-page px-md py-lg">
+    <h1 class="font-display text-display-sm text-ink">Đăng ký</h1>
+    <section data-block="1" class="mt-lg grid gap-sm">
+      <p x-show="$store.design.state === 'loading'" class="text-body-sm text-muted">Đang tải…</p>
+      <div x-show="$store.design.state === 'error'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Không tải được.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Thử lại</button>
+      </div>
+      <div x-show="$store.design.state === 'empty'" class="grid gap-xs">
+        <p class="text-body-sm text-ink">Chưa có gì ở đây.</p>
+        <button type="button" class="h-9 w-fit rounded-md border border-hairline px-md text-button text-ink" @click="$store.design.state = 'data'">Tải lại</button>
+      </div>
+      <div x-show="$store.design.state === 'data'" class="grid gap-xs">
+        <!--NOI-DUNG-->
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

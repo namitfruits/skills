@@ -5,7 +5,7 @@
 // Design system chỉ có một giao diện thì giao diện còn lại suy ra theo vai màu: nền, chữ, viền đảo độ sáng;
 // màu nhấn giữ sắc, chỉnh độ sáng tới khi đủ tương phản với nền mới; primary giữ nguyên.
 //
-// spec: F3.1
+// spec: F3.1 F3.8
 
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
@@ -287,7 +287,8 @@ export function parsePageWidth(value = "64rem") {
   return { width: text, css: text, px: Math.round(Number(match[1]) * (match[2] === "rem" ? 16 : 1)) };
 }
 
-export function buildTokens(sourcePath, { pageWidth } = {}) {
+// source: tên nguồn ghi vào DESIGN_THEME.source, vd "getdesign claude"; mặc định là tên file.
+export function buildTokens(sourcePath, { pageWidth, source = basename(sourcePath) } = {}) {
   const text = readFileSync(sourcePath, "utf8");
   const declarations = sourcePath.endsWith(".css") ? declarationsFromCss(text) : declarationsFromDesignMd(text);
   const fonts = planFonts(declarations);
@@ -302,15 +303,49 @@ export function buildTokens(sourcePath, { pageWidth } = {}) {
     `:root { color-scheme: ${theme.base}; }`,
     theme.derived ? `:root[data-theme="${theme.derived}"] {\n  color-scheme: ${theme.derived};\n${block(theme.overrides)}\n}` : "",
   ].join("\n\n");
-  const meta = { base: theme.base, derived: theme.derived, source: basename(sourcePath), fonts: fonts.notes, page: { width: page.width, px: page.px, from: pageWidth ? "--page-width" : "mặc định" } };
+  const meta = { base: theme.base, derived: theme.derived, source, fonts: fonts.notes, page: { width: page.width, px: page.px, from: pageWidth ? "--page-width" : "mặc định" } };
   return [
-    `// Token của design system, sinh từ ${basename(sourcePath)} bằng scripts/tokens.mjs. Mọi mã màu của page nằm ở đây.`,
+    `// Token của design system, sinh từ ${source} bằng scripts/tokens.mjs. Mọi mã màu của page nằm ở đây.`,
     `// Giao diện ${theme.derived ?? "—"} là suy ra (DESIGN_THEME.derived), không có trong design system gốc.`,
     `window.DESIGN_THEME = ${JSON.stringify(meta)};`,
     fonts.href ? `document.write('<link rel="stylesheet" href="${fonts.href}">');` : "",
     `document.write(${JSON.stringify(`<style type="text/tailwindcss">\n${css}\n</style>`)});`,
     "",
   ].join("\n");
+}
+
+// Cặp màu dưới 4.5 : 1 (nguyên tắc N13), ở giao diện gốc và giao diện suy ra. Agent chính đọc danh sách này lúc tạo thư
+// mục để chốt một cách dùng thay cho cả thư mục, trước khi các agent con dựng song song và mỗi agent lách một kiểu.
+// Cặp được xét: `on-<x>` trên `<x>` (hay `surface-<x>`); mọi màu không phải nền, viền, lớp phủ trên `canvas` và
+// `surface-card`. Màu nhấn dùng làm nền (nút, cột biểu đồ) cũng nằm trong danh sách: chỉ đáng lo khi dùng làm chữ.
+const notText = /^(canvas|surface-.+|.+-surface|hairline.*|scrim.*|shadow.*|chart-.+)$|-(active|hover|disabled)$/;
+
+export function weakPairs(sourcePath) {
+  const text = readFileSync(sourcePath, "utf8");
+  const declarations = sourcePath.endsWith(".css") ? declarationsFromCss(text) : declarationsFromDesignMd(text);
+  const theme = deriveTheme(declarations);
+  const themes = [{ name: theme.base, derived: false, values: declarations }];
+  if (theme.derived) themes.push({ name: theme.derived, derived: true, values: new Map([...declarations, ...theme.overrides]) });
+  const pairs = [];
+  for (const { name: themeName, derived, values } of themes) {
+    const colors = new Map([...values]
+      .filter(([name]) => name.startsWith("--color-"))
+      .map(([name, value]) => [name.slice("--color-".length), parseColor(value)])
+      .filter(([, color]) => color && color.alpha === 1));
+    const check = (fg, bg) => {
+      const ratio = contrast(colors.get(fg), colors.get(bg));
+      if (ratio < 4.5) pairs.push({ fg, bg, theme: themeName, derived, ratio: Number(ratio.toFixed(2)) });
+    };
+    for (const fg of colors.keys()) {
+      if (fg.startsWith("on-")) {
+        const bg = [fg.slice(3), `surface-${fg.slice(3)}`].find((name) => colors.has(name));
+        if (bg) check(fg, bg);
+      } else if (!notText.test(fg)) {
+        for (const bg of ["canvas", "surface-card"].filter((name) => colors.has(name))) check(fg, bg);
+      }
+    }
+  }
+  return pairs;
 }
 
 export { contrast, parseColor };

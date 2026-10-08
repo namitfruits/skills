@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -664,8 +664,6 @@
+   4. `new-design.mjs touch "$D" <file> --note "<góp ý>"` để khung mô tả của nút phương án và nhãn "✓ Xong" ghi ngày sửa.
+   Góp ý chạm nhiều page thì mỗi page một vòng riêng trong danh sách của nó; từ hai page trở lên thì mỗi page một agent
+   con, chạy song song như lúc dựng.
+-- Góp ý đổi dữ liệu chung hay nút dữ liệu chung → sửa `brief.md` trước, tính lại `## Số kiểm chéo ở mặc định`,
+-  rồi sửa **mọi** page cho khớp và chạy `check.mjs` cả thư mục: các page vẫn cùng bộ key, cùng con số.
+ - Muốn xem một hướng không dựng (dòng `chưa chọn` trong `## Pages`) → hỏi thay A hay B nếu người dùng chưa nói, rồi
+   dựng hướng đó **đè lên page bị thay**: giữ tên file, sửa `option` · `question` · `unit` · `tradeoff` của page đó
+   trong `pages.js`, đổi hai dòng trong `## Pages` (hướng mới `đã dựng`, hướng bị thay `chưa chọn`), thêm một dòng vào

@@ -150,7 +150,7 @@ export function staticIssues(html) {
 
 // Chạy trong trang, sau khi check.mjs chờ hiệu ứng chuyển (transition) chạy xong: màu đo giữa chừng không khớp token.
 // ctx: { colors, fonts, textScale, radiusScale, skip, width, state }.
-// Trả { issues: [{ rule, message }], buttons: [{ sig, label }], blocks: { id: { text, actionable } } }.
+// Trả { issues: [{ rule, message }], buttons: [{ sig, label, primary }], blocks: { id: { text, actionable } } }.
 export function pageProbe(ctx) {
   const issues = [];
   const seen = new Set();
@@ -708,7 +708,10 @@ export function pageProbe(ctx) {
       else fill = "nền nhạt";
     }
     const bordered = ["Top", "Right", "Bottom", "Left"].every((name) => parseFloat(s[`border${name}Width`]) > 0 && (parse(s[`border${name}Color`])?.a ?? 0) > 0.05);
-    buttons.push({ sig: `${fill} · ${bordered ? "có viền" : "không viền"} · chữ ${s.fontWeight}`, label: label.slice(0, 20) });
+    // Nút chính (nền đặc màu nhấn): ghi token nền và mã màu chữ (trắng trùng nhiều token nên không gọi tên) để check.mjs
+    // so giữa các page của thư mục.
+    const primary = solidPrimary(element) ? `nền ${tokenOf(background)?.name ?? hex(background)}, chữ ${hex(parse(s.color))}` : null;
+    buttons.push({ sig: `${fill} · ${bordered ? "có viền" : "không viền"} · chữ ${s.fontWeight}`, label: label.slice(0, 20), primary });
   }
 
   // N7: chữ và nút của từng khối, và nhãn mọi thứ bấm được ngoài lớp nổi; check.mjs so giữa các state.
