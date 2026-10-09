@@ -124,6 +124,20 @@ function yieldFolder(slug, rows, shadow = false) {
   return dir;
 }
 
+// Thư mục một page, brief điền đủ (brief hai page bỏ dòng B). edit đổi brief, extra chèn HTML vào đầu khối 1.
+function onePage(slug, { brief = (text) => text, extra = "" } = {}) {
+  const dir = run("init", slug, "--root", root);
+  const file = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--layout", "Trên cùng là thanh tiến độ tới mục tiêu tháng.");
+  writeFileSync(join(dir, "brief.md"), brief(readFileSync(join(here, "fixtures/check/hai-page-brief.md"), "utf8").replace(/\| `02-b\.html`[^\n]*\n/, "")));
+  const page = readFileSync(join(here, "fixtures/check/hai-page-a.html"), "utf8");
+  writeFileSync(file, page.replace('<section data-block="1" class="mt-lg grid gap-sm">', `<section data-block="1" class="mt-lg grid gap-sm">${extra}`));
+  builtUpTo(file);
+  return file;
+}
+// Khối rộng 600px chỉ ở khổ mobile; nút mở khung nổi lệch trái ra ngoài màn hình, có hiệu ứng 300ms.
+const mobileOnlyWide = '<div class="w-[600px] sm:w-auto">Khung rộng 600px ở khổ mobile</div>';
+const offscreenPanel = '<div x-data="{ open: false }"><button type="button" class="h-9 rounded-md border border-hairline px-md text-button text-ink" @click="open = true">Mở khung</button><div x-show="open" x-transition.duration.300ms role="dialog" class="fixed top-24 -left-24 z-[1100] w-64 bg-surface p-md">Khung lệch trái <button type="button" aria-label="Đóng" @click="open = false">×</button></div></div>';
+
 const cases = [
   {
     id: "C1",
@@ -246,6 +260,53 @@ const cases = [
     target: () => yieldFolder("nhuong-sai", []),
     forbid: [/UI2[^\n]*(chưa ghi cách giữ|thiếu|không phải)/],
   },
+  {
+    id: "C20",
+    what: "bảng preset ngay dưới bảng Nút dữ liệu chung: chỉ đọc bảng đầu, không báo variables lệch",
+    target: () => onePage("preset-duoi-bang", { brief: (text) => text.replace(/(## Nút dữ liệu chung\n\n(?:\|[^\n]*\n)+)/, "$1\nPreset chung:\n\n| Preset | target |\n| ------ | ------ |\n| Ca đông | 4000 |\n") }),
+    args: ["--quick"],
+    forbid: [/variables khác bảng "Nút dữ liệu chung"/],
+  },
+  {
+    id: "C21",
+    what: "kiểm đầy đủ hai lần liền, page không đổi: lần hai dùng lại kết quả, cùng dòng lỗi, không mở trình duyệt",
+    target: () => onePage("nho-ket-qua", { extra: mobileOnlyWide }),
+    twice: true,
+    expect: [/1 page không đổi, dùng lại kết quả lần trước/, /375px[^\n]*\]: cuộn ngang/],
+  },
+  {
+    id: "C22",
+    what: "--quick đo cả 375px: khối chỉ rộng ở khổ mobile báo cuộn ngang",
+    target: () => onePage("quick-375", { extra: mobileOnlyWide }),
+    args: ["--quick"],
+    status: 1,
+    expect: [/\[375px theme=light&state=data\]: cuộn ngang/],
+    forbid: [/\[1280px[^\n]*\]: cuộn ngang/],
+  },
+  {
+    id: "C23",
+    what: "--quick --click: bấm nút mở khung nổi, chờ hiệu ứng xong, báo khung lọt ra ngoài màn hình",
+    target: () => onePage("quick-click", { extra: offscreenPanel }),
+    args: ["--quick", "--click", "Mở khung"],
+    status: 1,
+    expect: [/bấm "Mở khung"[^\n]*\]: khung nổi lọt ra ngoài màn hình|\[1280px bấm "Mở khung"[^\]]*\]: khung nổi lọt ra ngoài màn hình/],
+  },
+  {
+    id: "C24",
+    what: "--quick --click tên không có: báo kèm tên các nút đang hiện",
+    target: () => onePage("quick-click-sai", { extra: offscreenPanel }),
+    args: ["--quick", "--click", "Không có nút này"],
+    status: 1,
+    expect: [/không có nút đang hiện tên "Không có nút này" \(có [^\n]*"Mở khung"/],
+  },
+  {
+    id: "C25",
+    what: "--brief trên brief còn khuôn trống: exit 1, báo chỗ trống, không mở trình duyệt",
+    target: () => { const dir = run("init", "brief-trong", "--root", root); run("page", dir, "a", "--title", "A"); return dir; },
+    args: ["--brief"],
+    status: 1,
+    expect: [/còn chỗ trống chưa điền/, /✗ brief · 0\d\d-brief-trong · \d+ lỗi/],
+  },
 ];
 
 let failed = 0;
@@ -253,7 +314,16 @@ const logs = new Map();
 for (const testCase of cases.filter((item) => !only || only.includes(item.id))) {
   const target = testCase.target();
   const params = [target, ...(testCase.args ?? []), "--no-shots", ...(pwDir ? ["--pw", pwDir] : [])];
-  if (!logs.has(params.join(" "))) logs.set(params.join(" "), spawnSync(process.execPath, [join(here, "check.mjs"), ...params], { encoding: "utf8" }));
+  // twice: chạy hai lần liền, so dòng lỗi hai lần, kiểm trên log lần hai.
+  const check = () => spawnSync(process.execPath, [join(here, "check.mjs"), ...params], { encoding: "utf8" });
+  let sameAsFirst = true;
+  if (testCase.twice) {
+    const first = check();
+    const second = check();
+    const lines = (result) => result.stdout.split("\n").filter((line) => line.startsWith("✗ ") && !/\d+ page ·/.test(line)).join("\n");
+    sameAsFirst = lines(first) === lines(second);
+    logs.set(params.join(" "), second);
+  } else if (!logs.has(params.join(" "))) logs.set(params.join(" "), check());
   const result = logs.get(params.join(" "));
   const log = `${result.stdout}${result.stderr}`;
   writeFileSync(join(out, `${testCase.id}.log`), log);
@@ -261,10 +331,11 @@ for (const testCase of cases.filter((item) => !only || only.includes(item.id))) 
   const present = (testCase.forbid ?? []).filter((pattern) => pattern.test(log));
   // Ca không ghi status thì chỉ cần check.mjs chạy được (exit 0 hay 1); ca có status thì mã thoát phải đúng.
   const statusOk = testCase.status === undefined ? result.status !== 2 : result.status === testCase.status;
-  const ok = statusOk && !missing.length && !present.length;
+  const ok = statusOk && sameAsFirst && !missing.length && !present.length;
   if (!ok) failed += 1;
   console.log(`${ok ? "✓" : "✗"} ${testCase.id} ${testCase.what}`);
   if (!statusOk) console.log(`    check.mjs exit ${result.status}${testCase.status === undefined ? "" : `, cần ${testCase.status}`}: ${log.trim().split("\n").at(-1)}`);
+  if (!sameAsFirst) console.log("    lần hai báo dòng lỗi khác lần một");
   for (const pattern of missing) console.log(`    thiếu dòng khớp ${pattern}`);
   for (const pattern of present) console.log(`    có dòng cấm ${pattern}: ${log.split("\n").find((line) => pattern.test(line))?.slice(0, 160)}`);
 }

@@ -1,14 +1,14 @@
 --- references/build-page.md
 +++ references/build-page.md
-@@ -42,7 +42,6 @@
+@@ -44,7 +44,6 @@
  | ---- | ----------------- | ----------------------- |
  | 1 · Khung các khối, dữ liệu mặc định | khai đủ `variables` theo "Nút dữ liệu chung" (có `state` đủ bốn giá trị) và `tweaks`; khối chờ thay bằng mọi khối thật, mỗi khối một `data-block` theo bảng "Khối", hiện đúng ở giá trị mặc định | `check.mjs <page> --quick` |
  | 2 · Đang tải · rỗng · lỗi | `state` `loading`, `empty`, `error` đã dựng | `--quick --state loading`, rồi `empty`, rồi `error` |
 -| 3 · Trạng thái riêng của đề | các `state` riêng trong brief đã dựng | `--quick --state <từng giá trị>` |
- | 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick` |
+ | 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick`, rồi `--quick --click "<nhãn>"` cho từng nút mở modal, sheet, thêm, xoá |
  | 5 · Preset và ca biên | `presets` khai xong, ca biên (tên dài, số 0, số rất lớn) dựng xong | `--quick --preset "<từng nhãn>"` |
  | 6 · Kiểm đầy đủ và tự kiểm | `check.mjs` đầy đủ exit 0, đã đi danh sách tự kiểm trên ảnh | `check.mjs <page>` (mục "Kiểm") |
-@@ -116,8 +115,7 @@
+@@ -118,8 +117,7 @@
  
  <!-- spec: F1.3 F3.2 F3.3 -->
  
@@ -18,7 +18,7 @@
    tiếp; lỗi có câu nói chuyện gì và nút thử lại.
  - Dữ liệu giả sinh từ variables (đổi số là đổi dữ liệu), theo `## Dữ liệu chung`, có ca biên: tên dài tràn hai dòng,
    số `0`, số rất lớn, thiếu ảnh hay mô tả, một phần tử. Số giữa các khối phải khớp nhau (tổng ở đầu trang bằng tổng
-@@ -208,7 +206,7 @@
+@@ -221,7 +219,7 @@
  1. dòng cuối của `check.mjs` đầy đủ;
  2. khối **Tự kiểm**: mỗi dòng **Tự kiểm** là một dòng. Dòng trượt mà sửa được thì sửa rồi tick; còn trượt thì để
     `[ ]` kèm chỗ và lý do chưa sửa;

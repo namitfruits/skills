@@ -10,9 +10,10 @@ chạy **kể cả khi đề không mơ hồ**.
 
 1. In stdout của `designs` vào chat, nguyên văn, trong một khối code `text`, có dòng mở `Design của getdesign dùng
    được (<số dòng> bộ):`. In trước lần gọi AskUserQuestion.
-2. Câu chọn design nằm trong **lượt hỏi đầu tiên**, cùng một lần gọi AskUserQuestion với các câu làm rõ đề của bước 2
-   (nếu có). Đề không mơ hồ thì lượt đó chỉ có câu này. Câu này không tính vào giới hạn 3 lượt hỏi làm rõ, nhưng tính
-   vào giới hạn 4 câu mỗi lần gọi: lượt đầu còn tối đa 3 câu làm rõ.
+2. Câu chọn design nằm trong **lượt hỏi đầu tiên**, cùng một lần gọi AskUserQuestion với câu mở page trong Chrome và
+   các câu làm rõ đề của bước 2 (nếu có). Đề không mơ hồ thì lượt đó chỉ có câu này và câu mở page trong Chrome. Câu
+   này không tính vào giới hạn 3 lượt hỏi làm rõ, nhưng tính vào giới hạn 4 câu mỗi lần gọi: lượt đầu còn tối đa 2 câu
+   làm rõ.
 
 | Phần | Giá trị |
 | ---- | ------- |

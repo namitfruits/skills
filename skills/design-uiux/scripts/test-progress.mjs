@@ -127,7 +127,18 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
   const names = ["mot", "hai"].map((slug, index) => basename(run("page", allDir, slug, "--title", `Màn · ${slug}`, "--option", `${"AB"[index]} · ${slug}`, "--layout", "Một bảng.").out));
   const readAll = (name) => { const window = {}; new Function("window", readFileSync(join(allDir, name.replace(/\.html$/, ".progress.js")), "utf8"))(window); return window.DESIGN_PROGRESS[name]; };
   run("progress", allDir, names[1], "--prepared");
+  // Brief còn là khuôn trống: --prepared --all từ chối, không page nào đổi.
+  const unfilled = run("progress", allDir, "--prepared", "--all");
+  expect("--prepared --all khi brief.md còn chỗ trống thì exit 1, nêu lỗi brief, không đánh dấu page nào", unfilled.code === 1 && /brief\.md chưa xong/.test(unfilled.err) && /còn chỗ trống/.test(unfilled.err) && !readAll(names[0]).prep.done, unfilled.err || unfilled.out);
+  const filled = readFileSync(join(dirname(script), "fixtures/check/hai-page-brief.md"), "utf8").replace("01-a.html", names[0]).replace("02-b.html", names[1]);
+  writeFileSync(join(allDir, "brief.md"), filled);
   const all = run("progress", allDir, "--prepared", "--all");
+  // Mọi lệnh ghi một dòng vào run.log: init, page, prepared, prepared-all; lệnh đọc in bảng bước của từng page.
+  const runLog = readFileSync(join(allDir, "run.log"), "utf8").trim().split("\n").map((line) => line.split("\t"));
+  const actions = runLog.map((cells) => `${cells[1]} ${cells[2]}`);
+  const summary = spawnSync(process.execPath, [join(dirname(script), "run-log.mjs"), allDir], { encoding: "utf8" }).stdout;
+  expect("run.log có dòng init, page, prepared, prepared-all; mỗi dòng 6 cột, cột đầu là giờ đọc được", ["new-design init", "new-design page", "new-design prepared", "new-design prepared-all"].every((action) => actions.includes(action)) && runLog.every((cells) => cells.length === 6 && !Number.isNaN(Date.parse(cells[0]))), actions.join(" / "));
+  expect("run-log.mjs in bảng bước của từng page, có dòng chuẩn bị", summary.includes(names[0]) && summary.includes("chuẩn bị: brief"), summary.slice(0, 200));
   expect("--prepared --all đánh dấu bước chuẩn bị mọi page, bỏ qua page đã chuẩn bị, rev giữ nguyên", all.code === 0 && names.every((name) => readAll(name).prep.done && readAll(name).rev === 0) && all.out.includes(`${names[1]}: bước chuẩn bị đã xong, bỏ qua`) && all.out.indexOf(names[0]) < all.out.indexOf(names[1]), all.err || all.out.replace(/\n/g, " / "));
   // --delivered --all: page nào còn bước dựng thì không ghi page nào; đủ thì đánh dấu mọi page, page đã giao thì bỏ qua.
   for (let step = 1; step <= 6; step += 1) run("progress", allDir, names[0], "--done", String(step));

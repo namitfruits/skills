@@ -313,6 +313,60 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | ------ | -------- | ------- |
 | `F1.3` | fix      | agent chính tự dựng một page cũng theo luật cặp màu, số khối như agent con |
 
+### 015 · Tăng tốc lượt chạy: máy kiểm nhanh hơn, agent không tự viết script
+
+- **Plan:** [015-design-uiux-tang-toc.md](../../.plan/015-design-uiux-tang-toc.md)
+- **Status:** approved
+- **Mục tiêu:** bài mẫu mặc định (một page) chạy 15–24 phút, bài màn Đơn hàng (hai page) 33 phút; lượt mốc của 013 là
+  8 phút 41 giây. Một lần kiểm đầy đủ một page mất 85–105 giây, gấp ba bản máy kiểm ngày 07/10, phần lớn ở lượt bấm.
+  Mỗi page kiểm đầy đủ 4–6 lần: lỗi khổ mobile chỉ hiện ở lần kiểm đầy đủ đầu tiên, máy kiểm đọc nhầm bảng preset của
+  brief thành lỗi page không sửa được, page đã sạch vẫn kiểm lại. 18 trên 29 agent dựng page tự viết script bấm thử.
+  Xong thì: kiểm đầy đủ dưới một nửa thời gian cũ, ra đúng từng dòng lỗi như cũ trên bộ page chép từ các lượt cũ;
+  page không đổi thì kiểm lại in kết quả ngay; kiểm nhanh đo cả khổ mobile và bấm được một nút; brief sai bị chặn ở
+  bước chuẩn bị; bài mặc định chạy một mình xong trong 12 phút.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F5.6`  | update   | kiểm nhanh đo tổ hợp mặc định ở 1280px và 375px |
+| `F5.9`  | new      | page không đổi thì máy kiểm in lại kết quả lần trước |
+| `F5.10` | new      | bấm thử một nút bằng kiểm nhanh có cờ bấm, không viết script |
+| `F5.11` | new      | brief sai thì lệnh đánh dấu chuẩn bị xong từ chối |
+| `F5.1`  | fix      | kiểm đầy đủ chạy song song, chờ hiệu ứng thay chờ cố định, ra đúng lỗi như cũ |
+| `F6.12` | new      | mỗi lệnh ghi một dòng vào `run.log`, `run-log.mjs` đọc thành bảng từng bước |
+
+### 016 · Hỏi người dùng có mở page trong Chrome không
+
+- **Plan:** [016-design-uiux-mo-page-trong-chrome.md](../../.plan/016-design-uiux-mo-page-trong-chrome.md)
+
+- **Status:** approved
+- **Mục tiêu:** page đã tự tải lại mỗi khi một bước dựng xong (`F6.3`), nhưng người chạy skill phải tự bấm từng link
+  `file://` agent in ra. Đề A/B có hai link, đề một luồng có mỗi màn một link. Xong thì người dùng thấy page lớn dần
+  mà không phải bấm link nào. Nhịp tải lại giữ nguyên: page chỉ tải lại khi một bước dựng xong, nên người xem không
+  thấy page dựng dở. `check.mjs` vẫn chạy headless. Các quyết định đã chốt với người dùng:
+  - Agent luôn hỏi ở bước 2. Nếu bước 2 có lượt hỏi làm rõ đề, thì câu này nằm trong lượt đó. Nếu đề đã rõ, thì câu
+    này là một lần dừng riêng.
+  - Người dùng chọn mở thì agent mở page ngay sau khi in link ở bước 4. Agent mở một cửa sổ Chrome mới, riêng cho
+    thư mục design đó, nên các cửa sổ Chrome người dùng đang mở không bị chen thêm tab.
+  - Cửa sổ chỉ có một tab, mở page đầu tiên trong `pages.js`: phương án A, hay màn 1 của luồng. Người xem sang page
+    khác bằng option-switcher trên toolbar.
+  - Agent mở cửa sổ bằng lệnh của hệ điều hành, không bằng Playwright, nên không có tiến trình phải tắt. Trên macOS,
+    lệnh là `open -na "Google Chrome" --args --new-window <url>`. Trên Linux, lệnh là `google-chrome --new-window
+    <url>`. Trên hệ điều hành khác, agent chỉ in link.
+  - Cửa sổ dùng profile Chrome người dùng dùng gần nhất. Agent không truyền `--profile-directory` và không tạo profile
+    mới. Profile mới là một Chrome thứ hai chạy song song: thêm một biểu tượng trên Dock, hiện màn chào lần đầu, để
+    lại thư mục profile phải dọn. Page không cần đăng nhập hay cookie, nên profile thật không làm sai page.
+  - Nếu máy không có Chrome, thì agent mở page bằng trình duyệt mặc định và báo trong chat là không có Chrome.
+  - Ở vòng góp ý, agent không hỏi lại và không mở lại. Nếu cửa sổ còn mở, thì page tự tải lại sau mỗi ý. Nếu người
+    dùng đã đóng cửa sổ, thì họ bấm link trong tin giao.
+  - Với `--auto`, agent không hỏi và không mở trình duyệt, vì lượt chạy thử không có người xem.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F6.13` | new      | bước 2 hỏi người dùng có muốn mở page trong Chrome không |
+| `F6.14` | new      | người dùng chọn mở thì agent mở page đầu tiên trong một cửa sổ Chrome riêng, một tab |
+| `F6.15` | new      | máy không có Chrome thì agent mở bằng trình duyệt mặc định và báo trong chat |
+| `F1.4`  | update   | `--auto` không hỏi và không mở trình duyệt |
+
 ## Plan Queue
 
 ### PQ-03 · Sửa 7 chỗ SKILL.md mơ hồ còn lại, tìm được khi nghiệm thu 005
@@ -351,3 +405,28 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | ------ | -------- | ------- |
 | `F1.3` | fix      | khối dùng chung giống nhau giữa các page; cặp màu ngoài danh sách `init` cũng chốt chung |
 | `F5.1` | fix      | phép so page vặn tại chỗ với page mở lại không làm `check.mjs` chậm gấp đôi |
+
+### PQ-05 · In danh sách design của getdesign ra chat, không chỉ trong output lệnh
+
+- **Status:** new
+- **Mục tiêu:** bài mẫu 04 trượt mục "Chat in danh sách design của getdesign" ở lượt `072` (plan 015) và cả lượt
+  `068` (trước plan 015): agent chạy `new-design.mjs designs` rồi viết "danh sách nguyên văn ở trên", nhưng danh sách
+  chỉ nằm trong output của lệnh, người dùng không thấy trong chat. Hai lượt `065`, `070` đạt vì người chạy tự chép vào
+  `chat.md`. Xong thì tin trước câu chọn design có đủ các dòng `tên - mô tả`, ở cả lượt chạy bằng `claude -p`.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F3.6` | fix      | agent chép danh sách design vào chữ của chat, không trỏ về output lệnh |
+
+### PQ-06 · Thư mục một page vẫn có nhãn phương án trên toolbar
+
+- **Status:** new
+- **Mục tiêu:** thư mục chỉ một page (đề xin một phương án) thì shell không vẽ option-switcher (`shell.js` trả rỗng
+  khi `pages.length < 2`). Mô tả phương án (bố cục, "Tiện cho") chỉ hiện ở khối chờ, mất khi bước dựng 1 xong ở khoảng
+  phút thứ 7; sau đó người xem phải mở `brief.md` mới biết page dựng theo bố cục nào. Người dùng hỏi khi xem lượt `072`.
+  Xong thì thư mục một page có một nhãn tên phương án giữa toolbar, không có chữ A, không bấm chuyển; rê hay chạm giữ
+  thì hiện cùng khung mô tả như nút A B.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F2.8` | new      | thư mục một page có nhãn phương án, rê vào thấy mô tả |

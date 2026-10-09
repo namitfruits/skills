@@ -42,11 +42,13 @@
 //
 // spec: F1.3 F1.2 F1.13 F1.17 F5.1 F5.4 F5.6 F5.7 F5.8
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { appendRun } from "./run-log.mjs";
 import { afterClick, animationsDone, checks, describeAt, folderIssues, hitsItself, pageProbe, positionsAround, readServes, readTokens, readYielded, rowRects, shifted, staticIssues } from "./principles-check.mjs";
 
 const widths = [375, 1280];
@@ -54,7 +56,7 @@ const requiredStates = ["data", "loading", "empty", "error"];
 const longText = "Một chuỗi rất dài để thử chữ tràn: Công ty Trách nhiệm hữu hạn Thương mại và Dịch vụ Kỹ thuật Số Toàn Cầu";
 
 const args = process.argv.slice(2);
-const valueFlags = ["--pw", "--state", "--preset"];
+const valueFlags = ["--pw", "--state", "--preset", "--click"];
 const flagValue = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
 const target = args.find((arg, index) => !arg.startsWith("--") && !valueFlags.includes(args[index - 1]));
 const pwFlag = flagValue("--pw") ?? process.env.PW_DIR;
@@ -62,19 +64,36 @@ const takeShots = !args.includes("--no-shots");
 const quick = args.includes("--quick");
 const quickState = flagValue("--state");
 const quickPreset = flagValue("--preset");
+const quickClick = flagValue("--click");
+const briefOnly = args.includes("--brief");
+// --fresh: bỏ kết quả đã nhớ, kiểm lại mọi page.
+const fresh = args.includes("--fresh");
 const started = performance.now();
 if (!target) {
-  console.error("cách dùng: node check.mjs <thư mục design | page.html> [--pw <dir>] [--no-shots]\n          node check.mjs <page.html> --quick [--state <giá trị>] [--preset \"<nhãn>\"] [--pw <dir>]");
+  console.error("cách dùng: node check.mjs <thư mục design | page.html> [--pw <dir>] [--no-shots] [--fresh]\n          node check.mjs <page.html> --quick [--state <giá trị>] [--preset \"<nhãn>\"] [--click \"<nhãn nút>\"] [--pw <dir>]\n          node check.mjs <thư mục design> --brief");
   process.exit(2);
 }
 if (quick && statSync(resolve(target)).isDirectory()) {
   console.error("--quick kiểm đúng một page: đưa đường dẫn tới <NN-slug>.html. Kiểm cả thư mục thì bỏ --quick.");
   process.exit(2);
 }
+if (quickClick !== undefined && !quick) {
+  console.error("--click đi cùng --quick: bấm một nút ở tổ hợp của --quick.");
+  process.exit(2);
+}
 
 // Gom theo page + lỗi: một lỗi dính 100 tổ hợp in một dòng kèm số tổ hợp và vài ví dụ.
 const errors = new Map();
+// Giờ từng lượt, ghi vào run.log của thư mục design lúc kết thúc: [nhãn, giây].
+const timings = [];
+let comboCount = 0;
+// Page dùng lại kết quả đã nhớ (xem bộ nhớ kết quả ở lượt trình duyệt).
+const reused = [];
+const since = (from) => (performance.now() - from) / 1000;
+// Đang kiểm một page ở lượt trình duyệt: mọi lỗi của nó được ghi thêm vào đây để lưu vào bộ nhớ kết quả.
+let recording = null;
 const report = (file, where, message) => {
+  recording?.push([file, where, message]);
   const key = `${file}\u0000${message}`;
   if (!errors.has(key)) errors.set(key, { file, message, places: [] });
   if (where) errors.get(key).places.push(where);
@@ -151,9 +170,15 @@ for (const [index, page] of pages.entries()) {
 const briefSections = ["Tóm tắt đề", "Quyết định", "Design system", ...(isFlow ? ["Luồng"] : ["Pages", "Tình huống"]), "Dữ liệu chung", "Nút dữ liệu chung", "Khối", "Số kiểm chéo ở mặc định", "Đề gốc"];
 const deciders = ["người dùng", "--auto", "AI đoán"];
 // Các dòng dữ liệu của bảng đầu tiên trong một mục (bỏ dòng tiêu đề và dòng gạch), mỗi dòng là mảng ô đã bỏ backtick.
-const sectionRows = (text, name) => (text.split(new RegExp(`^## ${name}\\s*$`, "m"))[1]?.split(/^## /m)[0] ?? "")
-  .split("\n").filter((line) => line.trim().startsWith("|")).slice(2)
-  .map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim().replace(/`/g, "")));
+// Bảng sau trong cùng mục (vd bảng preset dưới bảng nút dữ liệu) không tính.
+const sectionRows = (text, name) => {
+  const lines = (text.split(new RegExp(`^## ${name}\\s*$`, "m"))[1]?.split(/^## /m)[0] ?? "").split("\n");
+  const start = lines.findIndex((line) => line.trim().startsWith("|"));
+  if (start < 0) return [];
+  const end = lines.findIndex((line, index) => index > start && !line.trim().startsWith("|"));
+  return lines.slice(start, end < 0 ? undefined : end).slice(2)
+    .map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim().replace(/`/g, "")));
+};
 let sharedKeys = null;
 let blockNumbers = null;
 if (existsSync(join(designDir, "brief.md"))) {
@@ -190,6 +215,9 @@ if (existsSync(join(designDir, "brief.md"))) {
   }
 }
 for (const file of htmlFiles) if (!pages.some((page) => page.file === file)) report(file, "", "page không có trong pages.js");
+// --brief: chỉ soát brief.md và pages.js, lúc page còn trống (new-design.mjs progress --prepared gọi).
+if (briefOnly) finish(`brief · ${basename(designDir)}`);
+timings.push(["tĩnh", since(started)]);
 // Luồng: màn nào cũng có đường sang màn sau và về màn trước bằng nút trong page. Kiểm một page thì chỉ soát page đó:
 // các page khác có thể còn đang được agent con khác dựng.
 if (isFlow) {
@@ -271,25 +299,45 @@ function loadPlaywright() {
   process.exit(2);
 }
 
-const { chromium } = loadPlaywright();
-let browser;
-try {
-  browser = await chromium.launch({ channel: "chrome" });
-} catch {
+// Chrome chỉ mở khi có page phải kiểm lại: mọi page đều dùng lại kết quả thì không mở.
+let browser = null;
+async function launchBrowser() {
+  const { chromium } = loadPlaywright();
   try {
-    browser = await chromium.launch();
-  } catch (error) {
-    console.error(`Không mở được Chrome: ${error.message.split("\n")[0]}\nCài Chrome, hoặc chạy: npx playwright install chromium`);
-    process.exit(2);
+    return await chromium.launch({ channel: "chrome" });
+  } catch {
+    try {
+      return await chromium.launch();
+    } catch (error) {
+      console.error(`Không mở được Chrome: ${error.message.split("\n")[0]}\nCài Chrome, hoặc chạy: npx playwright install chromium`);
+      process.exit(2);
+    }
   }
 }
 
 const shotsDir = join(designDir, "shots");
 if (takeShots) mkdirSync(shotsDir, { recursive: true });
-let comboCount = 0;
+
+// Mỗi lần mở là một context mới (storage sạch), nên trình duyệt không dùng lại cache: Tailwind, Alpine, Lucide từ CDN
+// được nhớ ở đây và trả lại cho mọi lần mở sau, thay vì tải lại qua mạng mỗi lần.
+const cdnCache = new Map();
+async function fromCache(route) {
+  const url = route.request().url();
+  if (!cdnCache.has(url)) cdnCache.set(url, route.fetch().then(async (response) => ({ status: response.status(), headers: response.headers(), body: await response.body() })));
+  try {
+    await route.fulfill(await cdnCache.get(url));
+  } catch {
+    cdnCache.delete(url);
+    await route.continue().catch(() => {});
+  }
+}
 
 async function openPage(url, width, issues) {
-  const page = await browser.newPage({ viewport: { width, height: 900 } });
+  browser ??= launchBrowser();
+  const context = await (await browser).newContext({ viewport: { width, height: 900 } });
+  await context.route(/^https?:\/\//, fromCache);
+  const page = await context.newPage();
+  page.on("close", () => context.close().catch(() => {}));
   page.on("pageerror", (error) => issues.push(`lỗi JS: ${error.message}`));
   // Shell đọc <page>.progress.js mỗi 2 giây; page dựng trước khi có danh sách bước không có file đó, nạp hỏng là bình thường.
   const ofProgress = (url) => /\.progress\.js(\?|$)/.test(url ?? "");
@@ -403,14 +451,14 @@ async function inspect(page) {
 }
 
 // Lỗi layout của một lần đo, dùng chung cho lượt tổ hợp và lượt bấm.
-function reportLayout(file, where, result) {
+function reportLayout(file, where, result, rep = report) {
   const some = (list) => `${[...new Set(list)].slice(0, 3).join(" · ")}${list.length > 3 ? ` (+${list.length - 3})` : ""}`;
-  if (result.overflow > 0) report(file, where, `cuộn ngang ${result.overflow}px`);
-  if (result.overlaps.length) report(file, where, `chữ đè nhau: ${some(result.overlaps)}`);
-  if (result.squeezed.length) report(file, where, `chữ bị ép mỗi dòng một chữ, khung quá hẹp: ${some(result.squeezed)}`);
-  if (result.offscreen.length) report(file, where, `khung nổi lọt ra ngoài màn hình: ${some(result.offscreen)}`);
-  if (result.underBar.length) report(file, where, `khung nổi nằm dưới toolbar, bị che: ${some(result.underBar)} (toolbar ở z-index 1000, khung nổi dùng z-[1100])`);
-  if (result.silentButtons.length) report(file, where, `nút không làm gì, cũng không khoá kèm title: ${[...new Set(result.silentButtons)].join(" · ")}`);
+  if (result.overflow > 0) rep(file, where, `cuộn ngang ${result.overflow}px`);
+  if (result.overlaps.length) rep(file, where, `chữ đè nhau: ${some(result.overlaps)}`);
+  if (result.squeezed.length) rep(file, where, `chữ bị ép mỗi dòng một chữ, khung quá hẹp: ${some(result.squeezed)}`);
+  if (result.offscreen.length) rep(file, where, `khung nổi lọt ra ngoài màn hình: ${some(result.offscreen)}`);
+  if (result.underBar.length) rep(file, where, `khung nổi nằm dưới toolbar, bị che: ${some(result.underBar)} (toolbar ở z-index 1000, khung nổi dùng z-[1100])`);
+  if (result.silentButtons.length) rep(file, where, `nút không làm gì, cũng không khoá kèm title: ${[...new Set(result.silentButtons)].join(" · ")}`);
 }
 
 // Thứ bấm được trong page, mỗi loại lấy một cái: các dòng cùng bảng, các nút cùng hàng giống nhau chỉ bấm một.
@@ -434,6 +482,8 @@ const clickTargets = (page) => page.evaluate(() => {
   return targets;
 });
 const maxClicks = 60;
+// Số tab bấm cùng lúc ở mỗi khổ.
+const clickLanes = Number(process.env.CHECK_CLICK_LANES ?? 2);
 // Thứ bấm được chỉ hiện ở một giá trị khác mặc định (nút "Đặt mục tiêu" khi mục tiêu bằng 0): gom ở lượt vặn và lượt
 // quét, nhớ giá trị lúc nó hiện ra lần đầu để lượt bấm mở page đúng giá trị đó rồi mới bấm.
 const collectTargets = async (page, values, into) => {
@@ -474,7 +524,38 @@ function cartesian(lists) {
   return lists.reduce((rows, list) => rows.flatMap((row) => list.map((item) => [...row, item])), [[]]);
 }
 
+// Bộ nhớ kết quả của lượt trình duyệt, mỗi page một mục. Khoá là hash của mọi thứ lượt này đọc: page, tokens.js,
+// pages.js, bảng nút dữ liệu và luật nhường của brief.md, shell, mã máy kiểm. Khoá trùng thì in lại lỗi đã nhớ thay vì
+// mở Chrome. Lượt tĩnh (brief, danh sách bước dựng) lần nào cũng chạy.
+const cacheFile = join(designDir, ".check-cache.json");
+let cache = {};
+try {
+  cache = fresh ? {} : JSON.parse(readFileSync(cacheFile, "utf8"));
+} catch {}
+const readOr = (path) => (existsSync(path) ? readFileSync(path, "utf8") : "");
+const here = dirname(fileURLToPath(import.meta.url));
+const sharedInputs = [
+  readOr(join(designDir, "tokens.js")), readOr(join(designDir, "pages.js")), JSON.stringify([sharedKeys, yielded, takeShots, widths, maxClicks]),
+  ...["shell.js", "shell.css"].map((name) => readOr(join(designDir, shellDir, name))),
+  readOr(join(here, "check.mjs")), readOr(join(here, "principles-check.mjs")),
+];
+const cacheKey = (file) => createHash("sha256").update([readOr(join(designDir, file)), ...sharedInputs].join("\u0000")).digest("hex");
+
 for (const file of checkedFiles) {
+  const key = quick ? null : cacheKey(file);
+  const hit = key && cache[file]?.key === key && (!takeShots || existsSync(shotsDir)) ? cache[file] : null;
+  if (hit) {
+    for (const entry of hit.reports) report(...entry);
+    comboCount += hit.combos;
+    if (hit.buttons) buttonsByPage.set(file, hit.buttons);
+    if (hit.primaries) primariesByPage.set(file, new Set(hit.primaries));
+    reused.push(file);
+    timings.push([file, 0, "dùng lại"]);
+    continue;
+  }
+  recording = [];
+  const combosBefore = comboCount;
+  const pageStarted = performance.now();
   const fileUrl = pathToFileURL(join(designDir, file)).href;
   const loadIssues = [];
   let page;
@@ -553,16 +634,45 @@ for (const file of checkedFiles) {
     if (quickPreset !== undefined && !preset) report(file, "--quick", `không có preset "${quickPreset}" (có ${(info.design.presets ?? []).map((item) => `"${item.label}"`).join(", ") || "—"})`);
     if (quickState !== undefined && !declaredStates.includes(quickState)) report(file, "--quick", `state "${quickState}" không có trong variable state (có ${declaredStates.join(", ") || "—"})`);
     const values = { ...Object.fromEntries(controls.map((control) => [control.key, control.default])), theme: "light", ...(quickState !== undefined && { state: quickState }), ...(preset?.values ?? {}) };
-    loadIssues.length = 0;
-    await setStore(page, values);
-    const where = `1280px ${preset ? `preset "${preset.label}"` : `theme=light${values.state !== undefined ? `&state=${values.state}` : ""}`}`;
-    for (const issue of loadIssues) report(file, where, issue);
-    reportLayout(file, where, await inspect(page));
-    await page.evaluate(animationsDone);
-    const probe = await page.evaluate(pageProbe, { ...tokens, skip: yielded, width: 1280, state: values.state });
-    for (const issue of probe.issues) report(file, where, ruleTag(issue.rule, issue.message));
-    comboCount += 1;
-    if (takeShots) await page.screenshot({ path: join(shotsDir, `${file.replace(/\.html$/, "")}--quick.png`), fullPage: true });
+    const label = preset ? `preset "${preset.label}"` : `theme=light${values.state !== undefined ? `&state=${values.state}` : ""}`;
+    // Cùng tổ hợp ở 1280px và 375px, hai tab chạy cùng lúc: lỗi khổ mobile hiện ngay ở bước gây ra nó.
+    const mobileIssues = [];
+    const mobile = await openPage(fileUrl, 375, mobileIssues);
+    const measure = async (tab, tabIssues, width) => {
+      tabIssues.length = 0;
+      await setStore(tab, values);
+      const where = `${width}px ${label}`;
+      const log = tabIssues.map((issue) => [file, where, issue]);
+      reportLayout(file, where, await inspect(tab), (...entry) => log.push(entry));
+      await tab.evaluate(animationsDone);
+      const probe = await tab.evaluate(pageProbe, { ...tokens, skip: yielded, width, state: values.state });
+      for (const issue of probe.issues) log.push([file, where, ruleTag(issue.rule, issue.message)]);
+      comboCount += 1;
+      if (takeShots) await tab.screenshot({ path: join(shotsDir, `${file.replace(/\.html$/, "")}--quick${width === 375 ? "-375" : ""}.png`), fullPage: true });
+      return log;
+    };
+    const logs = await Promise.all([measure(page, loadIssues, 1280), measure(mobile, mobileIssues, 375)]);
+    for (const log of logs) for (const entry of log) report(...entry);
+    await mobile.close();
+    // --click: bấm đúng một nút ở tổ hợp trên (1280px), đo như lượt bấm của kiểm đầy đủ.
+    if (quickClick !== undefined) {
+      const found = await page.evaluate((wanted) => {
+        const name = (element) => (element.getAttribute("aria-label") || element.textContent.trim().replace(/\s+/g, " ")).slice(0, 60);
+        const all = [...document.querySelectorAll("#design *")];
+        const clickable = all.filter((element) => (element.tagName === "BUTTON" || [...element.attributes].some((attribute) => /^(@click|x-on:click)/.test(attribute.name))) && element.getClientRects().length);
+        const match = clickable.find((element) => name(element) === wanted) ?? clickable.find((element) => name(element).startsWith(wanted));
+        return match ? { index: all.indexOf(match), label: name(match).slice(0, 30) } : { labels: [...new Set(clickable.map(name))].slice(0, 15) };
+      }, quickClick);
+      if (found.labels) report(file, "--click", `không có nút đang hiện tên "${quickClick}" (có ${found.labels.map((text) => `"${text}"`).join(", ") || "—"})`);
+      else {
+        const defaults = Object.fromEntries(controls.map((control) => [control.key, control.default]));
+        const clickIssues = [];
+        const clicker = await openPage(fileUrl, 1280, clickIssues);
+        await clickOnce(clicker, clickIssues, { file, fileUrl, width: 1280, defaults, target: { ...found, values } }, report);
+        if (takeShots) await clicker.screenshot({ path: join(shotsDir, `${file.replace(/\.html$/, "")}--quick-click.png`) });
+        await clicker.close();
+      }
+    }
     await page.close();
     continue;
   }
@@ -647,6 +757,7 @@ for (const file of checkedFiles) {
   await setStore(page, { ...defaults, viewport: "desktop" });
   await page.close();
 
+  const tunedAt = since(pageStarted);
   // Mọi tổ hợp tweak × sáng tối × state, cộng từng preset, ở hai khổ.
   const tweakLists = tweaks.map((control) => [control.default, ...alternatives(control)].map((value) => [control.key, value]));
   const stateControl = variables.find((control) => control.key === "state");
@@ -661,7 +772,12 @@ for (const file of checkedFiles) {
 
   // UX6 so chữ của từng khối ở state empty / error với state mặc định cùng tổ hợp.
   const baselines = new Map();
-  for (const width of widths) {
+  const widthTimes = {};
+  // Hai khổ chạy cùng lúc. Lỗi của mỗi khổ ghi vào sổ riêng, rồi chép vào report theo thứ tự 375 → 1280 như khi chạy
+  // lần lượt, nên output không đổi.
+  const logs = await Promise.all(widths.map(async (width) => {
+    const log = [];
+    const rep = (...entry) => log.push(entry);
     const issues = [];
     const sweep = await openPage(fileUrl, width, issues);
     const sweepTargets = new Map();
@@ -672,11 +788,11 @@ for (const file of checkedFiles) {
       await collectTargets(sweep, values, sweepTargets);
       const result = await inspect(sweep);
       const where = `${width}px ${preset ? `preset "${preset}" theme=${values.theme}` : comboLabel(values)}`;
-      for (const issue of issues) report(file, where, issue);
-      reportLayout(file, where, result);
+      for (const issue of issues) rep(file, where, issue);
+      reportLayout(file, where, result, rep);
       await sweep.evaluate(animationsDone);
       const probe = await sweep.evaluate(pageProbe, { ...tokens, skip: yielded, width, state: values.state });
-      for (const issue of probe.issues) report(file, where, ruleTag(issue.rule, issue.message));
+      for (const issue of probe.issues) rep(file, where, ruleTag(issue.rule, issue.message));
       const { state: comboState, ...others } = values;
       if (!preset && stateControl) {
         const key = `${width}|${comboLabel(others)}`;
@@ -686,7 +802,7 @@ for (const file of checkedFiles) {
           const base = baselines.get(key) ?? { blocks: {}, actions: [] };
           const changed = Object.entries(probe.blocks).filter(([id, block]) => block.text && block.text !== base.blocks[id]?.text);
           const fresh = probe.actions.filter((label) => !base.actions.includes(label));
-          if (changed.length && !changed.some(([, block]) => block.actionable) && !fresh.length) report(file, where, ruleTag("UX6", `state=${comboState}: khối ${changed.map(([id]) => id).join(", ")} đổi chữ mà không có nút hay link làm tiếp`));
+          if (changed.length && !changed.some(([, block]) => block.actionable) && !fresh.length) rep(file, where, ruleTag("UX6", `state=${comboState}: khối ${changed.map(([id]) => id).join(", ")} đổi chữ mà không có nút hay link làm tiếp`));
         }
       }
       comboCount += 1;
@@ -703,68 +819,103 @@ for (const file of checkedFiles) {
     // Lượt bấm: modal, sheet, hàng mở rộng chỉ hiện sau cú bấm, panel không vặn ra được. Mỗi lần bấm mở
     // page mới từ giá trị mặc định, bấm một thứ, chờ hiệu ứng xong rồi đo như lượt tổ hợp.
     // Thứ thấy ở giá trị mặc định bấm trước, rồi tới thứ chỉ hiện ở giá trị khác (lượt vặn, lượt quét).
-    const clicker = await openPage(fileUrl, width, issues);
+    // Các cú bấm chia cho clickLanes tab chạy cùng lúc; sổ lỗi theo từng cú bấm, chép lại theo thứ tự bấm.
+    const lanes = await Promise.all(Array.from({ length: clickLanes }, async () => {
+      const laneIssues = [];
+      return { page: await openPage(fileUrl, width, laneIssues), issues: laneIssues };
+    }));
     const merged = new Map();
-    await collectTargets(clicker, {}, merged);
+    await collectTargets(lanes[0].page, {}, merged);
     for (const source of [tunedTargets, sweepTargets]) for (const [signature, target] of source) if (!merged.has(signature)) merged.set(signature, target);
     const targets = [...merged.values()].slice(0, maxClicks);
-    for (const target of targets) {
-      issues.length = 0;
-      await clicker.goto(fileUrl);
-      await clicker.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-bar]") && getComputedStyle(document.documentElement).getPropertyValue("--color-canvas"), null, { timeout: 20000 });
-      await settle(clicker);
-      const tuned = Object.keys(target.values).length > 0;
-      if (tuned) await setStore(clicker, { ...defaults, ...target.values });
-      const where = `${width}px bấm "${target.label}"${tuned ? ` (${comboLabel(target.values)})` : ""}`;
-      const element = await clicker.evaluateHandle((index) => document.querySelectorAll("#design *")[index], target.index);
-      // Gom ở 1280px mà khổ này ẩn (sm:inline…) thì bỏ qua: không phải nút câm.
-      if (!(await element.evaluate((node) => Boolean(node && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden")))) continue;
-      const fixedBefore = await clicker.evaluate(() => [...document.querySelectorAll("#design *")].filter((node) => getComputedStyle(node).position === "fixed" && node.getClientRects().length).length);
-      await element.asElement().scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-      // UX2: rê vào thì không phần tử nào khác xô đi (chỉ đo ở khổ có chuột).
-      if (width >= 1024) {
-        const before = await clicker.evaluate(positionsAround, target.index);
-        await element.asElement().hover({ timeout: 2000 }).catch(() => {});
-        await clicker.waitForTimeout(250);
-        const moved = shifted(before, await clicker.evaluate(positionsAround, target.index));
-        if (moved.length) {
-          const names = await Promise.all(moved.slice(0, 2).map((entry) => clicker.evaluate(describeAt, entry.index)));
-          report(file, `${width}px rê "${target.label}"`, ruleTag("UX2", `rê vào "${target.label}" làm ${moved.length} phần tử khác xô đi, vd ${names.join(", ")}`));
-        }
+    const clickLogs = targets.map(() => []);
+    await Promise.all(lanes.map(async (lane, laneIndex) => {
+      for (let index = laneIndex; index < targets.length; index += lanes.length) {
+        await clickOnce(lane.page, lane.issues, { file, fileUrl, width, defaults, target: targets[index] }, (...entry) => clickLogs[index].push(entry));
       }
-      const rowBefore = await clicker.evaluate(rowRects, target.index);
-      const wasHittable = await clicker.evaluate(hitsItself, target.index);
-      try {
-        await element.asElement().click({ timeout: 2000 });
-      } catch (error) {
-        report(file, where, `không bấm được: ${error.message.split("\n")[0].slice(0, 100)}`);
-        continue;
-      }
-      await clicker.waitForTimeout(350);
-      // Bấm làm page sang file khác: hợp lệ khi file đó có trong pages.js (nút "Tiếp tục" của luồng).
-      if (clicker.url().split("?")[0] !== fileUrl.split("?")[0]) {
-        const landed = decodeURIComponent(new URL(clicker.url()).pathname.split("/").pop());
-        if (!pages.some((page) => page.file === landed)) report(file, where, `bấm "${target.label}" sang ${landed}, file không có trong pages.js`);
-        continue;
-      }
-      for (const issue of issues) report(file, where, issue);
-      reportLayout(file, where, await inspect(clicker));
-      const rowAfter = await clicker.evaluate(rowRects, target.index);
-      if (rowBefore && rowAfter && rowBefore.length === rowAfter.length && rowBefore.some((rect, index) => Math.abs(rect[0] - rowAfter[index][0]) > 0.5 || Math.abs(rect[1] - rowAfter[index][1]) > 0.5)) {
-        report(file, where, ruleTag("UX2", `bấm "${target.label}" làm các nút cùng hàng xô đi`));
-      }
-      const createLike = /^(thêm|tạo|mời|mới|add|new|create|invite)/i.test(target.label.trim());
-      for (const issue of await clicker.evaluate(afterClick, { index: target.index, createLike, wasHittable })) report(file, where, ruleTag(issue.rule, issue.message));
-      await clicker.evaluate(animationsDone);
-      const clickProbe = await clicker.evaluate(pageProbe, { ...tokens, skip: yielded, width });
-      for (const issue of clickProbe.issues) report(file, where, ruleTag(issue.rule, issue.message));
-      comboCount += 1;
-      const fixedAfter = await clicker.evaluate(() => [...document.querySelectorAll("#design *")].filter((node) => getComputedStyle(node).position === "fixed" && node.getClientRects().length).length);
-      if (takeShots && fixedAfter > fixedBefore) {
-        await clicker.screenshot({ path: join(shotsDir, `${file.replace(/\.html$/, "")}--${width}--bam-${target.label.replace(/[^\p{L}\p{N}]+/gu, "_")}.png`) });
-      }
+      await lane.page.close();
+    }));
+    for (const entries of clickLogs) log.push(...entries);
+    widthTimes[width] = since(pageStarted) - tunedAt;
+    return log;
+  }));
+  for (const log of logs) for (const entry of log) report(...entry);
+  timings.push([file, since(pageStarted), `mở, vặn nút, khổ tablet ${tunedAt.toFixed(1)} · ${widths.map((width) => `${width}px ${widthTimes[width]?.toFixed(1)}`).join(" · ")}`]);
+  cache[file] = { key, reports: recording, combos: comboCount - combosBefore, buttons: buttonsByPage.get(file), primaries: [...(primariesByPage.get(file) ?? [])] };
+  recording = null;
+  try {
+    writeFileSync(cacheFile, JSON.stringify(cache));
+  } catch {}
+}
+
+// Một cú bấm của lượt bấm: mở lại page ở giá trị của thứ được bấm, rê (khổ có chuột), bấm, chờ hiệu ứng xong, đo.
+async function clickOnce(clicker, issues, { file, fileUrl, width, defaults, target }, rep) {
+  issues.length = 0;
+  await clicker.goto(fileUrl);
+  await clicker.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-bar]") && getComputedStyle(document.documentElement).getPropertyValue("--color-canvas"), null, { timeout: 20000 });
+  await settle(clicker);
+  const tuned = Object.keys(target.values).length > 0;
+  if (tuned) await setStore(clicker, { ...defaults, ...target.values });
+  const where = `${width}px bấm "${target.label}"${tuned ? ` (${comboLabel(target.values)})` : ""}`;
+  const element = await clicker.evaluateHandle((index) => document.querySelectorAll("#design *")[index], target.index);
+  // Gom ở 1280px mà khổ này ẩn (sm:inline…) thì bỏ qua: không phải nút câm.
+  if (!(await element.evaluate((node) => Boolean(node && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden")))) return;
+  const fixedBefore = await clicker.evaluate(() => [...document.querySelectorAll("#design *")].filter((node) => getComputedStyle(node).position === "fixed" && node.getClientRects().length).length);
+  await element.asElement().scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+  // UX2: rê vào thì không phần tử nào khác xô đi (chỉ đo ở khổ có chuột).
+  if (width >= 1024) {
+    const before = await clicker.evaluate(positionsAround, target.index);
+    await element.asElement().hover({ timeout: 2000 }).catch(() => {});
+    await settle(clicker);
+    await clicker.evaluate(animationsDone);
+    const moved = shifted(before, await clicker.evaluate(positionsAround, target.index));
+    if (moved.length) {
+      const names = await Promise.all(moved.slice(0, 2).map((entry) => clicker.evaluate(describeAt, entry.index)));
+      rep(file, `${width}px rê "${target.label}"`, ruleTag("UX2", `rê vào "${target.label}" làm ${moved.length} phần tử khác xô đi, vd ${names.join(", ")}`));
     }
-    await clicker.close();
+  }
+  const rowBefore = await clicker.evaluate(rowRects, target.index);
+  const wasHittable = await clicker.evaluate(hitsItself, target.index);
+  // Cú bấm gọi next() hay link sang file khác thì trang tải lại: nhận ra từ request điều hướng, chờ trang mới lên.
+  let navigating = false;
+  const onRequest = (request) => request.isNavigationRequest() && request.frame() === clicker.mainFrame() && (navigating = true);
+  clicker.on("request", onRequest);
+  try {
+    await element.asElement().click({ timeout: 2000 });
+  } catch (error) {
+    clicker.off("request", onRequest);
+    rep(file, where, `không bấm được: ${error.message.split("\n")[0].slice(0, 100)}`);
+    return;
+  }
+  try {
+    await settle(clicker);
+    if (!navigating) await clicker.evaluate(animationsDone);
+  } catch {
+    navigating = true;
+  }
+  clicker.off("request", onRequest);
+  if (navigating) await clicker.waitForLoadState("load").catch(() => {});
+  // Bấm làm page sang file khác: hợp lệ khi file đó có trong pages.js (nút "Tiếp tục" của luồng).
+  if (clicker.url().split("?")[0] !== fileUrl.split("?")[0]) {
+    const landed = decodeURIComponent(new URL(clicker.url()).pathname.split("/").pop());
+    if (!pages.some((page) => page.file === landed)) rep(file, where, `bấm "${target.label}" sang ${landed}, file không có trong pages.js`);
+    return;
+  }
+  for (const issue of issues) rep(file, where, issue);
+  reportLayout(file, where, await inspect(clicker), rep);
+  const rowAfter = await clicker.evaluate(rowRects, target.index);
+  if (rowBefore && rowAfter && rowBefore.length === rowAfter.length && rowBefore.some((rect, index) => Math.abs(rect[0] - rowAfter[index][0]) > 0.5 || Math.abs(rect[1] - rowAfter[index][1]) > 0.5)) {
+    rep(file, where, ruleTag("UX2", `bấm "${target.label}" làm các nút cùng hàng xô đi`));
+  }
+  const createLike = /^(thêm|tạo|mời|mới|add|new|create|invite)/i.test(target.label.trim());
+  for (const issue of await clicker.evaluate(afterClick, { index: target.index, createLike, wasHittable })) rep(file, where, ruleTag(issue.rule, issue.message));
+  await clicker.evaluate(animationsDone);
+  const clickProbe = await clicker.evaluate(pageProbe, { ...tokens, skip: yielded, width });
+  for (const issue of clickProbe.issues) rep(file, where, ruleTag(issue.rule, issue.message));
+  comboCount += 1;
+  const fixedAfter = await clicker.evaluate(() => [...document.querySelectorAll("#design *")].filter((node) => getComputedStyle(node).position === "fixed" && node.getClientRects().length).length);
+  if (takeShots && fixedAfter > fixedBefore) {
+    await clicker.screenshot({ path: join(shotsDir, `${file.replace(/\.html$/, "")}--${width}--bam-${target.label.replace(/[^\p{L}\p{N}]+/gu, "_")}.png`) });
   }
 }
 
@@ -829,7 +980,7 @@ if (isFlow && !onlyFile && pages.length >= 2) {
   await walker.close();
 }
 
-await browser.close();
+if (browser) await (await browser).close();
 
 for (const issue of folderIssues(buttonsByPage, yielded)) report(onlyFile ?? basename(designDir), "", ruleTag(issue.rule, issue.message));
 // Nút chính các page cùng màu nền và màu chữ (1280px, giao diện sáng, mọi tổ hợp): cặp của design system không đủ đọc
@@ -839,11 +990,21 @@ if (new Set(primaries.map(([, pairs]) => pairs)).size > 1) {
   report(basename(designDir), "", `nút chính các page khác màu: ${primaries.map(([file, pairs]) => `${file} ${pairs}`).join(" · ")} — theo "Cặp màu không đủ đọc" của brief.md`);
 }
 
-for (const { file, message, places } of errors.values()) {
-  const unique = [...new Set(places)];
-  const where = unique.length === 0 ? "" : unique.length <= 2 ? ` [${unique.join("; ")}]` : ` [${unique.length} chỗ, vd ${unique.slice(0, 2).join("; ")}]`;
-  console.log(`✗ ${file}${where}: ${message}`);
+if (quick) finish(`quick · ${onlyFile}`, ` · ${((performance.now() - started) / 1000).toFixed(1)}s`);
+finish(`${checkedFiles.length} page · ${comboCount} tổ hợp`, `${reused.length ? ` · ${reused.length} page không đổi, dùng lại kết quả lần trước` : ""}${takeShots ? ` · ảnh ở ${shotsDir}` : ""}`);
+
+function finish(head, tail = "") {
+  const action = briefOnly ? "brief" : quick ? (quickClick !== undefined ? "click" : "quick") : onlyFile ? "full" : "folder";
+  const parts = [`${comboCount} tổ hợp`, `${errors.size} lỗi`, ...(reused.length ? [`${reused.length} page dùng lại`] : []), ...timings.map(([label, sec, extra]) => `${label} ${sec.toFixed(1)}s${extra ? ` (${extra})` : ""}`)];
+  if (quickClick !== undefined) parts.unshift(`bấm "${quickClick}"`);
+  if (quickState !== undefined) parts.unshift(`state=${quickState}`);
+  if (quickPreset !== undefined) parts.unshift(`preset "${quickPreset}"`);
+  appendRun(designDir, "check", action, onlyFile ?? "-", since(started), parts.join(" · "));
+  for (const { file, message, places } of errors.values()) {
+    const unique = [...new Set(places)];
+    const where = unique.length === 0 ? "" : unique.length <= 2 ? ` [${unique.join("; ")}]` : ` [${unique.length} chỗ, vd ${unique.slice(0, 2).join("; ")}]`;
+    console.log(`✗ ${file}${where}: ${message}`);
+  }
+  console.log(`${errors.size ? "✗" : "✓"} ${head} · ${errors.size} lỗi${tail}`);
+  process.exit(errors.size ? 1 : 0);
 }
-if (quick) console.log(`${errors.size ? "✗" : "✓"} quick · ${onlyFile} · ${errors.size} lỗi · ${((performance.now() - started) / 1000).toFixed(1)}s`);
-else console.log(`${errors.size ? "✗" : "✓"} ${checkedFiles.length} page · ${comboCount} tổ hợp · ${errors.size} lỗi${takeShots ? ` · ảnh ở ${shotsDir}` : ""}`);
-process.exit(errors.size ? 1 : 0);

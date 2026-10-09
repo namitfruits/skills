@@ -11,6 +11,7 @@
 //   node new-design.mjs touch <thư mục design> <file> --note "<góp ý vừa sửa>"
 //   node new-design.mjs tokens <DESIGN.md | tokens.css> [--page-width <…>] [--out <tokens.js>]
 //   node new-design.mjs shell [--root .design]
+//   node new-design.mjs open <thư mục design> [--dry-run]
 //
 // Mỗi phương án được dựng đúng một page; góp ý thì sửa thẳng page đó rồi touch để pages.js ghi ngày sửa và góp ý.
 // Thư mục luồng: mỗi màn một page, tạo bằng --screen theo thứ tự màn. Một thư mục là thư mục phương án (--option) hay
@@ -36,13 +37,20 @@
 // `tên - mô tả`), init --getdesign tải bộ đã chọn vào thư mục design. Exit 1 là lỗi chọn (tên lạ, bộ chỉ có chữ);
 // exit 2 là không chạy được getdesign (gói đổi cấu trúc, registry lỗi), agent dừng và báo lỗi.
 //
-// spec: F1.2 F1.17 F4 F3.6 F3.8 F6.2 F6.6 F6.10
+// open mở page đầu tiên của pages.js (phương án A, màn 1) trong một cửa sổ Chrome mới, một tab; người xem sang page khác
+// bằng option-switcher. Lệnh không chọn profile, nên Chrome dùng profile dùng gần nhất. macOS: open -na "Google Chrome"
+// --args --new-window (tên ứng dụng đổi được bằng DESIGN_UIUX_CHROME_APP, chỉ để test nhánh thiếu Chrome); Linux:
+// google-chrome --new-window; thiếu Chrome thì mở bằng trình duyệt mặc định (open, xdg-open); hệ khác không mở gì.
+// stdout một dòng `chrome | default | none <url>`; --dry-run in thêm `$ <lệnh>` và không chạy. Exit 2: không mở được.
+//
+// spec: F1.2 F1.17 F4 F3.6 F3.8 F6.2 F6.6 F6.10 F6.14 F6.15
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { appendRun } from "./run-log.mjs";
 import { buildTokens, weakPairs } from "./tokens.mjs";
 
 const skillDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -212,6 +220,7 @@ function init(slug, flags) {
   cpSync(join(skillDir, "templates/brief.md"), join(designDir, "brief.md"));
   writePages(designDir, []);
   printWeakPairs(flags.getdesign ? join(designDir, "DESIGN.md") : source);
+  appendRun(designDir, "new-design", "init", "-", process.uptime(), `${flags.getdesign ? `getdesign ${flags.getdesign}` : flags.tokens ? `tokens ${flags.tokens}` : "token mặc định"}${flags["page-width"] ? ` · page-width ${flags["page-width"]}` : ""}`);
   console.log(designDir);
 }
 
@@ -256,6 +265,7 @@ function addPage(designDir, slug, flags) {
   const extra = Object.fromEntries([["option"], ["layout"], ["good-for", "goodFor"], ["screen"], ["purpose"], ["note"]].filter(([flag]) => flags[flag]).map(([flag, key = flag]) => [key, flags[flag]]));
   pages.push({ file, title: flags.title, ...extra, updated: today });
   writePages(dir, pages);
+  appendRun(dir, "new-design", "page", file, process.uptime(), flags.option ?? flags.screen ?? flags.title ?? "");
   console.log(join(dir, file));
 }
 
@@ -321,6 +331,7 @@ function markPrepared(dir, file, data) {
   data.prep.done = true;
   if (open >= 0 && !data.build[open].doing) data.build[open].doing = FIRST_DOING;
   writeProgress(dir, file, data);
+  appendRun(dir, "new-design", "prepared", file, process.uptime(), data.prep.task);
   printProgress(file, data);
 }
 
@@ -328,6 +339,7 @@ function markPrepared(dir, file, data) {
 function markDelivered(dir, file, data) {
   data.deliver.done = true;
   writeProgress(dir, file, data);
+  appendRun(dir, "new-design", "delivered", file, process.uptime(), data.deliver.task);
   printProgress(file, data);
 }
 
@@ -342,11 +354,16 @@ function markAll(designDir, file, flags) {
   const files = readPages(dir).map((page) => page.file).filter((name) => readProgress(dir, name));
   if (!files.length) fail("pages.js không có page nào có danh sách bước dựng");
   if (mark[0] === "prepared") {
+    // Brief sai thì mọi agent dựng page cùng dựng theo chỗ sai, và agent dựng page không được sửa brief: soát brief.md,
+    // pages.js trước khi đánh dấu page nào.
+    const brief = spawnSync(process.execPath, [join(skillDir, "scripts/check.mjs"), dir, "--brief"], { encoding: "utf8" });
+    if (brief.status !== 0) fail(`brief.md chưa xong, chưa đánh dấu page nào. Sửa brief rồi chạy lại:\n${brief.stdout.trim()}`);
     for (const name of files) {
       const data = readProgress(dir, name);
       if (!data.prep || data.prep.done) console.log(`${name}: bước chuẩn bị đã xong, bỏ qua`);
       else markPrepared(dir, name, data);
     }
+    appendRun(dir, "new-design", "prepared-all", "-", process.uptime(), `${files.length} page, đã soát brief`);
     return;
   }
   const blocked = files.map((name) => [name, blockingStep(readProgress(dir, name))]).filter(([, step]) => step);
@@ -356,6 +373,7 @@ function markAll(designDir, file, flags) {
     if (!data.deliver || data.deliver.done) console.log(`${name}: đã giao, bỏ qua`);
     else markDelivered(dir, name, data);
   }
+  appendRun(dir, "new-design", "delivered-all", "-", process.uptime(), `${files.length} page`);
 }
 
 function progress(designDir, file, flags, rest) {
@@ -388,6 +406,7 @@ function progress(designDir, file, flags, rest) {
     if (typeof flags.doing !== "string" || !flags.doing.trim()) fail("--doing cần tên việc con");
     data.build[open].doing = flags.doing.trim();
     writeProgress(dir, file, data);
+    appendRun(dir, "new-design", "doing", file, process.uptime(), `${open + 1} · ${flags.doing.trim()}`);
     printProgress(file, data);
     return;
   }
@@ -413,6 +432,8 @@ function progress(designDir, file, flags, rest) {
   }
   data.rev += 1;
   writeProgress(dir, file, data);
+  const action = flags.done !== undefined ? "done" : flags.insert !== undefined ? "insert" : "round";
+  appendRun(dir, "new-design", action, file, process.uptime(), action === "done" ? `${open + 1} · ${data.build[open].task}` : action === "insert" ? flags.insert : `vòng ${Math.max(...data.build.map((item) => item.round))}`);
   printProgress(file, data);
 }
 
@@ -425,6 +446,7 @@ function touch(designDir, file, flags) {
   page.updated = today;
   if (flags.note) page.note = flags.note;
   writePages(dir, pages);
+  appendRun(dir, "new-design", "touch", file, process.uptime(), flags.note ?? "");
   console.log(join(dir, file));
 }
 
@@ -433,6 +455,43 @@ function tokens(source, flags) {
   const output = tokensOrFail(resolve(source), flags);
   if (flags.out) writeFileSync(flags.out, output);
   else process.stdout.write(output);
+}
+
+function openPage(designDir, flags) {
+  if (!designDir) fail("cần <thư mục design>");
+  const dir = resolve(designDir);
+  const first = readPages(dir)[0];
+  if (!first) fail(`${join(dir, "pages.js")} không có page nào`);
+  const url = pathToFileURL(join(dir, first.file)).href;
+  const dryRun = "dry-run" in flags;
+  const quote = (arg) => (/^[\w./:%-]+$/.test(arg) ? arg : `"${arg}"`);
+  const done = (how, command) => {
+    if (dryRun && command) console.log(`$ ${command.map(quote).join(" ")}`);
+    if (!dryRun) appendRun(dir, "new-design", "open", first.file, process.uptime(), how);
+    console.log(`${how} ${url}`);
+  };
+  // Chrome và xdg-open trên Linux chạy tới khi đóng cửa sổ: tách khỏi lệnh này để lệnh trả về ngay.
+  const detach = ([bin, ...args]) => spawn(bin, args, { detached: true, stdio: "ignore" }).unref();
+  const onPath = (bin) => spawnSync("sh", ["-c", `command -v ${bin}`], { stdio: "ignore" }).status === 0;
+  const fallback = () => console.error("new-design: không có Google Chrome, mở bằng trình duyệt mặc định");
+
+  if (process.platform === "darwin") {
+    const chrome = ["open", "-na", process.env.DESIGN_UIUX_CHROME_APP || "Google Chrome", "--args", "--new-window", url];
+    if (dryRun) return done("chrome", chrome);
+    if (spawnSync(chrome[0], chrome.slice(1)).status === 0) return done("chrome");
+    fallback();
+    if (spawnSync("open", [url]).status === 0) return done("default");
+    fail(`không mở được ${url}`, 2);
+  }
+  if (process.platform === "linux") {
+    const chrome = ["google-chrome", "--new-window", url];
+    if (dryRun) return done("chrome", chrome);
+    if (onPath(chrome[0])) return detach(chrome), done("chrome");
+    fallback();
+    if (onPath("xdg-open")) return detach(["xdg-open", url]), done("default");
+    fail(`không mở được ${url}: không có google-chrome lẫn xdg-open`, 2);
+  }
+  done("none");
 }
 
 // So đường dẫn thật: gọi qua symlink (.claude/skills → skills/) thì argv[1] là đường symlink, import.meta.url là đường thật.
@@ -446,5 +505,6 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   else if (command === "tokens") tokens(positional[0], flags);
   else if (command === "shell") shell(flags);
   else if (command === "designs") designs();
-  else fail("lệnh: init | designs | page | progress | touch | tokens | shell (xem đầu file)");
+  else if (command === "open") openPage(positional[0], flags);
+  else fail("lệnh: init | designs | page | progress | touch | tokens | shell | open (xem đầu file)");
 }

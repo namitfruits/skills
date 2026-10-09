@@ -45,7 +45,7 @@ bước** trong `<file>.progress.js`, từng bước một:
 | 1 · Khung các khối, dữ liệu mặc định | khai đủ `variables` theo "Nút dữ liệu chung" (có `state` đủ bốn giá trị) và `tweaks`; khối chờ thay bằng mọi khối thật, mỗi khối một `data-block` theo bảng "Khối", hiện đúng ở giá trị mặc định | `check.mjs <page> --quick` |
 | 2 · Đang tải · rỗng · lỗi | `state` `loading`, `empty`, `error` đã dựng | `--quick --state loading`, rồi `empty`, rồi `error` |
 | 3 · Trạng thái riêng của đề | các `state` riêng trong brief đã dựng | `--quick --state <từng giá trị>` |
-| 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick` |
+| 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick`, rồi `--quick --click "<nhãn>"` cho từng nút mở modal, sheet, thêm, xoá |
 | 5 · Preset và ca biên | `presets` khai xong, ca biên (tên dài, số 0, số rất lớn) dựng xong | `--quick --preset "<từng nhãn>"` |
 | 6 · Kiểm đầy đủ và tự kiểm | `check.mjs` đầy đủ exit 0, đã đi danh sách tự kiểm trên ảnh | `check.mjs <page>` (mục "Kiểm") |
 
@@ -170,16 +170,24 @@ window.DESIGN = {
 
 ## Kiểm
 
-<!-- spec: F1.13 F3.4 F3.5 F3.9 F5.1 F5.2 F5.4 F5.5 F5.6 F5.7 F5.8 -->
+<!-- spec: F1.13 F3.4 F3.5 F3.9 F5.1 F5.2 F5.4 F5.5 F5.6 F5.7 F5.8 F5.9 F5.10 -->
 
 ```bash
 node $SKILL/scripts/check.mjs "$D/<file>" --quick [--state <giá trị>] [--preset "<nhãn>"]   # trước mỗi progress --done
+node $SKILL/scripts/check.mjs "$D/<file>" --quick --click "<nhãn nút>"                     # bấm thử một nút
 node $SKILL/scripts/check.mjs "$D/<file>" [--pw <thư mục có playwright>]                    # bước 6: kiểm đầy đủ
 ```
 
-- **Kiểm nhanh** (`--quick`, 1–2 giây): lượt đọc file, lỗi console, lỗi JS, bố cục và luật UX, UI ở **một** tổ hợp
-  (1280px, sáng, tweak mặc định, `state` theo `--state` hay preset theo `--preset`). Không vặn từng nút, không bấm,
-  không khổ tablet / mobile. Ảnh: `shots/<page>--quick.png`. `--quick` chỉ nhận một page.
+- **Kiểm nhanh** (`--quick`, 2–3 giây): lượt đọc file, lỗi console, lỗi JS, bố cục và luật UX, UI ở **một** tổ hợp
+  (sáng, tweak mặc định, `state` theo `--state` hay preset theo `--preset`), đo ở cả **1280px và 375px**. Không vặn
+  từng nút, không khổ tablet. Ảnh: `shots/<page>--quick.png` và `--quick-375.png`. `--quick` chỉ nhận một page.
+- **Bấm thử** (`--quick --click "<nhãn>"`): ở tổ hợp trên, bấm nút có tên hay `aria-label` đúng `<nhãn>` (hoặc bắt
+  đầu bằng `<nhãn>`), chờ hiệu ứng xong, rồi đo như lượt bấm của kiểm đầy đủ: nút câm, khung nổi lọt màn hình hay nằm
+  dưới toolbar, nút cùng hàng xô đi. Ảnh sau cú bấm: `shots/<page>--quick-click.png`. Không có nút tên đó thì lệnh in
+  tên các nút đang hiện.
+- **Không viết script riêng** (Playwright, Puppeteer, Python) để bấm thử, chụp ảnh hay đo page: bấm thử dùng
+  `--click`, ảnh có sẵn trong `shots/`. Script tự viết bắt nhầm nút của toolbar, của panel, và tốn mỗi lần chạy 30
+  giây. Dữ liệu giả viết thẳng trong page, không viết bộ sinh dữ liệu ở `/tmp`.
 - **Kiểm đầy đủ** là bước dựng cuối của page: mọi tổ hợp tweak × sáng tối × `state` cộng từng preset ở 375 và 1280px,
   cộng một lượt bấm từng loại thứ bấm được, cộng lượt đi luồng với thư mục luồng. Thứ chỉ hiện ở một giá trị khác mặc
   định được bấm ở đúng giá trị đó. Kiểm đầy đủ báo `còn bước chưa xong` khi danh sách bước dựng của page còn bước chưa
@@ -195,6 +203,9 @@ node $SKILL/scripts/check.mjs "$D/<file>" [--pw <thư mục có playwright>]    
   vào chỗ còn lấn cấn, không sửa page để lách.
 - Sửa tới khi **exit 0**, tối đa ba vòng. Còn lỗi sau ba vòng thì ghi từng dòng lỗi và vì sao chưa sửa; không trả về
   như thể đã sạch.
+- Kiểm đầy đủ nhớ kết quả từng page: page, `tokens.js`, `pages.js` và brief không đổi thì lệnh in lại kết quả lần
+  trước ngay, dòng cuối ghi `page không đổi, dùng lại kết quả lần trước`. Chạy lại khi page chưa sửa không ra lỗi khác.
+  Lỗi chỉ nằm ở `brief.md` thì page không sửa được: ghi vào chỗ còn lấn cấn rồi trả về, không chạy kiểm đầy đủ lại.
 - Exit 0 xong vẫn **mở ảnh trong `shots/` ra**: 1280 và 375, sáng và tối, `state` rỗng và lỗi, preset ca biên, ảnh
   `--bam-*` của modal và panel. Máy chỉ kiểm thứ nó vặn và bấm được: modal, sheet, hàng mở rộng vỡ mà máy vẫn báo
   sạch. Trên các ảnh đó đi hết dòng **Tự kiểm** của `references/ux-principles.md` và `references/ui-principles.md`.

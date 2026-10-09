@@ -17,7 +17,8 @@ Mỗi lịch hẹn có: giờ, tên bệnh nhân, số điện thoại, dịch v
 
 ## Checklist
 
-- Skill không hỏi câu nào ngoài câu chọn design. Skill tự chọn đáp án khuyên dùng của câu đó.
+- Skill không hỏi câu nào về đề. Skill soạn câu chọn design và câu mở page trong Chrome, tự chọn design khuyên dùng
+  và "Không mở".
 - Chat in danh sách design của getdesign. `tokens.js` ghi nguồn `getdesign <tên bộ đã chọn>`.
 - Có đúng 1 page, mở được bằng link trong chat. Chat có dòng `Đề xin một phương án.`
 - Bấm "Đã đến" ở một lịch hẹn thì trạng thái của lịch hẹn đó đổi.

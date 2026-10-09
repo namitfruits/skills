@@ -13,7 +13,7 @@ với `--auto` thì tự chọn đáp án khuyên dùng, ghi lại, rồi vẫn 
 
 ## Checklist
 
-- Skill hỏi 1–3 câu. Mỗi câu có sẵn đáp án, đáp án đầu ghi `Khuyên dùng`.
+- Skill hỏi 1–3 câu về đề, cùng lượt với câu mở page trong Chrome. Mỗi câu có sẵn đáp án, đáp án đầu ghi `Khuyên dùng`.
 - Có một câu hỏi đề là một màn hay một luồng.
 - Skill không dừng chờ trả lời mà tự chọn đáp án khuyên dùng.
 - Tin giao mở đầu bằng "Chạy `--auto`, đã tự trả lời:" và kể lại từng lựa chọn.

@@ -300,14 +300,15 @@ node $SKILL/scripts/new-design.mjs progress <thư mục design> --prepared --all
 
 **Actions:**
 
-- [ ] 🤖 chạy bài 04 `--auto` trên bản chụp skill mới: `prepare.mjs 04-quick-screen --slug nghiem-thu-014`, chấm ra `result.md`
-- [ ] 🤖 chạy bài 01 `--auto` trên bản chụp skill mới: `prepare.mjs 01-orders-screen --slug nghiem-thu-014`, chấm ra `result.md`
+- [x] 🤖 chạy bài 04 `--auto` trên bản chụp skill mới: `prepare.mjs 04-quick-screen --slug nghiem-thu-014`, chấm ra `result.md` — 2026-10-09, `070-sample-04-quick-screen-nghiem-thu-014`, 982 giây (mốc `065`: 880 giây; cả hai lượt chạy `init` hai lần để lấy bề rộng trang)
+- [x] 🤖 chạy bài 01 `--auto` trên bản chụp skill mới: `prepare.mjs 01-orders-screen --slug nghiem-thu-014`, chấm ra `result.md` — 2026-10-09, `071-sample-01-orders-screen-nghiem-thu-014`, kèm hai góp ý; 2677 giây tới tin giao đầu, 3933 giây hết góp ý 2
 
 **Gate** — một dòng ứng một bullet §2:
 
-- [ ] 🤖 §2 bullet 1: `subagent-*.md` hay transcript agent con của lượt bài 01 đọc `build-page.md` một lần, không đọc SKILL.md — BH1
-- [ ] 🤖 §2 bullet 2: lượt bài 04 (một page, agent chính tự dựng) có `chat.md` ghi đọc `build-page.md`; luật cặp màu, khối ngoài bảng có trong `build-page.md` — BH2
-- [ ] 🤖 §2 bullet 3: lời giao trong `chat.md` của lượt bài 01 theo khuôn DS3; `chat.md` có lệnh `--prepared --all` — BH3
+- [x] 🤖 §2 bullet 1: `subagent-*.md` hay transcript agent con của lượt bài 01 đọc `build-page.md` một lần, không đọc SKILL.md — BH1 — 2026-10-09: `prompt-A.md`, `prompt-B.md` chỉ trỏ `build-page.md`, hai file luật, `brief.md`; `subagent-*.md` không nhắc SKILL.md; Read trả về trọn `build-page.md` (agent so luật xác nhận)
+- [x] 🤖 §2 bullet 2: lượt bài 04 (một page, agent chính tự dựng) có `chat.md` ghi đọc `build-page.md`; luật cặp màu, khối ngoài bảng có trong `build-page.md` — BH2 — 2026-10-09: `reads.log` của `070` có `references/build-page.md`; luật nằm ở mục "Phạm vi của agent dựng page"
+- [x] 🤖 §2 bullet 3: lời giao trong `chat.md` của lượt bài 01 theo khuôn DS3; `chat.md` có lệnh `--prepared --all` — BH3 — 2026-10-09: `prompt-A.md` 14 dòng theo DS3 (7 dòng khuôn cộng bản phác); `--prepared --all` là lệnh nên không vào `chat.md`, đúng như SKILL.md. Lời giao vòng góp ý chưa có khuôn: người chạy tự soạn; đã thêm một câu vào "Vòng sau"
 - [ ] 🤖 §2 bullet 4: `wc -l SKILL.md` ≤ 450; SKILL.md không còn `test-shell`, `box-sizing`, `@layer`
-- [ ] 🤖 §2 bullet 5: hai lượt mới có số mục đạt bằng lượt mốc (`lint.mjs --compare`), `check.log` dòng cuối `0 lỗi`; lượt bài 04 có danh sách design của getdesign — BH4
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/014-design-uiux-rut-gon-skill-md.md` — 0 ERROR
+  Chưa đạt một nửa — 2026-10-09: SKILL.md không còn `test-shell`, `box-sizing`, `@layer`. SKILL.md 533 dòng: 507 sau plan này, cộng phần plan 011 thêm (bước giao) và một câu về lời giao vòng góp ý. Chờ người dùng chọn, như Gate DS2 của Phase 3.
+- [x] 🤖 §2 bullet 5: hai lượt mới có số mục đạt bằng lượt mốc (`lint.mjs --compare`), `check.log` dòng cuối `0 lỗi`; lượt bài 04 có danh sách design của getdesign — BH4 — 2026-10-09: bài 04 `✓ 5 dòng cùng kết quả`, `✓ 1 page · 82 tổ hợp · 0 lỗi`, `chat.md` dòng 3 có khối 68 bộ; bài 01 C1–C6 cùng kết quả với `064` (G1, G2 đạt, mốc không chạy góp ý), `✓ 2 page · 332 tổ hợp · 0 lỗi` trước và sau góp ý
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/014-design-uiux-rut-gon-skill-md.md` — 0 ERROR — 2026-10-09: `0 ERROR · 1 WARN`

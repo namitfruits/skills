@@ -16,13 +16,13 @@ description: >-
 
 <!-- spec: — -->
 
-Agent chính đi sáu bước; người dùng chỉ dừng lại ở bước 2 nếu phải trả lời:
+Agent chính đi sáu bước; người dùng chỉ dừng lại ở bước 2 để trả lời:
 
 1. **Đọc** design system và màn hiện có.
-2. **Hỏi** nếu đề mơ hồ, bằng câu có sẵn đáp án, tối đa 3 lượt. Dự án không có design system thì hỏi chọn một bộ của
-   getdesign.
+2. **Hỏi** có mở page trong Chrome không, kể cả khi đề rõ. Đề mơ hồ thì hỏi thêm, bằng câu có sẵn đáp án, tối đa 3
+   lượt. Dự án không có design system thì hỏi chọn một bộ của getdesign.
 3. **Xếp đề**: một màn thì tìm phương án, lấy A và B, không hỏi chọn; một luồng thì tách thành các màn.
-4. **Dựng**: tạo page trống, in link ngay, viết `brief.md`, rồi mỗi page một agent con dựng song song theo
+4. **Dựng**: tạo page trống, in link ngay, mở page trong Chrome nếu người dùng chọn mở, viết `brief.md`, rồi mỗi page một agent con dựng song song theo
    `references/build-page.md`. Thư mục một page thì agent chính tự dựng theo file đó.
 5. **Kiểm** cả thư mục bằng `check.mjs`.
 6. **Giao** tin cuối, ngay sau khi đánh dấu bước giao của mọi page. Người dùng góp ý thì sửa thẳng page đó, mỗi ý
@@ -47,6 +47,7 @@ Một **thư mục design** `.design/NNN-slug/` cho mỗi đề, ở thư mục 
 | `NN-slug.html` | `new-design.mjs page` chép khuôn trống `templates/page.html` (chỉ có khối chờ); agent con (hay agent chính khi thư mục chỉ một page) dựng tiếp | mỗi phương án, hay mỗi màn của luồng, đúng một page |
 | `NN-slug.progress.js` | `new-design.mjs page` tạo; ghi qua `new-design.mjs progress` | danh sách bước dựng của page; shell đọc lại mỗi 2 giây |
 | `shots/` | `check.mjs` | ảnh từng tổ hợp và từng cú bấm để soi bằng mắt |
+| `run.log` | mọi lệnh `new-design.mjs`, `check.mjs` tự ghi thêm | mỗi lệnh một dòng: giờ, lệnh, page, số giây; `run-log.mjs` đọc thành bảng từng bước |
 
 Sản phẩm là **HTML prototype**, không nối gì với code dự án. Đọc code dự án chỉ để lấy design system và biết màn hiện
 có trông ra sao. **Không ghi vào repo dự án** ngoài `.design/` ở thư mục làm việc.
@@ -58,12 +59,14 @@ node $SKILL/scripts/new-design.mjs init <slug> [--root .design] [--tokens <DESIG
 node $SKILL/scripts/new-design.mjs designs   # design của getdesign dùng được, mỗi dòng `tên - mô tả`
 node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<tên>" --option "<A · tên phương án>" --layout "<bố cục>" [--good-for "<việc 1> · <việc 2>"]
 node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<luồng> · <tên màn>" --screen "<n> · <tên màn>" --purpose "<màn để làm gì>"   # đề một luồng
-node $SKILL/scripts/new-design.mjs progress <thư mục design> --prepared --all              # agent chính: brief đã điền xong, mọi page sang "Đang dựng 0/6"
+node $SKILL/scripts/new-design.mjs progress <thư mục design> --prepared --all              # agent chính: soát brief, đúng thì mọi page sang "Đang dựng 0/6"
 node $SKILL/scripts/new-design.mjs progress <thư mục design> <file> [--doing | --done | --insert | --round …]   # agent dựng page, xem references/build-page.md
 node $SKILL/scripts/new-design.mjs progress <thư mục design> --delivered --all             # agent chính: ngay trước tin giao, mọi page sang "✓ Xong"
 node $SKILL/scripts/new-design.mjs touch <thư mục design> <file> --note "<góp ý vừa sửa>"
+node $SKILL/scripts/new-design.mjs open <thư mục design>   # agent chính: page đầu trong một cửa sổ Chrome mới, chỉ khi người dùng chọn mở
 node $SKILL/scripts/check.mjs <thư mục design | page.html> [--pw <thư mục có playwright>]   # kiểm đầy đủ
-node $SKILL/scripts/check.mjs <page.html> --quick [--state <giá trị>] [--preset "<nhãn>"]      # agent dựng page, trước mỗi --done
+node $SKILL/scripts/check.mjs <page.html> --quick [--state <giá trị>] [--preset "<nhãn>"] [--click "<nhãn nút>"]   # agent dựng page, trước mỗi --done
+node $SKILL/scripts/check.mjs <thư mục design> --brief   # chỉ soát brief.md và pages.js
 ```
 
 ### Các khối điều khiển
@@ -102,6 +105,7 @@ Bật khi lời gọi có `--auto` (`/design-uiux --auto <đề>`), hay người
 | ------------------- | ----------- |
 | Bước 2, hỏi khi đề mơ hồ hay chưa rõ một màn hay một luồng | vẫn soạn đủ câu hỏi và đáp án như khi hỏi thật, nhưng **không gọi AskUserQuestion**: lấy đáp án khuyên dùng của từng câu, coi như một lượt trả lời |
 | Bước 2, chọn design của getdesign | vẫn in danh sách và soạn câu chọn design; lấy design khuyên dùng (đáp án đầu) |
+| Bước 2, hỏi mở page trong Chrome | vẫn soạn câu như khi hỏi thật, nhưng chọn **"Không mở"**, không lấy đáp án khuyên dùng. Bước 4 không chạy `open` |
 
 Bước 3 không hỏi người dùng chọn phương án, nên không có gì để `--auto` thay.
 
@@ -161,7 +165,8 @@ Không có design system:
 - **loại đề**: chưa xếp được là một màn hay một luồng (bảng ở bước 3). Câu hỏi: "Một màn hay cả luồng?", hai đáp án.
   Đáp án khuyên dùng là **một màn** khi đề nhắc đúng một màn có sẵn trong dự án, ngược lại là **một luồng**.
 
-Không mơ hồ thì sang bước 3, trừ khi phải chọn design của getdesign (mục dưới). Mơ hồ thì hỏi bằng AskUserQuestion:
+Không mơ hồ thì vẫn hỏi một lượt có câu mở page trong Chrome (mục dưới), cùng câu chọn design nếu có, rồi sang bước 3.
+Mơ hồ thì hỏi bằng AskUserQuestion:
 
 | Luật | Giá trị |
 | ---- | ------- |
@@ -172,6 +177,24 @@ Không mơ hồ thì sang bước 3, trừ khi phải chọn design của getdes
 | điểm dừng | viết được 3 tình huống và biết dữ liệu có gì, hoặc hết **3 lượt**; hết lượt mà còn mơ hồ thì đoán, ghi dòng `AI đoán` vào `## Quyết định` |
 
 Người dùng chọn "Other" kèm chữ thì lấy chữ đó làm câu trả lời. Câu hỏi nào cũng thành một dòng trong `## Quyết định` của `brief.md`, cột "Ai quyết" ghi `người dùng`.
+
+### Hỏi mở page trong Chrome
+
+<!-- spec: F6.13 -->
+
+Lượt hỏi đầu tiên luôn có câu này, cùng lần gọi AskUserQuestion với câu làm rõ và câu chọn design. Đề rõ và không phải
+chọn design thì lượt đó chỉ có câu này. AskUserQuestion nhận tối đa 4 câu mỗi lần gọi, nên câu này chiếm một chỗ
+trong 4 chỗ của lượt đầu: còn lại tối đa 3 câu cho làm rõ và chọn design (có câu chọn design thì còn 2 câu làm rõ).
+
+| Trường | Giá trị |
+| --- | --- |
+| `question` | "Mở page trong một cửa sổ Chrome riêng để xem page lớn dần không?" |
+| `header` | "Mở Chrome" |
+| đáp án 1 | "Mở (Khuyên dùng)" — một cửa sổ Chrome mới, một tab ở page đầu; sang page khác bằng nút trên toolbar |
+| đáp án 2 | "Không mở" — chỉ in link vào chat |
+
+Câu trả lời thành một dòng trong `## Quyết định` của `brief.md`: "Mở page trong Chrome", đáp án, ai quyết. Ghi nhớ đáp
+án tới bước 4.
 
 ### Chọn design của getdesign
 
@@ -305,7 +328,7 @@ Sai màn thì người dùng góp ý ở vòng sau.
 
 ### Agent chính chuẩn bị (tuần tự)
 
-<!-- spec: F1.2 F1.3 F1.5 F1.6 F1.8 F1.16 F1.17 F3.1 F3.4 F3.9 F3.5 F3.8 F6.1 F6.5 F6.9 -->
+<!-- spec: F1.2 F1.3 F1.5 F1.6 F1.8 F1.16 F1.17 F3.1 F3.4 F3.9 F3.5 F3.8 F5.11 F6.1 F6.5 F6.9 F6.14 F6.15 -->
 
 Đề một màn: mỗi phương án một page.
 
@@ -348,6 +371,23 @@ Mở ngay được — page tự hiện bản mới mỗi khi một bước xong
 ```
 
 Luồng thì mỗi màn một dòng `<n> · <tên màn>: file://…`. Tin giao cuối (bước 6) vẫn đợi kiểm cả thư mục sạch.
+
+**Mở page ngay sau khi in link, nếu người dùng chọn "Mở" ở bước 2.** Chọn "Không mở", hay chạy `--auto`, thì bỏ qua.
+
+```bash
+node $SKILL/scripts/new-design.mjs open "$D"
+```
+
+Lệnh mở page đầu tiên của `pages.js` (phương án A, màn 1) trong một cửa sổ Chrome mới, một tab, bằng profile Chrome
+dùng gần nhất. Không mở từng page: người xem sang page khác bằng option-switcher. Chạy lệnh đúng một lần cho cả thư
+mục. Đọc chữ đầu của stdout:
+
+| stdout | Làm gì |
+| --- | --- |
+| `chrome <url>` | không nói gì thêm |
+| `default <url>` | nói trong chat một câu: máy không có Google Chrome, page mở bằng trình duyệt mặc định |
+| `none <url>` | không nói gì thêm; link đã in là đủ |
+| exit 2 | nói trong chat là không mở được trình duyệt, người dùng bấm link đã in; dựng tiếp |
 
 `init` in đường dẫn thư mục ra stdout, in danh sách cặp màu dưới 4.5 : 1 ra stderr. Đọc danh sách đó trước khi điền
 bảng "Cặp màu không đủ đọc" của brief.
@@ -401,6 +441,10 @@ dựng 1):
 node $SKILL/scripts/new-design.mjs progress "$D" --prepared --all
 ```
 
+Lệnh soát `brief.md` và `pages.js` trước (`check.mjs --brief`). Brief còn chỗ trống hay bảng sai thì lệnh exit 1, in
+từng lỗi, không đánh dấu page nào: sửa brief rồi chạy lại. Agent dựng page không được sửa brief, nên lỗi brief lọt qua
+bước này thì mọi lần kiểm đầy đủ của mọi page đều báo lại nó.
+
 Nhãn của page đang mở đổi từ "Đang chuẩn bị" sang "Đang dựng 0/6", page không tải lại. Quên lệnh này thì page đứng ở
 "Đang chuẩn bị" dù đang dựng, và `progress --done`, `--doing` của agent dựng page báo lỗi. Đây là lần duy nhất agent
 chính ghi vào danh sách bước của page.
@@ -441,7 +485,7 @@ bước dựng và làm tiếp từ bước đầu tiên chưa xong. Thư mục 
 
 ## Bước 5 — Kiểm cả thư mục, bắt buộc
 
-<!-- spec: F1.3 F1.13 F5.1 F5.3 F5.7 F5.8 -->
+<!-- spec: F1.3 F1.13 F5.1 F5.3 F5.7 F5.8 F5.9 F6.12 -->
 
 Mỗi page đã qua kiểm đầy đủ ở bước dựng cuối của nó (`references/build-page.md`, mục "Kiểm"). Sau khi mọi agent con
 trả về, agent chính kiểm **cả thư mục** một lần nữa:
@@ -453,12 +497,16 @@ node $SKILL/scripts/check.mjs "$D" [--pw <thư mục có playwright>]
 - Lần kiểm này thêm các phép so giữa các page: `data-block` ngoài bảng `## Khối` của `brief.md`; nút chính các page
   khác màu; thư mục phương án có từ ba page; thư mục luồng thì bảng `## Luồng` khớp `pages.js` và lượt đi luồng từ màn
   đầu tới màn cuối. Lệnh cũng báo `còn bước chưa xong` cho page dựng dở.
+- Page nào không đổi từ lần kiểm đầy đủ của agent dựng nó thì lệnh dùng lại kết quả đã nhớ, không mở lại trình duyệt;
+  dòng cuối ghi số page dùng lại. Sửa chữ trong brief ngoài bảng "Nút dữ liệu chung" cũng không làm page kiểm lại.
 - Chưa có Playwright thì lệnh in câu cài vào thư mục tạm, chạy lại kèm `--pw`. **Không cài vào dự án.**
 - So `## Số kiểm chéo ở mặc định` của brief với các số agent con trả về.
 - Agent con khai `pageWidth` thì ghi bề rộng và lý do nó trả về vào `## Design system` của brief.
 - Sửa tới khi **exit 0**, tối đa ba vòng. Còn lỗi sau ba vòng thì lúc giao ghi từng dòng lỗi và vì sao chưa sửa; không
   giao như thể đã sạch.
 - Chép các dòng tự kiểm còn `[ ]` agent con trả về vào tin giao.
+- Mọi lệnh `new-design.mjs` và `check.mjs` tự ghi một dòng vào `$D/run.log`. Khi người dùng hỏi lượt chạy chậm ở đâu,
+  chạy `node $SKILL/scripts/run-log.mjs "$D"`: bảng từng page ghi mỗi bước dựng dài bao lâu, máy kiểm chiếm bao nhiêu.
 
 ## Bước 6 — Giao
 
@@ -492,10 +540,13 @@ Tin giao theo tiếng người dùng đang viết, ngắn:
 
 ## Vòng sau
 
-<!-- spec: F1.2 F1.5 F1.6 F1.8 F1.13 F1.17 F4 F4.4 F6.10 -->
+<!-- spec: F1.2 F1.5 F1.6 F1.8 F1.13 F1.17 F4 F4.4 F6.10 F6.14 -->
 
 **Mỗi phương án, hay mỗi màn của luồng, đúng một page. Góp ý thì sửa thẳng page đó** tới khi người dùng thấy xong.
 Agent sửa page theo `references/build-page.md` như lúc dựng; agent chính chưa đọc file đó thì đọc trước khi sửa.
+
+Vòng góp ý không hỏi lại câu mở page trong Chrome và không chạy `new-design.mjs open`. Cửa sổ còn mở thì page tự tải
+lại sau mỗi ý. Người dùng đã đóng cửa sổ thì bấm link trong tin giao.
 
 - Góp ý đổi bố cục, khối, nút, dữ liệu, chữ → **mỗi ý một bước** trong danh sách bước dựng của page đó, rồi sửa như
   lúc dựng:
@@ -509,7 +560,9 @@ Agent sửa page theo `references/build-page.md` như lúc dựng; agent chính 
      `--delivered --all`). `--round` mở lại bước giao, nên từ lúc xong bước `Kiểm đầy đủ` tới lệnh này nhãn ghi "Đang
      kiểm lại".
   Góp ý chạm nhiều page thì mỗi page một vòng riêng trong danh sách của nó; từ hai page trở lên thì mỗi page một agent
-  con, chạy song song như lúc dựng.
+  con, chạy song song như lúc dựng. Agent chính mở vòng (`--round`) trước khi gọi. Lời giao theo khuôn ở "Gọi agent
+  con", thay hai dòng bố cục và bản phác bằng một dòng `Góp ý vòng <n>: <ý 1> · <ý 2>. Chạy progress không cờ để
+  thấy bước tiếp theo.`
 - Góp ý đổi dữ liệu chung hay nút dữ liệu chung → sửa `brief.md` trước, tính lại `## Số kiểm chéo ở mặc định`,
   rồi sửa **mọi** page cho khớp và chạy `check.mjs` cả thư mục: các page vẫn cùng bộ key, cùng con số.
 - Muốn xem một hướng không dựng (dòng `chưa chọn` trong `## Pages`) → hỏi thay A hay B nếu người dùng chưa nói, rồi

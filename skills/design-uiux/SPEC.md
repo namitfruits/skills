@@ -37,7 +37,8 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F1.3` Mọi page dùng chung: một bộ dữ liệu, một bộ nút dữ liệu, một bề rộng trang, một bảng số khối, một cách
     xử lý cặp màu không đủ đọc.
   - `F1.9` Nếu một phương án cần rộng hơn bề rộng chung, thì page khai bề rộng riêng kèm lý do.
-  - `F1.4` Với `--auto`, agent chọn đáp án khuyên dùng thay người dùng, không dừng hỏi.
+  - `F1.4` Với `--auto`, agent không dừng hỏi: câu làm rõ lấy đáp án khuyên dùng, câu mở page trong Chrome lấy đáp án
+    không mở.
   - `F1.10` Với `--auto`, lúc giao agent kể lại từng lựa chọn đã tự chọn.
   - `F1.5` Nếu thư mục có từ hai page trở lên, thì mỗi page do một agent con dựng, các agent con chạy song song.
   - `F1.6` Agent ghi vào `brief.md` mọi câu hỏi, lựa chọn và điều phải đoán, kèm ai quyết: người dùng, `--auto`, AI
@@ -79,8 +80,13 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F5.2` Máy kiểm đo phần đo được của từng luật trong `references/ux-principles.md` và `references/ui-principles.md`.
   - `F5.5` Agent soát phần còn lại của từng luật trên ảnh trong `shots/`.
   - `F5.3` Nếu còn lỗi chưa sửa được, thì lúc giao agent kể ra từng lỗi.
-  - `F5.6` Agent chạy kiểm nhanh một tổ hợp trước khi đánh dấu một bước dựng xong.
+  - `F5.6` Agent chạy kiểm nhanh tổ hợp mặc định ở khổ 1280px và 375px trước khi đánh dấu một bước dựng xong.
   - `F5.7` Nếu page còn bước dựng chưa xong ngoài bước kiểm đầy đủ, thì máy kiểm báo lỗi.
+  - `F5.9` Khi page và mọi thứ page đọc không đổi từ lần kiểm đầy đủ trước, máy kiểm in lại kết quả lần trước mà không
+    mở trình duyệt.
+  - `F5.10` Khi agent dựng page cần bấm thử một nút, agent dùng kiểm nhanh có cờ bấm, không viết script riêng.
+  - `F5.11` Nếu `brief.md` còn chỗ trống hay bảng của nó sai, thì lệnh đánh dấu chuẩn bị xong từ chối và không page
+    nào sang bước dựng.
 - **`F6` Tiến độ dựng**
   - `F6.1` Khi agent bắt đầu dựng một page, agent đưa link page đó trong chat trước khi page có khối đầu tiên.
   - `F6.2` Agent dựng page theo danh sách bước dựng và đánh dấu từng bước khi bước đó xong.
@@ -93,6 +99,12 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F6.9` Trong lúc page chưa có khối đầu tiên, page hiện tên màn, tên page, bố cục page hay việc của màn, và các việc page tiện cho.
   - `F6.10` Toolbar chỉ ghi page đã xong sau khi agent chính đánh dấu bước giao.
   - `F6.11` Toolbar ghi ngày sửa cuối của page ở cuối danh sách bước dựng, không ghi trên nhãn trạng thái.
+  - `F6.12` Khi một lệnh của skill chạy xong, lệnh đó ghi một dòng vào `run.log` của thư mục design: giờ, lệnh, page,
+    số giây, chi tiết.
+  - `F6.13` Agent hỏi người dùng có mở page trong Chrome không, trong lượt hỏi đầu tiên.
+  - `F6.14` Khi người dùng chọn mở, agent mở page đầu tiên trong một cửa sổ Chrome mới có đúng một tab, ngay sau khi in
+    link.
+  - `F6.15` Nếu máy không có Chrome, thì agent mở page bằng trình duyệt mặc định và báo trong chat.
 
 Bảng dưới phân biệt phương án (`F1.2`) và màn của luồng (`F1.17`) với thứ người xem vặn được (`F2`).
 
@@ -314,7 +326,7 @@ flowchart TB
 
 ### 3.5 Agent
 
-**Scope:** `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7`
+**Scope:** `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.13` `F6.14` `F6.15`
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontSize':'14px','titleColor':'#1b2230','textColor':'#1b2230','nodeTextColor':'#1b2230','lineColor':'#64748b','edgeLabelBackground':'#ffffff','clusterBkg':'#F7F8FA','clusterBorder':'#8a93a5'},'flowchart':{'curve':'basis','nodeSpacing':55,'rankSpacing':60,'padding':14,'subGraphTitleMargin':{'top':6,'bottom':14}}}}%%
@@ -405,15 +417,35 @@ flowchart TB
   ô nhập của các màn kề nhau khớp key.
 - **`--auto`** (`F1.4`): vẫn soạn câu hỏi làm rõ, nhưng thay chỗ gọi AskUserQuestion bằng đáp án khuyên dùng; mỗi lựa
   chọn là một dòng `--auto` trong bảng Quyết định của `brief.md`. Chọn phương án không hỏi người dùng nên không có gì
-  để `--auto` thay.
+  để `--auto` thay. Câu mở page trong Chrome là ngoại lệ: `--auto` vẫn soạn câu đó nhưng chọn "Không mở".
+- **Mở page trong Chrome** (`F6.13` `F6.14` `F6.15`): câu hỏi luôn nằm trong lượt hỏi đầu tiên của bước 2; đề rõ thì
+  lượt đó chỉ có câu này. Người dùng chọn mở thì ngay sau khi in link, agent chạy `new-design.mjs open`. Lệnh mở page
+  đầu tiên của `pages.js` (phương án A, màn 1) trong một cửa sổ Chrome mới, một tab; người xem sang page khác bằng
+  option-switcher. macOS dùng `open -na "Google Chrome" --args --new-window`, Linux dùng `google-chrome --new-window`,
+  hệ khác chỉ in link. Lệnh không chọn profile, nên Chrome dùng profile người dùng dùng gần nhất. Không có Chrome thì
+  lệnh mở bằng trình duyệt mặc định (`open`, `xdg-open`). Vòng góp ý không hỏi lại, không mở lại.
 
 ### 3.6 Máy kiểm
 
-**Scope:** `F5` `F3.4` `F3.9` `F1.3` `F1.2`
+**Scope:** `F5` `F3.4` `F3.9` `F1.3` `F1.2` `F6.12`
 
 - **`check.mjs --quick`** (`F5.6`) kiểm một page ở một tổ hợp: lượt tĩnh, lỗi console, lỗi JS, bố cục và dò luật ở
-  1280px, sáng, tweak mặc định, `state` theo `--state` hay preset theo `--preset`. Chạy 1–2 giây, nên chạy được sau
-  từng bước dựng, kể cả khi bốn agent con cùng chạy một lúc.
+  sáng, tweak mặc định, `state` theo `--state` hay preset theo `--preset`, đo cùng lúc ở 1280px và 375px. Chạy 2–3
+  giây, nên chạy được sau từng bước dựng, kể cả khi bốn agent con cùng chạy một lúc. Lỗi khổ mobile hiện ở bước gây ra
+  nó: trong 13 agent dựng page có lỗi ở lần kiểm đầy đủ đầu tiên, 12 agent có lỗi chỉ xảy ra ở 375px.
+- **`--quick --click "<nhãn>"`** (`F5.10`) bấm một nút ở tổ hợp đó rồi đo như lượt bấm. Không có cờ này thì agent tự
+  viết script Playwright để bấm thử: 18 trên 29 agent dựng page đã làm vậy.
+- **`check.mjs --brief`** (`F5.11`) chỉ chạy phần `brief.md` và `pages.js` của lượt tĩnh. `new-design.mjs progress
+  --prepared --all` gọi nó trước khi đánh dấu: agent dựng page không được sửa brief, nên lỗi brief lọt qua bước chuẩn
+  bị thì mỗi lần kiểm đầy đủ lại báo đúng lỗi đó mà page không sửa được.
+- **Nhớ kết quả** (`F5.9`): kiểm đầy đủ ghi vào `.check-cache.json` của thư mục design, mỗi page một mục, khoá là hash
+  của page, `tokens.js`, `pages.js`, bảng nút dữ liệu và luật nhường của `brief.md`, shell, mã máy kiểm. Khoá trùng
+  thì lượt trình duyệt của page đó in lại lỗi đã nhớ; lượt tĩnh vẫn chạy. Nhờ vậy kiểm cả thư mục ngay sau kiểm page,
+  hay sau khi chỉ sửa chữ trong brief, không chạy lại trình duyệt. `--fresh` bỏ bộ nhớ.
+- **Chạy song song**: hai khổ 375 và 1280px chạy cùng lúc, lượt bấm mỗi khổ chia cho hai tab. Mỗi phần ghi lỗi vào sổ
+  riêng, rồi chép theo thứ tự chạy lần lượt, nên output giống hệt. File CDN (Tailwind, Alpine, Lucide) tải một lần rồi
+  trả từ bộ nhớ cho mọi lần mở page; mỗi lần mở vẫn là một context mới, storage sạch. Sau lần bấm hay rê, máy kiểm chờ
+  tới khi hiệu ứng chạy xong thay vì chờ một khoảng cố định.
 - **`check.mjs`** chỉ đọc, không sửa page. Nó chạy ba lượt:
   - **Lượt tĩnh** đọc file: thứ tự nạp, mã màu, `brief.md`, `pages.js`, bộ key variables.
   - **Lượt tổ hợp** mở page bằng Playwright qua `file://`, chạy mọi tổ hợp tweak × sáng tối × `state` cộng từng preset
@@ -434,6 +466,13 @@ flowchart TB
   ghi luật UX, mã cũ, hay luật UI có dòng `Phục vụ` mà thiếu cột "Giữ luật UX bằng", thì máy kiểm báo lỗi. Luật có
   trong hai file mà không có phép kiểm thì dừng.
 - Exit `0` sạch · `1` có lỗi · `2` không chạy được. Playwright cài vào thư mục tạm, không cài vào dự án.
+- **`run.log`** (`F6.12`): `new-design.mjs` (init, page, prepared, doing, done, insert, round, delivered, touch) và
+  `check.mjs` (brief, quick, click, full, folder) mỗi lần chạy xong ghi thêm một dòng sáu cột cách bằng tab: giờ ISO,
+  lệnh, việc, page, số giây, chi tiết. Dòng của `check.mjs` ghi số tổ hợp, số lỗi, page dùng lại và giây của từng lượt
+  (tĩnh; mở, vặn nút, khổ tablet; từng khổ). Lệnh tự ghi nên lượt chạy thật nào cũng có log, agent không phải nhớ.
+  `run-log.mjs <thư mục design>` đọc lại thành bảng từng page: mỗi bước dựng xong lúc nào, dài bao lâu, máy kiểm chạy
+  mấy lần và bao nhiêu giây trong bước, phần còn lại là thời gian agent. Transcript cũng có giờ, nhưng chỉ có trên máy
+  chạy và không gắn với page hay bước dựng.
 
 ## 4. Vì sao thiết kế như vậy
 
@@ -476,6 +515,8 @@ flowchart TB
 | bảng Luồng trong brief chốt mỗi màn nhận gì, đưa gì | agent con dựng song song không thấy page của nhau; không có bảng thì màn 2 đưa `email`, màn 3 đọc `mail`
 | dựng theo sáu bước cố định, đánh dấu từng bước | ghi cả page một lần thì 3–5 phút đầu người dùng không có gì để xem và bị ngắt là mất cả page. Bước 1 ra ngay bản xem được; mỗi bước sau thêm một thứ người xem vặn thấy. Agent tự đặt bước thì mỗi page một kiểu, kiểm đầy đủ không biết lấy gì để so |
 | đưa link ngay sau khi tạo page trống, trước khi dựng | link sớm là điều kiện để người dùng xem và ngắt sớm khi thấy sai hướng; tin giao cuối vẫn đợi kiểm cả thư mục sạch |
+| hỏi rồi tự mở page trong một cửa sổ Chrome mới, một tab | nhiều người không bấm link, nên chỉ thấy page lúc giao. Một tab là đủ vì option-switcher chuyển được giữa các page; cửa sổ riêng thì các cửa sổ người dùng đang mở không bị chen thêm tab |
+| mở bằng lệnh hệ điều hành, profile dùng gần nhất, không dùng Playwright hay profile mới | đo thử: `open -na … --new-window` trả về sau 85 ms, gửi URL vào Chrome đang chạy, không để lại tiến trình nào phải tắt. Playwright không mở được profile đang chạy; profile mới chạy thêm một Chrome, hiện màn chào lần đầu. Page không cần đăng nhập hay cookie, nên profile thật không làm sai page |
 | danh sách bước dựng ở file riêng mỗi page, chỉ agent của page đó ghi | page chỉ đọc lại được một file `.js` riêng mà không tải lại. Để trong page thì chỉ đọc được sau khi tải; để trong `pages.js` thì các agent con tranh nhau ghi |
 | ghi danh sách ra file tạm rồi rename; lượt đọc thiếu dữ liệu thì bỏ qua | đo thử: ghi thẳng thì khoảng 9% lượt đọc trúng file ghi dở; rename còn vài lượt khi ghi dồn dập. File ghi dở luôn trông như nạp được mà thiếu dữ liệu, không như file không có, nên shell phân biệt được |
 | song song giữ nguyên khi thêm tiến độ: không có bước nào chờ chung | mỗi page một danh sách, một agent; một agent con bị ngắt thì chỉ gọi lại agent đó. Gọi lại cả lượt thì page đang dựng tốt bị dựng lại |
@@ -562,6 +603,7 @@ flowchart TB
 | `scripts/test-shell.mjs` | kiểm shell trên một thư mục design mẫu, gồm nhãn tiến độ và tự tải lại |
 | `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, vòng góp ý, chèn bước, ghi qua file tạm |
 | `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, `npx` hỏng (exit 2) |
+| `scripts/test-open.mjs` | kiểm lệnh `open`: page đầu của thư mục, URL có dấu cách và dấu, đổi sang trình duyệt mặc định khi thiếu Chrome |
 | `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc. Bài 04 (một page) là bài mặc định khi nghiệm thu plan; `samples/README.md` có bảng plan chạm phần nào thì dùng bài nào |
 | `samples/lint.mjs` · `prepare.mjs` | soát hình dạng checklist: danh sách ngắn, không mã yêu cầu, không chữ cảm tính; tạo thư mục chạy thử cho một bài |
 | `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md hay file nó khai để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |
