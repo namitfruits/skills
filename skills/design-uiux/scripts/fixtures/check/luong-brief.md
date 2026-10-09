@@ -22,7 +22,7 @@ Bề rộng trang: `64rem`, mặc định.
 
 Không có.
 
-### Giới hạn nhường cho design system
+### Luật UI theo design system
 
 Không có.
 

@@ -28,6 +28,8 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F1.2` Khi đề là một màn, agent dựng hai phương án A và B và không hỏi người dùng chọn.
   - `F1.13` Nếu đề một màn xin hơn hai phương án, thì agent dựng hai phương án A và B và nói lý do trong chat.
   - `F1.14` Nếu ba phép thử chỉ còn một phương án, thì agent dựng một page và nói lý do trong chat.
+  - `F1.19` Nếu đề một màn xin một phương án, thì agent dựng một page và nói lý do trong chat.
+  - `F1.18` Agent đặt tên phương án bằng cụm danh từ tả cách cả page được bày.
   - `F1.15` Khi đề là một luồng, agent dựng đúng một phương án.
   - `F1.16` Khi đề là một luồng, agent in bảng các màn của luồng vào chat trước khi dựng.
   - `F1.8` Mỗi phương án được dựng là một page.
@@ -60,8 +62,10 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
     tải vào thư mục design.
   - `F3.2` Khi người xem bấm tab, lọc, modal, thêm hay xoá, page đổi theo trên dữ liệu giả.
   - `F3.3` Page có đủ trạng thái: có dữ liệu, đang tải, rỗng, lỗi, và trạng thái riêng của đề.
-  - `F3.4` Nếu tài liệu hay component của design system làm khác một giới hạn `G`, thì page theo design system và
+  - `F3.4` Nếu tài liệu hay component của design system làm khác một luật UI, thì page theo design system và
     `brief.md` ghi dẫn chứng.
+  - `F3.9` Nếu design system làm khác một luật UI có phục vụ một luật UX, thì `brief.md` ghi cách page vẫn giữ luật UX
+    đó.
 - **`F4` Góp ý**
   - `F4.1` Khi người dùng góp ý một phương án, agent sửa thẳng page của phương án đó, không tạo page mới.
   - `F4.2` Nút phương án hiện ngày sửa và góp ý cuối của page đó.
@@ -72,7 +76,7 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
     desktop.
   - `F5.4` Máy kiểm bấm thử từng loại thứ bấm được trên page.
   - `F5.8` Khi kiểm thư mục luồng, máy kiểm đi được từ màn đầu tới màn cuối bằng nút trong page.
-  - `F5.2` Máy kiểm đo phần đo được của từng luật trong `references/page-principles.md`.
+  - `F5.2` Máy kiểm đo phần đo được của từng luật trong `references/ux-principles.md` và `references/ui-principles.md`.
   - `F5.5` Agent soát phần còn lại của từng luật trên ảnh trong `shots/`.
   - `F5.3` Nếu còn lỗi chưa sửa được, thì lúc giao agent kể ra từng lỗi.
   - `F5.6` Agent chạy kiểm nhanh một tổ hợp trước khi đánh dấu một bước dựng xong.
@@ -82,9 +86,13 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F6.2` Agent dựng page theo danh sách bước dựng và đánh dấu từng bước khi bước đó xong.
   - `F6.3` Khi một bước dựng được đánh dấu xong, page đang mở tự tải lại và giữ nguyên giá trị đang xem và vị trí cuộn.
   - `F6.4` Nếu người xem đang gõ trong ô nhập ở bất kỳ khổ màn nào, thì page đợi tới khi con trỏ rời ô mới tải lại.
-  - `F6.5` Toolbar hiện page đang dựng, đang sửa theo góp ý hay đã xong.
+  - `F6.5` Toolbar hiện page đang chuẩn bị, đang dựng, đang sửa theo góp ý, đang kiểm lại hay đã xong.
   - `F6.6` Nếu agent dựng page bị ngắt, thì agent được gọi lại làm tiếp từ bước dựng đầu tiên chưa xong.
   - `F6.7` Nếu một agent con bị ngắt trong lúc các agent con khác đang dựng, thì agent chính chỉ gọi lại agent bị ngắt.
+  - `F6.8` Trong lúc một bước dựng chưa xong, danh sách bước dựng trên toolbar hiện việc con agent đang làm, một dòng thụt vào ngay dưới bước đó.
+  - `F6.9` Trong lúc page chưa có khối đầu tiên, page hiện tên màn, tên page, bố cục page hay việc của màn, và các việc page tiện cho.
+  - `F6.10` Toolbar chỉ ghi page đã xong sau khi agent chính đánh dấu bước giao.
+  - `F6.11` Toolbar ghi ngày sửa cuối của page ở cuối danh sách bước dựng, không ghi trên nhãn trạng thái.
 
 Bảng dưới phân biệt phương án (`F1.2`) và màn của luồng (`F1.17`) với thứ người xem vặn được (`F2`).
 
@@ -102,14 +110,14 @@ Bốn phần, mỗi phần một chủ:
 
 | Phần | Là gì | Chủ | Scope |
 | --- | --- | --- | --- |
-| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` | `F1` `F4` `F6.1` `F6.2` `F6.6` `F6.7` |
-| **bản thiết kế** | page `NN-slug.html`, `tokens.js`, danh sách bước dựng `NN-slug.progress.js` | agent dựng, script sinh token, `new-design.mjs progress` | `F3` `F6.2` |
-| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` |
+| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` cho agent chính, `references/build-page.md` cho agent dựng page | `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.8` `F6.10` |
+| **bản thiết kế** | page `NN-slug.html`, `tokens.js`, danh sách bước dựng `NN-slug.progress.js` | agent dựng, script sinh token, `new-design.mjs progress` | `F3` `F6.2` `F6.9` |
+| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` `F6.8` `F6.10` `F6.11` |
 | **máy kiểm** | `check.mjs`, `principles-check.mjs` | skill mang theo | `F5` |
 
 ### 3.1 Thư mục design
 
-**Scope:** `F1.2` `F1.3` `F1.8` `F1.16` `F1.17` `F4` `F6.2`
+**Scope:** `F1.2` `F1.3` `F1.8` `F1.16` `F1.17` `F4` `F6.2` `F6.5` `F6.8` `F6.9` `F6.10`
 
 Mỗi đề một thư mục `.design/NNN-slug/` ở thư mục làm việc lúc gọi skill. Mọi thư mục design dùng chung
 `.design/_shell/`. Một thư mục là **thư mục phương án** (đề một màn, mỗi page một phương án) hay **thư mục luồng**
@@ -119,12 +127,14 @@ Mỗi đề một thư mục `.design/NNN-slug/` ở thư mục làm việc lúc
 | --- | --- | --- |
 | `brief.md` | agent chính | thoả thuận chung mọi page phải theo: quyết định, design system, cặp màu không đủ đọc, dữ liệu chung, nút dữ liệu chung, số khối, số kiểm chéo; thư mục luồng thêm bảng Luồng: mỗi màn để làm gì, nhận gì từ màn trước, đưa gì cho màn sau |
 | `tokens.js` | `new-design.mjs init` | token của design system |
-| `pages.js` | `new-design.mjs page` · `touch` | danh sách page theo thứ tự: tên phương án và câu hỏi trung tâm (`option`), hay tên màn và việc của màn (`screen`); ngày sửa, góp ý cuối |
-| `NN-slug.html` | agent con, mỗi agent đúng một file | một phương án, hay một màn của luồng |
-| `NN-slug.progress.js` | `new-design.mjs page` tạo; agent dựng page đó ghi qua `new-design.mjs progress` | danh sách bước dựng của page: sáu bước dựng, rồi các bước góp ý theo vòng; bước nào xong; `rev` tăng mỗi lần đánh dấu |
+| `pages.js` | `new-design.mjs page` · `touch` | danh sách page theo thứ tự: tên phương án, bố cục và việc page tiện cho (`option`), hay tên màn và việc của màn (`screen`); ngày sửa, góp ý cuối |
+| `NN-slug.html` | `new-design.mjs page` tạo với khối chờ; agent con dựng tiếp, mỗi agent đúng một file | một phương án, hay một màn của luồng |
+| `NN-slug.progress.js` | `new-design.mjs page` tạo; agent chính đánh dấu bước chuẩn bị và bước giao; agent dựng page đó ghi phần còn lại; mọi lần ghi qua `new-design.mjs progress` | bước chuẩn bị (`prep`); bước giao (`deliver`); danh sách bước dựng của page: sáu bước dựng, rồi các bước góp ý theo vòng; bước nào xong; việc con của bước dở (`doing`); `rev` tăng mỗi lần đánh dấu, ghi việc con thì không |
 | `shots/` | `check.mjs` | ảnh từng tổ hợp, từng cú bấm |
 
-Mỗi file đúng một người ghi, nên các agent con chạy song song không giẫm nhau. Danh sách bước dựng là chỗ duy nhất
+Mỗi file đúng một người ghi tại một lúc, nên các agent con chạy song song không giẫm nhau. Agent chính chỉ ghi bước
+chuẩn bị và bước giao của mọi page: bước chuẩn bị trước khi gọi agent con, bước giao sau khi mọi agent con đã trả về.
+Danh sách bước dựng là chỗ duy nhất
 nói page đã tới đâu: shell đọc nó để hiện tiến độ, agent được gọi lại đọc nó để làm tiếp, máy kiểm đọc nó để chặn page
 dựng dở.
 
@@ -132,6 +142,19 @@ Sáu bước dựng cố định cho mọi page: khung các khối và dữ li�
 · tương tác · preset và ca biên · kiểm đầy đủ. Agent được chèn bước trước bước kiểm đầy đủ, không được bớt. Lệnh
 `progress` ghi ra file tạm rồi rename, để shell không đọc phải file ghi dở. Mọi thứ các page phải giống nhau
 nằm ở `brief.md` và `tokens.js`, không nằm trong từng page.
+
+Bước chuẩn bị là việc agent chính viết `brief.md`. Nó nằm riêng, ngoài sáu bước dựng, nên sáu bước giữ nguyên số. Lúc
+bước chuẩn bị chưa xong, lệnh `progress` không nhận đánh dấu hay ghi việc con của bước dựng. File tiến độ không có bước
+chuẩn bị là page tạo trước khi có bước này: coi như đã chuẩn bị xong.
+
+Bước giao là việc agent chính kiểm lại rồi giao: kiểm cả thư mục, so số kiểm chéo, viết tin giao. Nó nằm riêng, sau
+mọi vòng, vì agent con không làm được việc đó. Agent chính đánh dấu bước giao ngay trước tin giao, và chỉ khi mọi bước
+dựng đã xong. Mở vòng góp ý thì bước giao mở lại. File tiến độ không có bước giao coi như đã giao.
+
+Page mới chỉ có khối chờ, `new-design.mjs page` điền từ cờ của lệnh: dòng tên màn (phần trước ` · ` của `--title`),
+tiêu đề (`--option` hay `--screen`), phụ đề (`--layout` hay `--purpose`), dòng nhỏ ("Tiện cho: `--good-for`"). Cờ
+nào thiếu thì không có dòng đó. Câu hỏi trung tâm, đơn vị chính, cái hy sinh là cách agent so phương án, nằm ở bảng
+`## Tình huống` của `brief.md`, không in ra page. Bước dựng 1 thay khối chờ bằng các khối thật.
 
 ### 3.2 Design system thành token
 
@@ -260,7 +283,7 @@ flowchart TB
 
 ### 3.4 Shell
 
-**Scope:** `F2` `F4.2` `F6.3` `F6.4` `F6.5`
+**Scope:** `F2` `F4.2` `F6.3` `F6.4` `F6.5` `F6.8`
 
 | Khối | Đọc từ | Làm gì |
 | --- | --- | --- |
@@ -268,12 +291,13 @@ flowchart TB
 | view-controller | `DESIGN_THEME` | khổ màn, sáng tối, số khối, về mặc định |
 | data-panel | `DESIGN.variables`, `presets` | vặn dữ liệu; loại ô theo `type` của nút |
 | config-panel | `DESIGN.tweaks` | vặn cấu hình |
-| nhãn tiến độ | `NN-slug.progress.js`, `pages.js` | "Đang dựng a/b", "Đang sửa a/b" hay "✓ Xong · ngày sửa cuối"; bấm vào thấy danh sách bước dựng theo vòng |
+| nhãn tiến độ | `NN-slug.progress.js`, `pages.js` | "Đang chuẩn bị", "Đang dựng a/b", "Đang sửa a/b", "Đang kiểm lại" hay "✓ Xong"; nhãn xong không có con số, ngày sửa cuối là dòng cuối danh sách ("Sửa lần cuối 9 thg 10"); khi page chưa xong, nhãn có vòng lan từ chấm, việc con "· <việc>" và thanh tiến độ ở đáy có vệt sáng chạy, chỉ vẽ lại khi nội dung đổi; bấm vào thấy danh sách bước dựng theo vòng; bước dở có `doing` thì thêm một dòng việc con thụt vào ngay dưới nó |
 
 - **Tự tải lại theo danh sách bước dựng.** Trang cha cứ 2 giây, khi tab đang hiện, chèn lại thẻ `<script>` trỏ tới
   `NN-slug.progress.js?t=<giờ>`; đây là cách duy nhất đọc lại một file trên `file://` mà không tải page. Khi `rev`
-  khác lần đọc trước, trang cha tải lại. Giá trị vặn nằm trên URL nên còn nguyên; vị trí cuộn lưu vào
-  `sessionStorage` lúc rời trang và lấy lại khi lần mở là một lần tải lại.
+  khác lần đọc trước, trang cha tải lại. Khi `rev` giữ nguyên, trang cha chỉ vẽ lại danh sách bước, để việc con mới
+  hiện ra. Giá trị vặn nằm trên URL nên còn nguyên; vị trí cuộn lưu vào `sessionStorage` lúc rời trang và lấy lại khi
+  lần mở là một lần tải lại.
 - **Đợi người xem gõ xong.** Nếu ô nhập đang có con trỏ, thì trang cha đợi con trỏ rời ô mới tải lại. Ở khổ tablet,
   mobile, ô nhập nằm trong iframe mà trang cha không đọc vào được, nên page trong iframe báo lên bằng `postMessage`
   mỗi khi con trỏ vào hay rời ô.
@@ -290,7 +314,7 @@ flowchart TB
 
 ### 3.5 Agent
 
-**Scope:** `F1` `F4` `F6.1` `F6.2` `F6.6` `F6.7`
+**Scope:** `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7`
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontSize':'14px','titleColor':'#1b2230','textColor':'#1b2230','nodeTextColor':'#1b2230','lineColor':'#64748b','edgeLabelBackground':'#ffffff','clusterBkg':'#F7F8FA','clusterBorder':'#8a93a5'},'flowchart':{'curve':'basis','nodeSpacing':55,'rankSpacing':60,'padding':14,'subGraphTitleMargin':{'top':6,'bottom':14}}}}%%
@@ -352,14 +376,17 @@ flowchart TB
   4. Một màn: tìm phương án theo tình huống dùng, lấy hai phương án A và B, in bản phác vào chat, không hỏi chọn. Ba
      phép thử chỉ còn một phương án thì dựng một và nói lý do. Một luồng: tách luồng thành các màn, điền bảng Luồng,
      in bảng vào chat.
-  5. Chốt `brief.md`, tạo page trống bằng `new-design.mjs page` (`--option` cho phương án, `--screen` cho màn). Mỗi
-     page trống có sẵn danh sách sáu bước dựng.
-  6. Từ hai page trở lên thì gọi mọi agent con trong cùng một lượt, chạy nền, rồi in link mọi page ngay; một page thì
-     in link rồi agent chính tự dựng (`F6.1`).
-  7. Khi mọi page xong, kiểm cả thư mục và so số kiểm chéo với brief.
-  8. Giao tin cuối.
+  5. Tạo page trống bằng `new-design.mjs page` (`--option` cho phương án, `--screen` cho màn), rồi in link mọi page
+     ngay (`F6.1`). Mỗi page trống có khối chờ, bước chuẩn bị và danh sách sáu bước dựng. Tên phương án là cụm danh từ
+     tả cách cả page được bày (`F1.18`).
+  6. Chốt `brief.md`, rồi đánh dấu bước chuẩn bị của mọi page (`F6.5`).
+  7. Từ hai page trở lên thì gọi mọi agent con trong cùng một lượt, chạy nền; một page thì agent chính tự dựng.
+  8. Khi mọi page xong, kiểm cả thư mục và so số kiểm chéo với brief.
+  9. Đánh dấu bước giao của mọi page (`F6.10`), rồi giao tin cuối.
 - **Agent con dựng đúng một page**, theo thứ tự (`F6.2`):
-  1. Đọc `brief.md` và `references/page-principles.md`.
+  1. Đọc `references/build-page.md`, `references/ux-principles.md`, `references/ui-principles.md` và `brief.md`.
+     Lời giao chỉ mang chỗ phải đọc và phần riêng của page: phương án hay màn, bố cục, tiện cho, bản phác. Thư mục
+     một page thì agent chính tự dựng theo đúng file `build-page.md` đó, nên luật dựng page không phụ thuộc ai dựng.
   2. Lấy bước dựng đầu tiên chưa xong bằng `new-design.mjs progress`, dựng bước đó, chạy `check.mjs --quick`, sạch thì
      đánh dấu bước xong. Lặp tới bước kiểm đầy đủ.
   3. Bước kiểm đầy đủ: chạy `check.mjs` tới khi sạch, mở ảnh trong `shots/`, đi danh sách tự kiểm.
@@ -382,9 +409,9 @@ flowchart TB
 
 ### 3.6 Máy kiểm
 
-**Scope:** `F5` `F3.4` `F1.3` `F1.2`
+**Scope:** `F5` `F3.4` `F3.9` `F1.3` `F1.2`
 
-- **`check.mjs --quick`** (`F5.6`) kiểm một page ở một tổ hợp: lượt tĩnh, lỗi console, lỗi JS, bố cục và dò nguyên tắc ở
+- **`check.mjs --quick`** (`F5.6`) kiểm một page ở một tổ hợp: lượt tĩnh, lỗi console, lỗi JS, bố cục và dò luật ở
   1280px, sáng, tweak mặc định, `state` theo `--state` hay preset theo `--preset`. Chạy 1–2 giây, nên chạy được sau
   từng bước dựng, kể cả khi bốn agent con cùng chạy một lúc.
 - **`check.mjs`** chỉ đọc, không sửa page. Nó chạy ba lượt:
@@ -401,9 +428,11 @@ flowchart TB
 - **Lượt đi luồng** (thư mục luồng): mở màn 1 ở mặc định, điền các ô `form.*` bằng chữ mẫu, bấm thứ gọi `next()` tới
   màn cuối, rồi `prev()` một lần và kiểm ô của màn trước còn chữ. Ở lượt bấm, cú bấm làm page sang một file trong
   `pages.js` là hợp lệ.
-- **`principles-check.mjs`** đo phần máy đo được của từng luật trong [`references/page-principles.md`](references/page-principles.md) ở lượt tĩnh,
-  mỗi tổ hợp, lượt bấm và cả thư mục; lỗi mang ID luật (`[N13]`, `[G4]`). Giới hạn `G` mà `brief.md` ghi là nhường cho
-  design system thì bỏ qua. Luật có trong `references/page-principles.md` mà không có phép kiểm thì dừng.
+- **`principles-check.mjs`** đo phần máy đo được của từng luật trong [`references/ux-principles.md`](references/ux-principles.md)
+  và [`references/ui-principles.md`](references/ui-principles.md) ở lượt tĩnh, mỗi tổ hợp, lượt bấm và cả thư mục; lỗi
+  mang ID luật (`[UX10]`, `[UI4]`). Luật UI có trong bảng "Luật UI theo design system" của `brief.md` thì bỏ qua. Bảng
+  ghi luật UX, mã cũ, hay luật UI có dòng `Phục vụ` mà thiếu cột "Giữ luật UX bằng", thì máy kiểm báo lỗi. Luật có
+  trong hai file mà không có phép kiểm thì dừng.
 - Exit `0` sạch · `1` có lỗi · `2` không chạy được. Playwright cài vào thư mục tạm, không cài vào dự án.
 
 ## 4. Vì sao thiết kế như vậy
@@ -469,6 +498,14 @@ flowchart TB
 | tải lại khi một bước được đánh dấu xong, không phải mỗi lần agent ghi file | bước chỉ được đánh dấu sau khi kiểm nhanh sạch, nên người xem chỉ thấy bản đã chạy được, không thấy page trắng vì lỗi JS giữa chừng |
 | đang gõ thì đợi rời ô; ở khổ tablet, mobile thì iframe báo lên bằng `postMessage` | tải lại giữa lúc gõ làm mất chữ. Trên `file://` trang cha không đọc được vào iframe, nên không tự biết người xem đang gõ |
 | page không có danh sách bước dựng coi như đã xong | page dựng trước khi có danh sách vẫn mở và kiểm như cũ, không phải sửa |
+| bước chuẩn bị nằm riêng ngoài sáu bước dựng, agent chính đánh dấu trước khi gọi agent con | nhãn phải nói đúng việc đang diễn ra: lúc agent chính viết brief, chưa ai dựng. Thêm làm bước dựng 1 thì "a/6" thành "a/7" và số bước lệch bảng sáu bước |
+| bước giao nằm riêng sau mọi vòng, agent chính đánh dấu ngay trước tin giao; vòng góp ý mở lại bước này | bước kiểm đầy đủ là của agent con; sau đó agent chính còn kiểm cả thư mục, sửa tới ba vòng. Nhãn báo xong lúc agent con xong thì sai đúng lúc người xem đang đợi. `check.mjs` không tự đánh dấu khi sạch, vì còn lỗi sau ba vòng thì agent vẫn giao |
+| nhãn xong không có con số, ngày sửa cuối ở cuối danh sách bước | "09/10" cạnh nhãn "Xong" đọc thành 9 trên 10 bước. Ngày không giúp biết page xong chưa, nên không cần nằm trên nhãn |
+| in link ngay sau khi tạo page trống, trước khi viết brief | viết brief mất vài phút; người dùng có link sớm hơn và thấy page đang chuẩn bị |
+| khối chờ chỉ có dữ liệu của page: tên màn, tên page, bố cục hay việc của màn, các việc page tiện cho | khối chờ là thứ người mở link sớm đọc đầu tiên; câu hướng dẫn kể chuyện, còn nhãn tiến độ đã nói page đang ở đâu |
+| page tả bố cục và việc tiện cho, không in câu hỏi trung tâm, đơn vị chính, cái hy sinh | người xem cần biết page bày thế nào, dùng vào việc gì. "Hy sinh", "đơn vị chính" là chữ agent dùng để so phương án; đọc trên page thì không hiểu, và một câu hỏi trung tâm thu cả page về một nhu cầu |
+| tên phương án là cụm danh từ tả cách cả page được bày | tên kiểu chuỗi động từ ("Tìm nhanh để đánh dấu đến") bỏ mất ai làm, làm với cái gì. Tên tả một widget ("Ô tìm bệnh nhân ở đầu trang") làm người xem tưởng page chỉ có widget đó |
+| việc con nằm trên bước dở (`doing`), ghi việc con không tăng `rev` | một bước dựng kéo dài 2–3 phút, chỉ thấy tên bước thì người xem không biết agent còn chạy hay đã treo. Việc con không đổi page, nên shell chỉ vẽ lại danh sách; tăng `rev` thì page tải lại mà không có gì mới. Việc con không thành bước riêng, để "a/6" giữ nghĩa |
 
 ### Kiểm
 
@@ -476,13 +513,17 @@ flowchart TB
 | --- | --- |
 | đầu ra kiểm bằng code; chưa sạch thì không nói là xong | lời khai của agent không đáng tin bằng phép đo. Mỗi hứa hẹn về page có một phép kiểm trong `check.mjs` |
 | mỗi luật tách phần máy đo được và phần tự kiểm | phần máy đo được thì không để agent tự khai; phần còn lại thành danh sách mở ảnh ra soát, dòng trượt hiện trong tin giao |
-| thứ tự: nguyên tắc > design system > giới hạn | nguyên tắc là đúng sai (đọc được, màu nói đúng trạng thái); giới hạn chỉ là gu mặc định, và design system được đưa phải thắng gu của skill |
-| design system "nói khác" một giới hạn chỉ khi tài liệu viết ra hay component đang làm vậy | design system nào cũng khai token bóng, màu phụ; có token không có nghĩa là dùng cho card hay cho trạng thái. Nhường phải kèm dẫn chứng |
+| luật chia hai file: luật UI (người dùng thấy gì) và luật UX (người dùng cảm nhận gì); không có khái niệm thứ ba | luật UI lo màu, chữ, khoảng cách, hình khối, nên design system được đưa quyết; luật UX lo người dùng hiểu đúng và làm được, nên không design system nào đè. Quyền nhường đi theo UI và UX, không cần tên riêng cho nó |
+| lựa chọn UI nào làm hỏng một luật UX thì luật UX thắng | hai nhóm chỉ đụng nhau ở chỗ đó. Design system tô ba nút cùng nặng thì người dùng không biết bấm nút nào: page vẫn chỉ có một nút chính |
+| mỗi luật UI ghi luật UX nó phục vụ; nhường thì `brief.md` ghi cách page vẫn giữ luật UX đó | nhiều luật UI là cách mặc định để đạt một luật UX: bóng chỉ cho lớp nổi giữ cho modal tách khỏi trang. Nhường luật UI mà không ai hỏi điều nó bảo vệ thì page mất điều đó, máy kiểm vẫn báo sạch. Luật chỉ thuần gu ghi `—`, nhường là xong |
+| design system "nói khác" một luật UI chỉ khi tài liệu viết ra hay component đang làm vậy | design system nào cũng khai token bóng, màu phụ; có token không có nghĩa là dùng cho card hay cho trạng thái. Nhường phải kèm dẫn chứng |
 | luật không có phép kiểm thì `check.mjs` dừng | không có chốt này thì luật thêm sau sẽ chỉ nằm trên giấy |
 | kiểm báo nhầm thì sửa phép kiểm; page không có cách tắt kiểm | có lối tắt trong page thì agent dùng lối tắt thay vì sửa page. 28 page chạy thử cũ là bộ đo báo nhầm |
 | `check.mjs` có lượt bấm, và vẫn bắt mở ảnh `shots/` | chỉ kiểm thứ vặn ở panel thì modal, sheet, hàng mở rộng vỡ mà máy vẫn báo sạch |
 | sửa tối đa ba vòng, còn lỗi thì kể từng dòng lúc giao | đổi lấy thời gian chạy có giới hạn, nhưng không giao như thể đã sạch |
-| nguyên tắc và giới hạn ở file riêng `references/page-principles.md` | chỉ agent dựng page cần; để trong `SKILL.md` thì lượt hỏi và chọn phương án cũng phải nạp |
+| luật UX và luật UI ở file riêng trong `references/` | chỉ agent dựng page cần; để trong `SKILL.md` thì lượt hỏi và chọn phương án cũng phải nạp |
+| luật dựng page ở `references/build-page.md`, tách khỏi `SKILL.md` | `SKILL.md` gộp cả hai người đọc thì vượt giới hạn một lượt đọc file, và agent con đọc qua phần hỏi, chọn phương án nó không dùng. Luật chép vào lời giao thì nằm hai nơi, và agent chính tự dựng một page không thấy |
+| `SKILL.md` khai các file nó kéo theo (`spec-files`); `spec-check` soát chúng như `SKILL.md` | agent đọc file đó ở một bước của skill, nên yêu cầu gắn ở đó vẫn là yêu cầu agent biết. Chỉ file được khai mới tính, để file luật UX, UI không bị đòi dòng `spec:` |
 | kiểm nhanh một tổ hợp trước mỗi lần đánh dấu bước; kiểm đầy đủ chỉ ở bước cuối | bản lỗi JS thì page trắng đúng lúc người dùng đang xem. Một tổ hợp mất 1–2 giây, bốn page cùng kiểm vẫn dưới 3 giây; kiểm đầy đủ mất ~30 giây, chạy sau mỗi bước thì chậm gấp sáu |
 | kiểm đầy đủ chặn page còn bước dựng chưa xong | không có chốt này thì agent bỏ dở một bước mà vẫn giao như đã xong |
 
@@ -501,33 +542,36 @@ flowchart TB
 | --- | --- |
 | **Input** | đề trong chat; design system (file CSS có `@theme`, `DESIGN.md`, design của getdesign do đề chỉ định hay người dùng chọn, hay bộ mặc định); code dự án nếu có, chỉ để đọc |
 | **Output** | thư mục `.design/NNN-slug/` ở thư mục làm việc: `brief.md`, `tokens.js`, `pages.js`, mỗi phương án một `NN-slug.html` kèm danh sách bước dựng `NN-slug.progress.js`, ảnh `shots/`. Mọi thư mục design dùng chung `.design/_shell/` |
-| **Verify** | `check.mjs --quick` trên page sau mỗi bước dựng; `check.mjs` trên page hay cả thư mục: thứ tự nạp, brief, mọi tổ hợp tweak × sáng tối × `state` × preset ở 375 và 1280px, lượt bấm, nguyên tắc và giới hạn. `test-shell.mjs` khi sửa shell |
+| **Verify** | `check.mjs --quick` trên page sau mỗi bước dựng; `check.mjs` trên page hay cả thư mục: thứ tự nạp, brief, mọi tổ hợp tweak × sáng tối × `state` × preset ở 375 và 1280px, lượt bấm, luật UX và luật UI. `test-shell.mjs` khi sửa shell |
 | **Mutate** | chỉ ghi trong `.design/`. Không sửa code dự án, không cài gì vào dự án (Playwright cài vào thư mục tạm) |
 
 | File | Vai trò |
 | --- | --- |
-| `SKILL.md` | phần vận hành: từng bước, lệnh, lời giao cho agent con, luật viết page, bẫy đã gặp — đủ để chạy mà không đọc SPEC |
+| `SKILL.md` | phần vận hành của agent chính: từng bước, lệnh, lời giao cho agent con — cùng các file nó khai ở dòng `spec-files`, đủ để chạy mà không đọc SPEC |
+| `references/build-page.md` | luật dựng một page cho agent con, và cho agent chính khi thư mục một page: sáu bước dựng, viết page, kiểm, tự kiểm |
+| `references/getdesign.md` | cách hỏi chọn design của getdesign, agent chính đọc khi dự án không có design system |
 | `SPEC.md` | file này: vấn đề, mental model, lý do của từng quyết định, ranh giới phạm vi |
-| `references/page-principles.md` | nguyên tắc `N` và giới hạn `G` cho agent dựng page, mỗi luật có phần máy kiểm và phần tự kiểm |
-| `references/shell-principles.md` | nguyên tắc thiết kế shell: màu, bố cục, cách vẽ từng loại ô |
+| `references/ux-principles.md` | luật UX (`UX1`…) cho agent dựng page: người dùng hiểu đúng, làm được; mỗi luật có phần máy kiểm và phần tự kiểm |
+| `references/ui-principles.md` | luật UI (`UI1`…) cho agent dựng page: màu, chữ, khoảng cách, hình khối; mỗi luật ghi luật UX nó phục vụ, có phần máy kiểm và phần tự kiểm; bảng vai màu |
+| `references/shell-principles.md` | nguyên tắc thiết kế shell: màu, bố cục, cách vẽ từng loại ô; cách các khối điều khiển hiện ở từng khổ; lệnh và bẫy khi sửa shell |
 | `shell/` | shell (`shell.js`, `shell.css`), bộ token dự phòng (`default-design.md`) |
 | `templates/` | khuôn `brief.md`; khuôn page trống `page.html` mà `new-design.mjs page` chép ra; page mẫu `example.html` chỉ để đọc cách viết |
 | `scripts/new-design.mjs` | tạo thư mục design, page kèm danh sách bước dựng, đánh dấu bước dựng, ghi ngày sửa, chép shell; in danh sách design của getdesign, tải design đã chọn |
 | `scripts/tokens.mjs` | đổi design system thành `tokens.js`, suy giao diện còn thiếu |
-| `scripts/check.mjs` · `principles-check.mjs` | máy kiểm page; phép kiểm của từng luật trong `references/page-principles.md` |
+| `scripts/check.mjs` · `principles-check.mjs` | máy kiểm page; phép kiểm của từng luật trong `references/ux-principles.md` và `references/ui-principles.md` |
 | `scripts/test-shell.mjs` | kiểm shell trên một thư mục design mẫu, gồm nhãn tiến độ và tự tải lại |
 | `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, vòng góp ý, chèn bước, ghi qua file tạm |
 | `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, `npx` hỏng (exit 2) |
-| `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc |
+| `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc. Bài 04 (một page) là bài mặc định khi nghiệm thu plan; `samples/README.md` có bảng plan chạm phần nào thì dùng bài nào |
 | `samples/lint.mjs` · `prepare.mjs` | soát hình dạng checklist: danh sách ngắn, không mã yêu cầu, không chữ cảm tính; tạo thư mục chạy thử cho một bài |
-| `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |
+| `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md hay file nó khai để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |
 
 ## 6. Không thuộc phạm vi
 
 - Chuyển prototype thành code dự án, hay ghi bất cứ gì vào repo dự án ngoài `.design/`.
 - Gọi API thật, chạy logic thật. Page chỉ chạy trên dữ liệu giả.
-- Gu thẩm mỹ riêng của skill: component mẫu, bố cục mẫu từng loại màn. Skill theo design system được đưa; giới hạn
-  `G` chỉ lấp chỗ design system không nói tới.
+- Gu thẩm mỹ riêng của skill: component mẫu, bố cục mẫu từng loại màn. Skill theo design system được đưa; luật UI
+  chỉ lấp chỗ design system không nói tới.
 - Đọc `DESIGN.md` chỉ có phần chữ, không có YAML đầu file, kể cả design của getdesign dạng đó.
 - Design trả phí trên getdesign.md; skill chỉ dùng các bộ đi kèm gói npm `getdesign`.
 - Tự chạy app để chụp hiện trạng. Hiện trạng đọc từ code; có ảnh hay URL người dùng đưa thì dùng cái đó.

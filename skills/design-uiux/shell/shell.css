@@ -227,9 +227,25 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.ds-status[data-state="building"], .ds-status[data-state="revising"] { color: var(--ds-bar-accent); font-weight: 600; }
+.ds-status[data-state="preparing"], .ds-status[data-state="building"], .ds-status[data-state="revising"], .ds-status[data-state="checking"] { color: var(--ds-bar-accent); font-weight: 600; }
 .ds-status[aria-expanded="true"] { border-color: var(--ds-bar-accent); }
 .ds-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+/* Page chưa xong: nhãn cho thấy agent đang chạy. Chấm đứng yên, một vòng lan ra từ chấm rồi tan. Việc con nằm ngay trên
+   nhãn, chữ nhạt, cắt ở 22 ký tự; việc con mới trượt lên. Đáy nhãn là thanh tiến độ: phần đã xong (--ds-done) tô đặc,
+   một vệt sáng chạy trên phần còn lại. Người xem tắt chuyển động thì mọi thứ đứng yên. */
+.ds-status { position: relative; overflow: hidden; }
+.ds-status-dot { position: relative; flex-shrink: 0; }
+@keyframes ds-ripple { from { transform: scale(1); opacity: 0.6; } to { transform: scale(3.2); opacity: 0; } }
+.ds-status:not([data-state="done"]) .ds-status-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor; animation: ds-ripple 1.4s ease-out infinite; }
+.ds-status-doing { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; color: var(--ds-bar-muted); font-weight: 400; }
+@keyframes ds-slide-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ds-status-doing[data-fresh] { animation: ds-slide-in 0.35s ease-out; }
+.ds-status-track { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: color-mix(in srgb, var(--ds-bar-accent) 15%, transparent); }
+.ds-status-track::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--ds-done); background: var(--ds-bar-accent); }
+.ds-status-track span { position: absolute; inset: 0 0 0 var(--ds-done); overflow: hidden; }
+@keyframes ds-sweep { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
+.ds-status-track span::after { content: ""; position: absolute; inset: 0; width: 25%; background: linear-gradient(90deg, transparent, var(--ds-bar-accent), transparent); animation: ds-sweep 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ds-status *, .ds-status *::before, .ds-status *::after { animation: none !important; } }
 .ds-status-count { font-variant-numeric: tabular-nums; }
 .ds-status-list {
   position: absolute;
@@ -252,10 +268,14 @@
 .ds-status-list li span { width: 1em; flex-shrink: 0; text-align: center; }
 .ds-status-list li[data-step="done"] { color: var(--ds-bar-muted); }
 .ds-status-list li[data-step="current"] { color: var(--ds-bar-accent); font-weight: 600; }
+/* Việc con của bước dở: thẳng mép chữ của bước ở trên (bỏ qua cột dấu ● 1em + gap 8px), chữ nhỏ và nhạt hơn. */
+.ds-status-list li[data-step="doing"] { margin-top: -2px; padding-left: calc(1em + 8px); color: var(--ds-bar-muted); font-size: 12px; }
 .ds-status-list .ds-status-round { margin-top: 4px; color: var(--ds-bar-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .ds-status-list .ds-status-round:first-child { margin-top: 0; }
+.ds-status-list .ds-status-edited { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--ds-bar-line); color: var(--ds-bar-muted); font-size: 12px; }
 @media (max-width: 720px) {
-  .ds-status-label, .ds-status[data-state="done"] .ds-status-count { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ds-status-doing { display: none; }
+  .ds-status-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .ds-status-wrap { position: static; }
   .ds-status-list { left: 12px; right: 12px; width: auto; max-width: none; }
 }
@@ -325,7 +345,7 @@
   :root[data-sections="1"] [data-block] { position: relative; }
 }
 
-/* Tailwind v4 không còn đặt cursor: pointer cho nút. Để trong layer base nên class cursor-* của page vẫn đè được (N10). */
+/* Tailwind v4 không còn đặt cursor: pointer cho nút. Để trong layer base nên class cursor-* của page vẫn đè được (UX9). */
 @layer base {
   #design button:not(:disabled), #design [role="button"]:not([aria-disabled="true"]), #design summary { cursor: pointer; }
 }

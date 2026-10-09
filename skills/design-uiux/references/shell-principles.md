@@ -39,20 +39,28 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 - Màn ≤ 480px chỉ còn số: tên màn làm dãy tràn khỏi toolbar ở 375px. Nhãn đủ chữ vẫn nằm ở `aria-label`.
 - Bấm một màn, hay nút "Tiếp tục", "Quay lại" trong page, thì sang page đó với mọi giá trị đang xem trên URL. Ở khung
   mobile / tablet, trang cha chuyển theo, để dãy màn luôn tô đúng màn đang xem.
+- Chữ người xem gõ nằm ở `$store.design.form`. Shell lưu nó vào `sessionStorage`, không lên URL: link chép không mang
+  theo mật khẩu mẫu.
 - Nút về mặc định xoá cả chữ đã gõ ở các màn, để đi lại luồng từ đầu.
 
 ## Nhãn tiến độ và tự tải lại: biết page đang tới đâu
 
-- **Nhãn tiến độ luôn có**, ở cột trái của toolbar, đối xứng với view-controller bên phải: "● Đang dựng 3/6",
-  "● Đang sửa 1/3" (chấm và chữ màu accent) hay "✓ Xong · 07/10" (chữ nhạt, ngày sửa cuối trong `pages.js`). Số đếm
-  bước của vòng đang mở, không đếm cả danh sách.
-- Bấm nhãn mở danh sách bước dựng, nhóm theo vòng ("Dựng", "Góp ý vòng 2"): ✓ xong, ● bước đang làm, ○ còn lại. Esc hay
+- **Nhãn tiến độ luôn có**, ở cột trái của toolbar, đối xứng với view-controller bên phải: "● Đang chuẩn bị",
+  "● Đang dựng 3/6", "● Đang sửa 1/3" (chấm và chữ màu accent) hay "✓ Xong · 07/10" (chữ nhạt, ngày sửa cuối trong
+  `pages.js`). Số đếm bước của vòng đang mở, không đếm cả danh sách.
+- **Nhãn chưa xong phải trông đang chạy.** Chấm có vòng lan ra rồi tan. Sau số bước là việc agent đang làm, chữ nhạt,
+  cắt ở 22 ký tự; việc mới thì trượt lên. Đáy nhãn là thanh tiến độ: phần đã xong tô đặc, một vệt sáng chạy trên phần
+  còn lại. Nhãn chỉ vẽ lại khi nội dung đổi, để chuyển động không giật về đầu mỗi lần shell đọc tiến độ. Người xem tắt
+  chuyển động thì nhãn đứng yên. "✓ Xong" không có chuyển động.
+- Bấm nhãn mở danh sách bước dựng, nhóm theo vòng ("Chuẩn bị", "Dựng", "Góp ý vòng 2"): ✓ xong, ● bước đang làm, ○ còn
+  lại; dưới bước ● là một dòng việc con thụt vào. Esc hay
   bấm ngoài thì đóng. Page không có danh sách bước là page đã xong, danh sách ghi một dòng nói vậy.
+- Shell đọc lại `NN-slug.progress.js` mỗi 2 giây. `rev` đổi nghĩa là có bước mới được đánh dấu xong.
 - **Không có nút tải lại.** Có bước mới được đánh dấu xong thì page tự tải lại: người xem để page mở là thấy page lớn
   dần. Giá trị đang vặn nằm trên URL nên còn nguyên; vị trí cuộn cũng giữ, ở cả trang cha lẫn khung mobile / tablet.
 - **Không tải lại khi người xem đang gõ.** Con trỏ đang ở ô gõ chữ (kể cả trong khung mobile / tablet) thì đợi rời ô
   mới tải. Ô chọn, thanh kéo không tính: chúng giữ con trỏ sau khi chọn, tính vào thì page đợi mãi.
-- Màn hẹp (≤ 720px) nhãn chỉ giữ dấu và số bước, bỏ chữ và ngày, để toolbar vẫn vừa một dòng.
+- Màn hẹp (≤ 720px) nhãn chỉ giữ dấu, số bước và thanh tiến độ, bỏ chữ, việc con và ngày, để toolbar vẫn vừa một dòng.
 
 ## data-panel và config-panel: thấy ngay, khó nhập sai
 
@@ -68,3 +76,24 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 - Nhãn ngắn, một dòng; ô rộng hết panel, nhãn trên ô dưới.
 - **Giải thích khi nhãn chưa đủ nói.** Ô có `help` thì có icon ⓘ cạnh nhãn; đưa chuột, Tab tới hay chạm vào thì hiện
   lời giải thích, khung nằm trong màn hình. Nhãn đã rõ thì không có icon: icon ở mọi ô thành nhiễu.
+
+## Lệnh khi sửa shell
+
+```bash
+node $SKILL/scripts/new-design.mjs shell [--root .design]   # chép shell mới nhất vào .design/_shell/; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
+node $SKILL/scripts/test-shell.mjs [--pw <thư mục có playwright>] [--out <thư mục ảnh>]
+node $SKILL/scripts/test-progress.mjs   # sau khi sửa lệnh progress của new-design.mjs
+```
+
+`test-shell.mjs` tự dựng một `.design/` mẫu trong thư mục tạm, kiểm toolbar và panel ở 1600 / 1280 / 700 / 375px, sáng
+và tối, trong vài giây. Sửa shell thì không cần chạy `check.mjs`: lệnh đó kiểm page.
+
+## Bẫy khi sửa shell
+
+| Bẫy | Hậu quả | Cách tránh |
+| --- | ------- | ---------- |
+| Token để trong file `.css` | Tailwind bản trình duyệt không đọc được qua `file://` | token trong `tokens.js` |
+| Rule ngoài `@layer` đặt `position` | đè `sticky` / `absolute` của Tailwind | rule của shell trong `@layer base` |
+| `box-sizing: border-box` cho iframe | khung 375 còn 373, media query lệch | shell đặt `content-box` cho iframe |
+| Design system có khoảng cách `sm`, `md`… | Tailwind đọc `max-w-sm` thành 12px, modal còn một chữ mỗi dòng | `tokens.mjs` khai sẵn `--max-width-<k>`; sinh lại `tokens.js` cho thư mục design cũ |
+| Khung nổi của page `z-40`, `z-50` | toolbar ở `z-index: 1000` che tiêu đề và nút đóng của panel trượt từ mép trên | page đặt khung nổi `z-[1100]`; `check.mjs` bắt lỗi này |

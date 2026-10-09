@@ -6,7 +6,7 @@
 //
 // Mỗi ca in ✓ / ✗ kèm dòng mong đợi thiếu hay dòng cấm có mặt; log đủ của check.mjs nằm ở thư mục log.
 //
-// spec: F1.3 F1.13 F5.1 F5.4 F5.6 F5.7 F5.8
+// spec: F1.3 F1.13 F3.4 F3.9 F5.1 F5.2 F5.4 F5.6 F5.7 F5.8
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -26,17 +26,19 @@ const out = resolve(flag("out") ?? join(work, "logs"));
 mkdirSync(out, { recursive: true });
 const run = (...params) => execFileSync(process.execPath, [join(here, "new-design.mjs"), ...params], { cwd: work, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 
-// Page fixture là page đã dựng: đánh dấu xong mọi bước dựng trừ bước kiểm đầy đủ, như lúc agent chạy kiểm đầy đủ.
-const builtUpTo = (file, last = 5) => {
+// Page fixture là page đã dựng: đánh dấu xong bước chuẩn bị và mọi bước dựng trừ bước kiểm đầy đủ, như lúc agent chạy
+// kiểm đầy đủ. last = 0: chỉ còn bước chuẩn bị chưa xong.
+const builtUpTo = (file, last = 5, prepared = true) => {
+  if (prepared) run("progress", dirname(file), basename(file), "--prepared");
   for (let step = 1; step <= last; step += 1) run("progress", dirname(file), basename(file), "--done", String(step));
 };
 
 // Một thư mục design một page: page trống của new-design.mjs bị thay bằng fixture.
-function singlePage(slug, fixture) {
+function singlePage(slug, fixture, prepared = true) {
   const dir = run("init", slug, "--root", root);
   const file = run("page", dir, slug, "--title", slug);
   copyFileSync(join(here, "fixtures/check", fixture), file);
-  builtUpTo(file);
+  builtUpTo(file, prepared ? 5 : 0, prepared);
   return file;
 }
 
@@ -46,8 +48,8 @@ let twoPages;
 function twoPageFolder() {
   if (twoPages) return twoPages;
   const dir = run("init", "hai-page", "--root", root);
-  const a = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--question", "Còn bao xa tới mục tiêu?");
-  const b = run("page", dir, "b", "--title", "Từng ngày", "--option", "B · Từng ngày", "--question", "Hôm nay bán được bao nhiêu?");
+  const a = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--layout", "Trên cùng là thanh tiến độ tới mục tiêu tháng.");
+  const b = run("page", dir, "b", "--title", "Từng ngày", "--option", "B · Từng ngày", "--layout", "Trên cùng là số hôm nay, dưới là biểu đồ từng ngày.");
   copyFileSync(join(here, "fixtures/check/hai-page-brief.md"), join(dir, "brief.md"));
   const page = readFileSync(join(here, "fixtures/check/hai-page-a.html"), "utf8");
   writeFileSync(a, page);
@@ -84,7 +86,7 @@ function flowFolder(broken = false) {
 // Thư mục phương án ba page A B C: quá hai phương án.
 function threeOptions() {
   const dir = run("init", "ba-phuong-an", "--root", root);
-  for (const letter of ["A", "B", "C"]) run("page", dir, letter.toLowerCase(), "--title", letter, "--option", `${letter} · ${letter}`, "--question", `Câu ${letter}?`);
+  for (const letter of ["A", "B", "C"]) run("page", dir, letter.toLowerCase(), "--title", letter, "--option", `${letter} · ${letter}`, "--layout", `Bố cục ${letter}.`);
   return dir;
 }
 
@@ -94,8 +96,8 @@ let building;
 function buildingFolder() {
   if (building) return building;
   const dir = run("init", "dang-dung", "--root", root);
-  const a = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--question", "Còn bao xa tới mục tiêu?");
-  const b = run("page", dir, "b", "--title", "Từng ngày", "--option", "B · Từng ngày", "--question", "Hôm nay bán được bao nhiêu?");
+  const a = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--layout", "Trên cùng là thanh tiến độ tới mục tiêu tháng.");
+  const b = run("page", dir, "b", "--title", "Từng ngày", "--option", "B · Từng ngày", "--layout", "Trên cùng là số hôm nay, dưới là biểu đồ từng ngày.");
   copyFileSync(join(here, "fixtures/check/hai-page-brief.md"), join(dir, "brief.md"));
   copyFileSync(join(here, "fixtures/check/buoc-1.html"), a);
   copyFileSync(join(here, "fixtures/check/hai-page-a.html"), b);
@@ -103,6 +105,23 @@ function buildingFolder() {
   builtUpTo(b);
   building = { dir, a, b };
   return building;
+}
+
+// Thư mục một page có bảng "Luật UI theo design system" ghi các dòng rows. shadow: khối 1 thành card có bóng, để luật
+// UI6 có chỗ phạm khi không nhường.
+const yieldFolders = new Map();
+function yieldFolder(slug, rows, shadow = false) {
+  if (yieldFolders.has(slug)) return yieldFolders.get(slug);
+  const dir = run("init", slug, "--root", root);
+  const file = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--layout", "Trên cùng là thanh tiến độ tới mục tiêu tháng.");
+  const table = ["| Luật | Design system nói | Dẫn chứng | Giữ luật UX bằng |", "| --- | --- | --- | --- |", ...rows.map((cells) => `| ${cells.join(" | ")} |`)].join("\n");
+  const brief = readFileSync(join(here, "fixtures/check/hai-page-brief.md"), "utf8").replace(/(### Luật UI theo design system\n\n)Không có\./, `$1${table}`);
+  writeFileSync(join(dir, "brief.md"), brief.replace(/\| `02-b\.html`[^\n]*\n/, ""));
+  const page = readFileSync(join(here, "fixtures/check/hai-page-a.html"), "utf8");
+  writeFileSync(file, shadow ? page.replace('data-block="1" class="mt-lg grid gap-sm"', 'data-block="1" class="mt-lg grid gap-sm rounded-md border border-hairline p-md shadow-md"') : page);
+  builtUpTo(file);
+  yieldFolders.set(slug, dir);
+  return dir;
 }
 
 const cases = [
@@ -183,12 +202,49 @@ const cases = [
     forbid: [/còn bước chưa xong/],
   },
   {
+    id: "C14",
+    what: "bước chuẩn bị chưa xong: kiểm đầy đủ báo còn bước chưa xong, kể bước chuẩn bị",
+    target: () => singlePage("chua-chuan-bi", "xshow-style-ok.html", false),
+    status: 1,
+    expect: [/chua-chuan-bi\.progress\.js\]: còn bước chưa xong: Viết brief chung · Khung các khối/],
+  },
+  {
     id: "C13",
     what: "--quick đưa thư mục: exit 2 kèm câu hướng dẫn",
     target: () => buildingFolder().dir,
     args: ["--quick"],
     status: 2,
     expect: [/--quick kiểm đúng một page/],
+  },
+  {
+    id: "C15",
+    what: "bảng Luật UI theo design system ghi UI6, UI11 đủ cột Giữ luật UX bằng: tắt kiểm UI6, không lỗi bảng",
+    target: () => yieldFolder("nhuong-du", [["UI6", "card có bóng", "DESIGN.md: cards use shadow-md", "UX4: modal có lớp phủ tối"], ["UI11", "component viết tiền kiểu khác", "src/Money.tsx", "UX4: một khối chỉ một cách viết"]], true),
+    forbid: [/\[UI6\]/, /mã cũ|không nhường được|chưa ghi cách giữ|không phải một luật|thiếu "Design system nói"/],
+  },
+  {
+    id: "C16",
+    what: "bảng ghi mã cũ G6: báo đổi thành UI6",
+    target: () => yieldFolder("nhuong-sai", [["G6", "card có bóng", "DESIGN.md", "UX4: lớp phủ"], ["UX4", "ba nút chính", "DESIGN.md", ""], ["UI2", "hai họ chữ", "DESIGN.md", ""]]),
+    expect: [/G6 là mã cũ, đổi thành UI6/],
+  },
+  {
+    id: "C17",
+    what: "bảng ghi luật UX4: báo luật UX không nhường được",
+    target: () => yieldFolder("nhuong-sai", []),
+    expect: [/UX4 là luật UX, không nhường được/],
+  },
+  {
+    id: "C18",
+    what: "bảng ghi UI6 mà cột Giữ luật UX bằng trống: báo lỗi bảng, UI6 vẫn kiểm",
+    target: () => yieldFolder("nhuong-thieu", [["UI6", "card có bóng", "DESIGN.md: cards use shadow-md", ""]], true),
+    expect: [/luật UI6 nhường mà chưa ghi cách giữ UX4/, /\[UI6\]/],
+  },
+  {
+    id: "C19",
+    what: "bảng ghi UI2 (Phục vụ —) mà cột Giữ luật UX bằng trống: không lỗi bảng",
+    target: () => yieldFolder("nhuong-sai", []),
+    forbid: [/UI2[^\n]*(chưa ghi cách giữ|thiếu|không phải)/],
   },
 ];
 

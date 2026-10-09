@@ -1,29 +1,31 @@
 --- SKILL.md
 +++ SKILL.md
-@@ -137,7 +137,6 @@
+@@ -96,7 +96,6 @@
  
  | Chỗ thường dừng hỏi | Có `--auto` |
  | ------------------- | ----------- |
--| Bước 2, hỏi khi đề mơ hồ | vẫn soạn đủ câu hỏi và đáp án như khi hỏi thật, nhưng **không gọi AskUserQuestion**: lấy đáp án khuyên dùng của từng câu, coi như một lượt trả lời |
- | Bước 3, chọn phương án | vẫn in bảng tình huống và từng phương án như khi hỏi thật, rồi **chọn tất cả** phương án qua ba phép thử |
+-| Bước 2, hỏi khi đề mơ hồ hay chưa rõ một màn hay một luồng | vẫn soạn đủ câu hỏi và đáp án như khi hỏi thật, nhưng **không gọi AskUserQuestion**: lấy đáp án khuyên dùng của từng câu, coi như một lượt trả lời |
+ | Bước 2, chọn design của getdesign | vẫn in danh sách và soạn câu chọn design; lấy design khuyên dùng (đáp án đầu) |
  
- Mỗi câu đã tự trả lời là một dòng trong bảng `## Quyết định` của `brief.md`, cột "Ai quyết" ghi `--auto`. Mọi bước khác giữ nguyên.
-@@ -175,28 +174,7 @@
- Ra một dòng `Đọc:`, in ở đầu tin của bước 3 (hay bước 2 nếu phải hỏi):
+ Bước 3 không hỏi người dùng chọn phương án, nên không có gì để `--auto` thay.
+@@ -145,30 +144,7 @@
+ Không có design system:
  
- > Đọc: design system từ `packages/ui/src/tokens.css` (chỉ có tối, sáng sẽ suy ra); bề rộng trang `80rem` theo `AppLayout.tsx`; màn `/insights` ở `routes/insights.tsx`, 6 khối; vẽ theo `StatTile`, `DataTable`, `BarChart` của dự án.
+ > Đọc: không có design system (đề không chỉ định, không có file `@theme` hay `DESIGN.md`); sẽ hỏi chọn một bộ của getdesign; bề rộng trang mặc định `64rem`.
 -
 -## Bước 2 — Đề mơ hồ thì hỏi
 -
--<!-- spec: F1.1 F1.6 F1.7 -->
+-<!-- spec: F1.1 F1.6 F1.7 F1.12 -->
 -
--Đề **mơ hồ** khi một trong hai điều còn chưa trả lời được từ đề hay từ dự án:
+-Đề **mơ hồ** khi một trong ba điều còn chưa trả lời được từ đề hay từ dự án:
 -
 -- **tình huống dùng**: chưa viết được 3 tình huống (ai dùng, lúc nào, để biết hay làm gì);
--- **dữ liệu**: chưa biết có gì (thực thể, trường, đơn vị, khoảng giá trị).
+-- **dữ liệu**: chưa biết có gì (thực thể, trường, đơn vị, khoảng giá trị);
+-- **loại đề**: chưa xếp được là một màn hay một luồng (bảng ở bước 3). Câu hỏi: "Một màn hay cả luồng?", hai đáp án.
+-  Đáp án khuyên dùng là **một màn** khi đề nhắc đúng một màn có sẵn trong dự án, ngược lại là **một luồng**.
 -
--Không mơ hồ thì sang bước 3. Mơ hồ thì hỏi bằng AskUserQuestion:
--
+-Không mơ hồ thì sang bước 3, trừ khi phải chọn design của getdesign (mục dưới). Mơ hồ thì hỏi bằng AskUserQuestion:
+ 
 -| Luật | Giá trị |
 -| ---- | ------- |
 -| số câu mỗi lượt | ≤ 4, một lần gọi |
@@ -31,9 +33,9 @@
 -| không hỏi | thứ đọc được từ dự án; thứ có mặc định hợp lý (một dòng `AI đoán` trong `## Quyết định`, báo lúc giao) |
 -| hỏi gì trước | câu đổi bộ tình huống (ai dùng, để làm gì), rồi câu đổi dữ liệu, cuối cùng mới tới chi tiết |
 -| điểm dừng | viết được 3 tình huống và biết dữ liệu có gì, hoặc hết **3 lượt**; hết lượt mà còn mơ hồ thì đoán, ghi dòng `AI đoán` vào `## Quyết định` |
- 
+-
 -Người dùng chọn "Other" kèm chữ thì lấy chữ đó làm câu trả lời. Câu hỏi nào cũng thành một dòng trong `## Quyết định` của `brief.md`, cột "Ai quyết" ghi `người dùng`.
 -
- ## Bước 3 — Tìm phương án theo tình huống dùng
+ ### Chọn design của getdesign
  
- <!-- spec: F1.2 -->
+ <!-- spec: F3.6 F3.7 -->

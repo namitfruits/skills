@@ -22,16 +22,16 @@ Bề rộng trang: `64rem`, mặc định.
 
 Không có.
 
-### Giới hạn nhường cho design system
+### Luật UI theo design system
 
 Không có.
 
 ## Pages
 
-| File | Phương án | Câu hỏi trung tâm | Đơn vị chính | Hy sinh | Trạng thái |
-| ---- | --------- | ----------------- | ------------ | ------- | ---------- |
-| `01-a.html` | A · Còn bao xa | Còn bao xa tới mục tiêu? | tháng | từng ngày | đã dựng |
-| `02-b.html` | B · Từng ngày | Hôm nay bán được bao nhiêu? | ngày | tổng tháng | đã dựng |
+| File | Phương án | Bố cục | Tiện cho | Trạng thái |
+| ---- | --------- | ------ | -------- | ---------- |
+| `01-a.html` | A · Còn bao xa | Trên cùng là thanh tiến độ tới mục tiêu tháng. Dưới là bảng tuần. | xem còn bao xa tới mục tiêu | đã dựng |
+| `02-b.html` | B · Từng ngày | Trên cùng là số hôm nay. Phần lớn trang là biểu đồ cột từng ngày. | xem hôm nay bán được bao nhiêu | đã dựng |
 
 ## Tình huống
 

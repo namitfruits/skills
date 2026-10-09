@@ -11,8 +11,8 @@ Mỗi file trả lời một câu:
   mental model, lý do của từng quyết định, thứ không thuộc phạm vi. Chỉ tả những gì skill đang làm; không ghi trạng
   thái, không ghi cách nghiệm thu. Agent không cần đọc khi chạy.
 - **SKILL.md** — agent **làm thế nào**, viết cho agent đang chạy skill: từng bước, luật, bảng tra, ví dụ, dấu hiệu làm
-  sai. File phải đủ để chạy, không trỏ sang SPEC để lấy luật — khi chạy agent chỉ load SKILL.md. Code thực thi cùng
-  nó.
+  sai. File phải đủ để chạy, không trỏ sang SPEC để lấy luật — khi chạy agent chỉ load SKILL.md và các file SKILL.md
+  khai ở dòng `spec-files` (mục dưới). Code thực thi cùng nó.
 - **PLANS.md** (optional) — skill **đã đổi gì, sắp đổi gì**: các plan đã viết, mỗi plan ghi các yêu cầu SPEC
   nó chạm tới; và hàng chờ các việc chưa viết plan. Dùng khi skill đổi qua nhiều plan, cần thấy plan nào chạm yêu cầu
   nào và còn việc gì đang chờ.
@@ -62,6 +62,10 @@ Một sub-scope không vừa một mẫu nào thì nó đang gộp nhiều yêu 
 - Mọi mục `##` / `###` của SKILL.md có dòng `<!-- spec: F1.1 F1.2 -->` ngay dưới tiêu đề. Mục cố ý không thực thi
   yêu cầu nào ghi `<!-- spec: — -->`: mục im lặng thì không phân biệt được quên gắn với cố ý.
 - Gắn mã scope (`F2`) là thực thi mọi sub-scope của nó.
+- Nếu một phần luật chỉ một người đọc cần, vd agent con dựng page, thì phần đó được tách ra file riêng trong skill.
+  SKILL.md khai file đó ở dòng `<!-- spec-files: references/build-page.md -->` dưới tiêu đề `#`, và chỉ rõ bước nào
+  agent đọc nó. File được khai theo cùng luật với SKILL.md: mục nào cũng có dòng `spec:`, gắn mã ở đó là có mục thực
+  thi. File không được khai, vd luật UX trong `references/`, thì không tính.
 
 ### PLANS.md
 
@@ -100,7 +104,8 @@ node scripts/spec-check.mjs [skills/<tên>] [--list | --matrix]
 
 Lệnh báo:
 
-- SKILL.md: sub-scope chưa có mục gắn mã, mục chưa có dòng `spec:`, mã gắn mà SPEC không có.
+- SKILL.md và file nó khai: sub-scope chưa có mục gắn mã, mục chưa có dòng `spec:`, mã gắn mà SPEC không có, file khai
+  mà không có.
 - PLANS.md, khi skill có file này: sub-scope chưa có plan `done` hay `approved` nào chạm tới; mã trong bảng mà SPEC không có (trừ dòng `new`
   của việc chưa `done`); việc thiếu **Mục tiêu**; status hay tiêu đề không hợp mục nó nằm; thay đổi lạ; dòng
   **Plan** trỏ file không có.
@@ -169,6 +174,9 @@ mkdir -p .claude && ln -sfn ../skills .claude/skills
 **Chạy thử luôn ở chế độ tự chạy, không dừng hỏi người dùng** (`--auto` với skill có cờ này). Kịch bản chạy thử và
 cách nghiệm thu trong SPEC cũng viết cho chế độ đó: kiểm câu hỏi skill đã soạn và câu trả lời nó tự chọn, không đợi
 người thật trả lời.
+
+Nếu skill có bài mẫu, thì plan nghiệm thu bằng bài nhỏ nhất có đầu vào chạm phần plan đổi. Nếu plan dùng bài khác bài
+mặc định, thì plan ghi lý do. Bài mặc định và bảng chọn bài nằm trong `samples/README.md` của skill.
 
 Kết quả mỗi lần chạy thử để ở `.test/<tên-skill>/NNN-<slug>/`. `.test/` đã được gitignore.
 

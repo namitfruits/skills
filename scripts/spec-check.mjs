@@ -13,6 +13,9 @@
 // Chỗ thực thi gắn mã bằng chữ `spec:` trong comment:
 //   SKILL.md, file .md khác:  <!-- spec: F1.1 F1.2 -->   ngay dưới tiêu đề mục; mục không thực thi yêu cầu nào: <!-- spec: — -->
 //   code:                     // spec: F3.1
+// SKILL.md khai các file agent đọc ở một bước của skill, đường dẫn tính từ thư mục skill:
+//   <!-- spec-files: references/build-page.md references/getdesign.md -->
+// File được khai soát như SKILL.md: mục nào cũng có dòng spec:, được ghi spec: —, gắn ở đó là có mục thực thi.
 // Gắn mã scope (F2) là thực thi mọi sub-scope của nó.
 // PLANS.md cạnh SPEC.md, optional, có hai mục: ## Plan (việc đã viết plan) và ## Plan Queue (chưa viết plan); mỗi việc một mục
 //   ### 005 · Tên việc        (ở Plan Queue: ### PQ-01 · Tên việc)
@@ -22,8 +25,10 @@
 //   | Mã | Thay đổi | Tóm tắt |   thay đổi là new · update · remove · fix
 //
 // SKILL.md theo đúng SPEC:
-//   - sub-scope nào cũng có mục SKILL.md gắn mã; gắn trong code không thay được, vì agent chạy skill chỉ đọc SKILL.md
-//   - mục ## / ### nào của SKILL.md cũng có dòng spec: ngay dưới tiêu đề
+//   - sub-scope nào cũng có mục gắn mã trong SKILL.md hay file nó khai; gắn trong code không thay được, vì agent chạy
+//     skill chỉ đọc SKILL.md và các file đó
+//   - mục ## / ### nào của SKILL.md và file nó khai cũng có dòng spec: ngay dưới tiêu đề
+//   - file khai ở spec-files phải có thật
 //   - mã gắn ở đâu cũng phải có trong SPEC; mã SPEC nhắc ngoài mục Feature requirement cũng vậy
 // PLANS.md khớp SPEC:
 //   - sub-scope nào cũng nằm trong một việc done hay approved
@@ -161,6 +166,19 @@ function readSkillSections(skillPath) {
   return { sections, sectionAt };
 }
 
+// Dòng <!-- spec-files: a.md b.md --> của SKILL.md, ngoài khối code.
+function readSpecFiles(skillPath) {
+  let fence = false;
+  const files = [];
+  readFileSync(skillPath, "utf8").split("\n").forEach((line, index) => {
+    if (/^\s*(```|~~~)/.test(line)) fence = !fence;
+    if (fence) return;
+    const match = line.match(/<!--\s*spec-files:\s*(.*?)\s*-->/);
+    if (match) for (const path of match[1].split(/\s+/).filter(Boolean)) files.push({ path, line: index + 1 });
+  });
+  return files;
+}
+
 // ---------- soát một skill ----------
 
 function checkSkill(dir) {
@@ -179,10 +197,17 @@ function checkSkill(dir) {
     if (!known(id)) errors.push(`SPEC.md:${line} nhắc ${id}, mà mục Feature requirement không có`);
   }
 
-  // Việc 1: mọi mục SKILL.md có dòng spec:, mọi sub-scope có mục SKILL.md gắn.
-  const skill = readSkillSections(skillPath);
-  for (const section of skill.sections) {
-    if (!section.tagged) errors.push(`SKILL.md:${section.line} mục "${section.title}" chưa có dòng spec: ngay dưới tiêu đề`);
+  // Việc 1: mọi mục của SKILL.md và file nó khai có dòng spec:, mọi sub-scope có mục gắn ở một trong các file đó.
+  const docs = new Map([["SKILL.md", readSkillSections(skillPath)]]); // file → mục
+  for (const { path, line } of readSpecFiles(skillPath)) {
+    const file = join(dir, path);
+    if (!existsSync(file)) errors.push(`SKILL.md:${line} khai ${path}, mà file không có`);
+    else docs.set(relative(dir, file), readSkillSections(file));
+  }
+  for (const [where, doc] of docs) {
+    for (const section of doc.sections) {
+      if (!section.tagged) errors.push(`${where}:${section.line} mục "${section.title}" chưa có dòng spec: ngay dưới tiêu đề`);
+    }
   }
 
   const covered = new Map([...spec.subScopes.keys()].map((id) => [id, []])); // id → [{ at, file, section }]
@@ -190,7 +215,7 @@ function checkSkill(dir) {
     if (file === specPath) continue;
     const where = relative(dir, file);
     readFileSync(file, "utf8").split("\n").forEach((line, index) => {
-      if (where !== "SKILL.md" && noneTag.test(line)) errors.push(`${where}:${index + 1} ghi spec: —, mà chỉ mục SKILL.md mới được ghi`);
+      if (!docs.has(where) && noneTag.test(line)) errors.push(`${where}:${index + 1} ghi spec: —, mà chỉ mục SKILL.md hay file nó khai mới được ghi`);
       for (const match of line.matchAll(tagPattern)) {
         for (const id of match[1].split(/[\s,]+/).filter(Boolean)) {
           const at = `${where}:${index + 1}`;
@@ -198,14 +223,15 @@ function checkSkill(dir) {
             errors.push(`${at} gắn ${id}, mà SPEC không có`);
             continue;
           }
-          const section = where === "SKILL.md" ? skill.sectionAt(index + 1)?.title : undefined;
-          for (const sub of expand(id)) covered.get(sub).push({ at, file: where, section });
+          const title = docs.get(where)?.sectionAt(index + 1)?.title;
+          const section = title && (where === "SKILL.md" ? title : `${where} › ${title}`);
+          for (const sub of expand(id)) covered.get(sub).push({ at, file: where, doc: docs.has(where), section });
         }
       }
     });
   }
   for (const [id, places] of covered) {
-    if (places.some((place) => place.file === "SKILL.md")) continue;
+    if (places.some((place) => place.doc)) continue;
     errors.push(`${id} chưa có trong SKILL.md` + (places.length ? ` (chỉ có ở ${places.map((place) => place.at).join(" · ")})` : ""));
   }
 
@@ -255,7 +281,7 @@ function printMatrix(result) {
   console.log("| Mã | Yêu cầu | Mục SKILL.md thực thi | Việc đưa vào |");
   console.log("| --- | --- | --- | --- |");
   for (const [id, text] of result.spec.subScopes) {
-    const sections = [...new Set(result.covered.get(id).filter((place) => place.file === "SKILL.md").map((place) => place.section))];
+    const sections = [...new Set(result.covered.get(id).filter((place) => place.doc).map((place) => place.section))];
     const rows = (result.from.get(id) ?? []).map((item) => (item.status === "done" ? `plan ${item.id}` : `plan ${item.id} (${item.status})`));
     console.log(`| \`${id}\` | ${text} | ${sections.join(" · ") || "—"} | ${rows.join(" · ") || "—"} |`);
   }

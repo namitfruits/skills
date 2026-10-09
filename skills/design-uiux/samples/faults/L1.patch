@@ -1,6 +1,6 @@
 --- SKILL.md
 +++ SKILL.md
-@@ -184,15 +184,10 @@
+@@ -113,15 +113,10 @@
    1. đề chỉ định. Đề ghi lệnh `npx getdesign@latest add <tên>` thì **không chạy lệnh đó**: ghi lại `<tên>`, bước 4
       dùng `init --getdesign <tên>`. Chạy thẳng `getdesign add` thì file nằm ở gốc git repo hay thư mục làm việc, ngoài
       `.design/`;
@@ -8,9 +8,9 @@
 -     Mẫu `*.css` phải có nháy: zsh tự mở `*` trước khi tới `grep`, không khớp file nào thì báo `no matches found` và
 -     `grep` không chạy. Lệnh báo lỗi là chưa tìm được gì, không có nghĩa dự án không có file `@theme`;
    3. `DESIGN.md` ở gốc dự án;
-   4. không có gì thì chạy `node $SKILL/scripts/new-design.mjs designs`, giữ stdout cho mục "Chọn design của
-      getdesign" ở bước 2. Lệnh thoát mã 2 (getdesign hỏng) thì **dừng**: in vào chat dòng lỗi stderr, không dựng page.
-      Không dùng `shell/default-design.md` thay.
+   4. không có gì thì chạy `node $SKILL/scripts/new-design.mjs designs`, giữ stdout cho bước 2. Lệnh thoát mã 2
+      (getdesign hỏng) thì **dừng**: in vào chat dòng lỗi stderr, không dựng page. Không dùng `shell/default-design.md`
+      thay: mọi prototype không có design system sẽ trông như nhau, người dùng không biết có thể chọn.
 -
 -  File CSS có `@theme` thắng `DESIGN.md` khi cả hai cùng có, vì đó là giá trị app đang chạy.
  - **Màn liên quan** (đề cải thiện một màn): tìm route (`grep -rn "<đường dẫn>" --include='*.tsx' .`), đọc file màn và component nó dùng. Ghi lại các khối đang có, chữ, trạng thái, số liệu thật, chỗ đang vướng. Không tự chạy app; người dùng đưa ảnh hay URL đang chạy thì dùng cái đó.

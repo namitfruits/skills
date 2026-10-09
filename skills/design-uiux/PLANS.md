@@ -227,6 +227,92 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F3.8` | new      | page lấy token từ design đã chọn, tải vào thư mục design |
 | `F3.1` | fix      | đề ghi lệnh getdesign thì tải vào thư mục design, không ra `./DESIGN.md` |
 
+### 011 · Page đang dựng đọc là hiểu
+
+- **Plan:** [011-design-uiux-page-dang-dung-de-hieu.md](../../.plan/011-design-uiux-page-dang-dung-de-hieu.md)
+- **Status:** approved
+- **Mục tiêu:** lượt review ngày 2026-10-09 (màn "Lịch hẹn hôm nay", hai phương án) mở link ngay khi có và gặp năm chỗ
+  khó hiểu. Chat nói agent đang viết brief mà page ghi "Đang dựng 0/6". Chấm cạnh nhãn đứng yên. Một bước dựng 2–3 phút
+  chỉ thấy tên bước. Khối chờ kể chuyện thay vì nói page dựng gì. Tên phương án "A · Tìm nhanh để đánh dấu đến" không
+  nói màn nào, tìm cái gì. Tên sửa lại "A · Ô tìm bệnh nhân ở đầu trang" vẫn làm người xem tưởng page chỉ có ô tìm, và
+  dòng "Đơn vị chính · Hy sinh" là chữ so phương án mà người xem không hiểu. Xong plan thì:
+  - Lúc agent chính viết brief, nhãn ghi "Đang chuẩn bị". Lúc page chưa xong, nhãn có vòng lan từ chấm, thanh tiến độ có vệt sáng và việc agent đang làm.
+  - Bấm nhãn thấy việc agent đang làm, một dòng ngay dưới bước dở. Bước xong thì dòng mất.
+  - Khối chờ ghi tên màn, tên phương án, bố cục page và các việc page tiện cho.
+  - Tên phương án là cụm danh từ tả cách cả page được bày.
+  - Nhãn ghi "Đang kiểm lại" tới khi agent chính giao; nhãn "✓ Xong" không có ngày "09/10" đọc nhầm thành số bước.
+
+  Nhãn chuyển động, việc con và khối chờ dạng tiêu đề / phụ đề đã làm trong lượt review, trước khi có plan.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F6.5`  | update   | nhãn có thêm "đang chuẩn bị", "đang kiểm lại" |
+| `F6.8`  | new      | việc con của bước dở hiện dưới bước đó |
+| `F6.9`  | new      | khối chờ ghi rõ page dựng gì |
+| `F1.18` | new      | tên phương án là cụm danh từ |
+| `F6.10` | new      | nhãn xong chỉ sau bước giao |
+| `F6.11` | new      | ngày sửa cuối ở cuối danh sách |
+
+### 012 · Tách luật dựng page thành luật UX và luật UI
+
+- **Plan:** [012-design-uiux-tach-ui-ux-principles.md](../../.plan/012-design-uiux-tach-ui-ux-principles.md)
+
+- **Status:** done
+- **Mục tiêu:** `references/page-principles.md` có hai danh sách, nguyên tắc `N` và giới hạn `G`. File chia hai danh
+  sách theo việc luật có nhường design system hay không, và mở đầu bằng câu "Nguyên tắc > design system > giới hạn".
+  Người đọc vì vậy tưởng design system quyết thứ tự giữa hai danh sách. Thật ra hai danh sách lo hai việc riêng: `N`
+  lo người dùng hiểu đúng và làm được (UX), còn `G` lo page gọn và đồng bộ (UI). Cách chia hiện tại có ba chỗ hở:
+  - `N6` (cùng vai thì cùng class) và `N12` (nhịp chữ trong khối) là luật UI nhưng nằm trong nhóm `N`.
+  - `N11` (không dùng số âm) không phải UX cũng không phải UI, mà là luật giữ code page dễ sửa.
+  - Khi design system thay một `G`, agent không biết `G` đó phục vụ luật UX nào. Vì vậy agent không giữ được luật UX
+    đó bằng cách khác. Ví dụ: design system đổ bóng cho mọi card, thì `G6` nhường và bóng mất nghĩa "lớp nổi".
+
+  Xong việc thì có hai file:
+  - `references/ux-principles.md` chứa luật UX. Không design system nào đè được các luật này.
+  - `references/ui-principles.md` chứa luật UI. Design system quyết các luật này, skill chỉ lấp chỗ design system không
+    nói tới. Mỗi luật UI ghi nó phục vụ luật UX nào.
+
+  Thay cho thứ tự ba bậc, chỉ còn một luật: lựa chọn UI nào làm hỏng một luật UX thì luật UX thắng. Việc lấy từ `PQ-06`.
+
+  Các luật code lấy từ Web Interface Guidelines của Vercel (focus nhìn thấy được, label cho ô, `transition-all`) không
+  thuộc việc này.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F5.2` | update   | máy kiểm đo luật trong hai file `ux-principles.md`, `ui-principles.md` |
+| `F3.4` | update   | design system làm khác một luật UI, không còn "giới hạn `G`" |
+| `F3.9` | new      | nhường luật UI có phục vụ luật UX thì `brief.md` ghi cách giữ luật UX đó |
+
+### 013 · Bài mẫu mặc định để nghiệm thu plan
+
+- **Plan:** [013-design-uiux-bai-mau-mac-dinh.md](../../.plan/013-design-uiux-bai-mau-mac-dinh.md)
+- **Status:** done
+- **Mục tiêu:** mỗi plan nghiệm thu bằng một lượt chạy skill thật, thường trên bài 01: hai page, khoảng 34 phút (lượt
+  `059`). Lượt một page chỉ mất khoảng 9 phút (lượt `063`). Xong thì bài 04 là bài mặc định: một màn, đề xin một
+  phương án, không có design system nên skill in danh sách design của getdesign rồi tự chọn. Bài 02 nhận đề ghi sẵn
+  `linear.app`, để đường "đề chỉ định design" vẫn có bài kiểm. `samples/README.md` có bảng: plan chạm phần nào thì
+  dùng bài nào. Skill thêm luật cho đề một màn xin một phương án.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F1.19` | new      | đề một màn xin một phương án thì dựng một page |
+
+### 014 · Rút gọn SKILL.md, tách luật dựng page ra file riêng
+
+- **Plan:** [014-design-uiux-rut-gon-skill-md.md](../../.plan/014-design-uiux-rut-gon-skill-md.md)
+- **Status:** approved
+- **Mục tiêu:** SKILL.md dài 800 dòng, khoảng 33k token, vượt giới hạn một lượt đọc file: lượt đầu dừng ở dòng 517.
+  Agent con chỉ cần mục "Dựng một page theo bước" và "Bước 5" (dòng 558–720), đúng phần bị cắt, và phải đọc qua cả
+  phần hỏi và chọn phương án. Vài luật chỉ nằm trong lời giao, nên agent chính tự dựng một page không thấy chúng.
+  Khoảng một phần tư file là chữ cho người sửa skill hay nhắc lại luật đã có. Xong thì luật dựng page nằm ở
+  `references/build-page.md`, agent dựng page nào cũng đọc trọn file đó trong một lượt; lời giao chỉ còn chỗ đọc và
+  phần riêng của page; SKILL.md còn khoảng 400–450 dòng; `spec-check` soát cả các file SKILL.md khai. Skill chạy ra
+  kết quả như trước.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F1.3` | fix      | agent chính tự dựng một page cũng theo luật cặp màu, số khối như agent con |
+
 ## Plan Queue
 
 ### PQ-03 · Sửa 7 chỗ SKILL.md mơ hồ còn lại, tìm được khi nghiệm thu 005

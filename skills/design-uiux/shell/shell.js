@@ -5,9 +5,9 @@
 // Thư mục luồng (pages.js có `screen`): option-switcher thành dãy màn; page gọi $store.design.next() · prev() để sang
 // màn kề, chữ người xem gõ nằm ở $store.design.form, lưu trong sessionStorage của thư mục design.
 // Tiến độ dựng: nhãn trạng thái ở cột trái toolbar đọc danh sách bước dựng `<file>.progress.js`; có bước mới xong thì
-// tự tải lại, giữ vị trí cuộn, đợi người xem gõ xong.
+// tự tải lại, giữ vị trí cuộn, đợi người xem gõ xong. Việc con agent đang làm hiện thành một dòng dưới bước dở.
 //
-// spec: F2 F4.2 F6.3 F6.4 F6.5
+// spec: F2 F4.2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11
 (() => {
   const design = window.DESIGN ?? {};
   const theme = window.DESIGN_THEME ?? { base: "light", derived: null, fonts: [] };
@@ -18,15 +18,17 @@
   const text = {
     vi: { variables: "Dữ liệu", tweaks: "Cấu hình", presets: "Bộ dữ liệu…", reset: "Về mặc định", light: "Sáng", dark: "Tối",
       derived: "suy ra", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Số khối",
-      options: "Phương án", screens: "Các màn", unit: "Đơn vị chính", tradeoff: "hy sinh", updated: "sửa",
-      status: "Tiến độ dựng page", building: "Đang dựng", revising: "Đang sửa", done: "Xong",
-      roundBuild: "Dựng", roundFeedback: "Góp ý vòng", noBuild: "Page dựng trước khi có danh sách bước",
+      options: "Phương án", screens: "Các màn", goodFor: "Tiện cho", updated: "sửa",
+      status: "Tiến độ dựng page", preparing: "Đang chuẩn bị", building: "Đang dựng", revising: "Đang sửa", checking: "Đang kiểm lại", done: "Xong",
+      roundPrep: "Chuẩn bị", roundBuild: "Dựng", roundFeedback: "Góp ý vòng", roundDeliver: "Giao", noBuild: "Page dựng trước khi có danh sách bước",
+      lastEdited: (day, month) => `Sửa lần cuối ${day} thg ${month}`,
       presetsHelp: "Một bộ giá trị dựng sẵn cho ca hay gặp hay ca biên. Chọn là đổi cả bộ; ô nào đổi sẽ nháy lên." },
     en: { variables: "Data", tweaks: "Config", presets: "Presets…", reset: "Reset", light: "Light", dark: "Dark",
       derived: "derived", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Section numbers",
-      options: "Options", screens: "Screens", unit: "Main unit", tradeoff: "trade-off", updated: "edited",
-      status: "Page build progress", building: "Building", revising: "Revising", done: "Done",
-      roundBuild: "Build", roundFeedback: "Feedback round", noBuild: "Built before step lists existed",
+      options: "Options", screens: "Screens", goodFor: "Good for", updated: "edited",
+      status: "Page build progress", preparing: "Preparing", building: "Building", revising: "Revising", checking: "Checking", done: "Done",
+      roundPrep: "Prepare", roundBuild: "Build", roundFeedback: "Feedback round", roundDeliver: "Deliver", noBuild: "Built before step lists existed",
+      lastEdited: (day, month) => `Last edited ${new Date(2000, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
       presetsHelp: "A ready-made set of values for a common or edge case. Picking one changes them all; changed fields flash." },
   }[lang];
 
@@ -179,7 +181,7 @@
   }
 
   // option-switcher: mỗi page một nút chữ (A, B, C lấy từ `option` = "A · tên"). Đưa chuột, Tab tới, hay chạm giữ một nút thì hiện
-  // khung mô tả: tên, câu hỏi trung tâm, đơn vị chính, cái hy sinh, lần sửa cuối. Thư mục một page thì không có nút.
+  // khung mô tả: tên, bố cục, các việc page tiện cho (cùng chữ với khối chờ của page), lần sửa cuối. Thư mục một page thì không có nút.
   function pagesMenuHtml() {
     const current = currentFile;
     if (pages.length < 2) return "";
@@ -188,9 +190,9 @@
       .map((page, index) => {
         const letter = page.option?.match(/^\s*([A-Za-z])\s*·/)?.[1]?.toUpperCase() ?? String(index + 1);
         const file = escapeHtml(page.file).replace(/'/g, "");
-        const facts = [page.unit && `${text.unit}: ${page.unit}`, page.tradeoff && `${text.tradeoff}: ${page.tradeoff}`].filter(Boolean).join(" · ");
+        const goodFor = page.goodFor ? `${text.goodFor}: ${page.goodFor}` : "";
         const edited = [page.updated && `${text.updated} ${page.updated}`, page.note].filter(Boolean).join(" · ");
-        const tip = `<span class="ds-option-tip" id="ds-tip-${index}" role="tooltip"><b>${escapeHtml(page.option ?? page.title)}</b>${page.question ? `<span>${escapeHtml(page.question)}</span>` : ""}${facts ? `<small>${escapeHtml(facts)}</small>` : ""}${edited ? `<small>${escapeHtml(edited)}</small>` : ""}</span>`;
+        const tip = `<span class="ds-option-tip" id="ds-tip-${index}" role="tooltip"><b>${escapeHtml(page.option ?? page.title)}</b>${page.layout ? `<span>${escapeHtml(page.layout)}</span>` : ""}${goodFor ? `<small>${escapeHtml(goodFor)}</small>` : ""}${edited ? `<small>${escapeHtml(edited)}</small>` : ""}</span>`;
         // Chạm giữ 450ms thì mở khung mô tả thay vì chuyển page; chạm nhanh vẫn là bấm.
         return `<span class="ds-option-wrap" :data-tip="tip === ${index} ? '' : null">
           <a class="ds-option" data-ds-option href="${file}" :href="'${file}?' + new URLSearchParams({ viewport: $store.design.viewport, theme: $store.design.theme })" aria-describedby="ds-tip-${index}" ${page.file === current ? 'aria-current="page"' : ""}
@@ -225,7 +227,8 @@
   // Tiến độ dựng. Danh sách bước dựng của page nằm ở `<file>.progress.js` cạnh page, chỉ agent dựng page đó ghi (qua
   // new-design.mjs progress: ghi file tạm rồi rename). Trang cha đọc lại file mỗi 2 giây bằng một thẻ <script> mới: trên
   // file:// đây là cách duy nhất đọc lại một file mà không tải page. `rev` đổi là có bước mới được đánh dấu xong: tải
-  // lại, trừ khi người xem đang gõ thì đợi rời ô. Lần đọc đầu mà thẻ script báo lỗi nạp là page không có danh sách
+  // lại, trừ khi người xem đang gõ thì đợi rời ô. `rev` giữ nguyên thì chỉ vẽ lại nhãn: việc con (`doing`) đổi mà không
+  // tăng `rev`. Lần đọc đầu mà thẻ script báo lỗi nạp là page không có danh sách
   // (dựng trước khi có danh sách bước): coi như xong, thôi đọc. Nạp được mà thiếu dữ liệu là đọc trúng lúc file đang
   // ghi: bỏ lượt đó, đọc lại lượt sau.
   const progressFile = `${currentFile.replace(/\.html?$/, "")}.progress.js`;
@@ -274,18 +277,20 @@
     document.addEventListener("focusout", reloadIfDoneTyping);
   }
 
-  // Nhãn trạng thái: còn bước vòng 1 chưa xong là đang dựng, còn bước vòng góp ý (round ≥ 2) chưa xong là đang sửa,
-  // không còn gì (hay page không có danh sách) là xong kèm ngày sửa cuối trong pages.js. Bấm mở danh sách bước theo vòng.
+  // Nhãn trạng thái: bước chuẩn bị (agent chính viết brief) chưa xong là đang chuẩn bị, còn bước vòng 1 chưa xong là đang dựng, còn bước vòng góp ý (round ≥ 2) chưa xong là đang sửa,
+  // hết bước dựng mà bước giao (agent chính kiểm lại cả thư mục rồi giao) chưa xong là đang kiểm lại, không còn gì (hay
+  // page không có danh sách) là xong. Nhãn xong không có con số: ngày dạng "09/10" đọc thành 9 trên 10 bước, nên ngày sửa
+  // cuối trong pages.js nằm ở dòng cuối danh sách. Bấm mở danh sách bước theo vòng; bước dở có `doing` thì thêm một dòng
+  // việc con thụt vào ngay dưới nó.
   function progressStatus() {
     const steps = progress ? progress.build.map((item) => ({ ...item, round: Number(item.round) || 1 })) : null;
+    if (progress?.prep && !progress.prep.done) return { state: "preparing", label: text.preparing, count: "", share: 0, doing: progress.prep.task, steps, open: null };
     const open = steps?.find((item) => !item.done);
-    if (!open) {
-      const updated = pages.find((page) => page.file === currentFile)?.updated;
-      const [, month, day] = String(updated ?? "").match(/^\d{4}-(\d{2})-(\d{2})/) ?? [];
-      return { state: "done", label: text.done, count: day ? `· ${day}/${month}` : "", steps, open: null };
-    }
+    if (!open && progress?.deliver && !progress.deliver.done) return { state: "checking", label: text.checking, count: "", share: 1, doing: progress.deliver.task, steps, open: null };
+    if (!open) return { state: "done", label: text.done, count: "", steps, open: null };
     const round = steps.filter((item) => item.round === open.round);
-    return { state: open.round === 1 ? "building" : "revising", label: open.round === 1 ? text.building : text.revising, count: `${round.filter((item) => item.done).length}/${round.length}`, steps, open };
+    const done = round.filter((item) => item.done).length;
+    return { state: open.round === 1 ? "building" : "revising", label: open.round === 1 ? text.building : text.revising, count: `${done}/${round.length}`, share: done / round.length, steps, open };
   }
   const statusHtml = () => `<div class="ds-status-wrap" data-ds-status-wrap hidden x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
       <button type="button" class="ds-status" data-ds-status title="${text.status}" :aria-expanded="String(open)" aria-controls="ds-status-list" @click="open = !open"></button>
@@ -297,14 +302,35 @@
     const status = progressStatus();
     const rounds = [...new Set((status.steps ?? []).map((item) => item.round))];
     const button = wrap.querySelector("[data-ds-status]");
-    button.dataset.state = status.state;
-    button.innerHTML = `${status.state === "done" ? icons.check : '<i class="ds-status-dot"></i>'}<span class="ds-status-label">${status.label}</span>${status.count ? ` <span class="ds-status-count">${status.count}</span>` : ""}`;
-    wrap.querySelector("[data-ds-status-list]").innerHTML = status.steps
-      ? rounds.map((round) => `<li class="ds-status-round">${round === 1 ? text.roundBuild : `${text.roundFeedback} ${round}`}</li>${status.steps
+    // Nhãn lúc page chưa xong: chấm có vòng lan, việc con ngay trên nhãn, thanh tiến độ ở đáy (phần đã xong tô đặc, vệt
+    // sáng chạy trên phần còn lại). Shell đọc tiến độ mỗi 2 giây: chỉ vẽ lại nhãn khi nội dung đổi, để chuyển động không
+    // bị giật về đầu; việc con mới thì trượt lên.
+    const working = status.state !== "done";
+    const doing = status.doing ?? status.open?.doing ?? "";
+    const html = `${working ? '<i class="ds-status-dot"></i>' : icons.check}<span class="ds-status-label">${status.label}</span>${status.count ? ` <span class="ds-status-count">${status.count}</span>` : ""}${doing ? `<span class="ds-status-doing" data-ds-status-doing>· ${escapeHtml(doing)}</span>` : ""}${working ? `<span class="ds-status-track" style="--ds-done:${(status.share * 100).toFixed(1)}%" aria-hidden="true"><span></span></span>` : ""}`;
+    if (button.dataset.html !== html) {
+      const freshDoing = Boolean(doing) && button.dataset.doing !== undefined && button.dataset.doing !== doing;
+      button.dataset.state = status.state;
+      button.dataset.html = html;
+      button.dataset.doing = doing;
+      button.innerHTML = html;
+      if (doing) button.title = `${text.status}: ${doing}`;
+      else button.title = text.status;
+      if (freshDoing) button.querySelector("[data-ds-status-doing]").dataset.fresh = "";
+    }
+    const prep = progress?.prep;
+    const prepHtml = prep ? `<li class="ds-status-round">${text.roundPrep}</li><li data-step="${prep.done ? "done" : "current"}"><span aria-hidden="true">${prep.done ? "✓" : "●"}</span>${escapeHtml(prep.task)}</li>` : "";
+    const deliver = progress?.deliver;
+    const deliverStep = deliver?.done ? "done" : status.state === "checking" ? "current" : "todo";
+    const deliverHtml = deliver ? `<li class="ds-status-round">${text.roundDeliver}</li><li data-step="${deliverStep}"><span aria-hidden="true">${{ done: "✓", current: "●", todo: "○" }[deliverStep]}</span>${escapeHtml(deliver.task)}</li>` : "";
+    const [, month, day] = String(pages.find((page) => page.file === currentFile)?.updated ?? "").match(/^\d{4}-(\d{2})-(\d{2})/) ?? [];
+    const editedHtml = status.state === "done" && day ? `<li class="ds-status-edited">${text.lastEdited(Number(day), Number(month))}</li>` : "";
+    wrap.querySelector("[data-ds-status-list]").innerHTML = (status.steps
+      ? prepHtml + rounds.map((round) => `<li class="ds-status-round">${round === 1 ? text.roundBuild : `${text.roundFeedback} ${round}`}</li>${status.steps
           .filter((item) => item.round === round)
-          .map((item) => `<li data-step="${item.done ? "done" : item === status.open ? "current" : "todo"}"><span aria-hidden="true">${item.done ? "✓" : item === status.open ? "●" : "○"}</span>${escapeHtml(item.task)}</li>`)
-          .join("")}`).join("")
-      : `<li>${text.noBuild}</li>`;
+          .map((item) => `<li data-step="${item.done ? "done" : item === status.open ? "current" : "todo"}"><span aria-hidden="true">${item.done ? "✓" : item === status.open ? "●" : "○"}</span>${escapeHtml(item.task)}</li>${item === status.open && item.doing ? `<li data-step="doing">${escapeHtml(item.doing)}</li>` : ""}`)
+          .join("")}`).join("") + deliverHtml
+      : `<li>${text.noBuild}</li>`) + editedHtml;
     wrap.hidden = false;
     alignBar(Alpine.store("design").viewport);
   }

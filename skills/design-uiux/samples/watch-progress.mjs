@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Theo dõi tiến độ dựng trong lúc chạy một bài mẫu: đọc mọi <page>.progress.js dưới một thư mục mỗi 2 giây, như shell
-// của page đang mở. Mỗi lần thấy một page mới hay rev của nó đổi thì ghi một dòng vào file log:
+// của page đang mở. Mỗi lần thấy một page mới, rev của nó đổi, bước chuẩn bị xong, việc con đổi hay page được giao thì ghi một dòng vào
+// file log:
 //
-//   <giờ hh:mm:ss.mmm>  <thư mục design>/<file page>  rev <n>  <tên bước vừa xong | "thấy lần đầu">
+//   <giờ hh:mm:ss.mmm>  <thư mục design>/<file page>  rev <n>  <tên bước vừa xong | "thấy lần đầu" | "chuẩn bị xong" | "việc con: <việc>" | "đã giao">
 //
 // Người chạy bật lệnh này (chạy nền) trước khi gọi skill, tắt sau tin giao cuối. Người chấm đọc log để biết page có
 // dựng theo bước không, các page có dựng cùng lúc không, link có trước bước đầu tiên không.
@@ -11,7 +12,7 @@
 //
 // Lệnh tự thoát khi không có gì đổi trong --idle giây.
 //
-// spec: F6.2 F6.7
+// spec: F6.2 F6.5 F6.7 F6.8
 
 import { appendFileSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -54,13 +55,27 @@ function tick() {
     const data = read(path);
     if (!data || typeof data.rev !== "number" || !Array.isArray(data.build)) continue;
     const before = seen.get(path);
-    if (before && before.rev === data.rev) continue;
+    // --prepared, --doing và --delivered ghi mà không tăng rev: so cả bước chuẩn bị, việc con của bước dở và bước giao.
+    const doing = data.build.find((step) => !step.done)?.doing ?? "";
+    const prepared = !data.prep || data.prep.done;
+    const delivered = !data.deliver || data.deliver.done;
+    if (before && before.rev === data.rev && before.prepared === prepared && before.doing === doing && before.delivered === delivered) continue;
     // Bước vừa xong: bước có done = true mà lần đọc trước chưa xong (nhiều bước xong trong 2 giây thì ghi bước cuối).
     const fresh = data.build.filter((step, index) => step.done && !before?.build[index]?.done);
-    const what = !before ? "thấy lần đầu" : fresh.length ? fresh.map((step) => step.task).join(" · ") : "đổi danh sách";
+    const what = !before
+      ? "thấy lần đầu"
+      : fresh.length
+        ? fresh.map((step) => step.task).join(" · ")
+        : prepared && !before.prepared
+          ? "chuẩn bị xong"
+          : delivered && !before.delivered
+            ? "đã giao"
+            : doing && doing !== before.doing
+            ? `việc con: ${doing}`
+            : "đổi danh sách";
     const page = relative(root, path).replace(/\.progress\.js$/, ".html");
     appendFileSync(out, `${stamp()}  ${page}  rev ${data.rev}  ${what}\n`);
-    seen.set(path, data);
+    seen.set(path, { ...data, prepared, doing, delivered });
     lastChange = Date.now();
   }
   if (Date.now() - lastChange > idle) process.exit(0);

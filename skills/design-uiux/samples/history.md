@@ -5,6 +5,7 @@ cộng 8 ký tự đầu sha256 của `SKILL.md` lúc chụp. `Lỗi gài` là m
 
 | Ngày | Bản skill | Bài | Lỗi gài | Đạt / tổng | Trượt | Không chạm | Thư mục |
 | ---- | --------- | --- | ------- | ---------- | ----- | ---------- | ------- |
+| 2026-10-09 | 2ee0f74 + 709835fb | 04 | — | 5 / 5 | — | 0 | `070-sample-04-quick-screen-nghiem-thu-014` (plan 014; 982 giây) |
 | 2026-10-08 | 3d95ecd + a07e3f8a | 02 | — | 8 / 8 | — | 0 | `035-mau-02-onboarding-3-buoc-lan-1` |
 | 2026-10-08 | 3d95ecd + a07e3f8a | 02 | — | 7 / 8 | Q4 `F3.2` | 0 | `036-mau-02-onboarding-3-buoc-lan-2` |
 | 2026-10-08 | 3d95ecd + a07e3f8a | 02 | L2 | 7 / 8 | Q6 `F3.3` | 0 | `040-mau-02-onboarding-3-buoc-L2` |

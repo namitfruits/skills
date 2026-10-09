@@ -1,28 +1,29 @@
---- SKILL.md
-+++ SKILL.md
-@@ -484,7 +484,7 @@
- Cặp màu có trong bảng "Cặp màu không đủ đọc" dùng đúng cột "Dùng thay"; cặp khác trượt N13 thì báo lại, không tự chọn.
- Bước kiểm đầy đủ: node <$SKILL>/scripts/check.mjs <$D>/<NN-slug.html> [--pw <dir>] tới khi exit 0, tối đa ba vòng;
- mở ảnh <$D>/shots/<NN-slug>--* ra, đi danh sách tự kiểm của references/page-principles.md; rồi progress … --done <n>.
--Trả về: dòng cuối của check.mjs; khối "Tự kiểm" theo references/page-principles.md; variables, tweaks, preset; trạng thái riêng đã thêm;
-+Trả về: dòng cuối của check.mjs; khối "Tự kiểm" theo references/page-principles.md; variables, tweaks, preset;
- chỗ còn lấn cấn.
- ```
- 
-@@ -511,7 +511,6 @@
+--- references/build-page.md
++++ references/build-page.md
+@@ -42,7 +42,6 @@
  | ---- | ----------------- | ----------------------- |
  | 1 · Khung các khối, dữ liệu mặc định | khai đủ `variables` theo "Nút dữ liệu chung" (có `state` đủ bốn giá trị) và `tweaks`; khối chờ thay bằng mọi khối thật, mỗi khối một `data-block` theo bảng "Khối", hiện đúng ở giá trị mặc định | `check.mjs <page> --quick` |
  | 2 · Đang tải · rỗng · lỗi | `state` `loading`, `empty`, `error` đã dựng | `--quick --state loading`, rồi `empty`, rồi `error` |
 -| 3 · Trạng thái riêng của đề | các `state` riêng trong brief đã dựng | `--quick --state <từng giá trị>` |
  | 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick` |
  | 5 · Preset và ca biên | `presets` khai xong, ca biên (tên dài, số 0, số rất lớn) dựng xong | `--quick --preset "<từng nhãn>"` |
- | 6 · Kiểm đầy đủ và tự kiểm | `check.mjs` đầy đủ exit 0, đã đi danh sách tự kiểm trên ảnh | `check.mjs <page>` (bước 5 dưới đây) |
-@@ -562,7 +561,7 @@
+ | 6 · Kiểm đầy đủ và tự kiểm | `check.mjs` đầy đủ exit 0, đã đi danh sách tự kiểm trên ảnh | `check.mjs <page>` (mục "Kiểm") |
+@@ -116,8 +115,7 @@
  
- **Trạng thái và dữ liệu giả**
+ <!-- spec: F1.3 F3.2 F3.3 -->
  
--- Variable `state` bắt buộc, `options` có ít nhất `data` · `loading` · `empty` · `error`, cộng trạng thái riêng của đề (vượt ngưỡng, quá hạn, sắp reset). Đang tải là khung chờ đúng hình dòng thật; rỗng có câu nói vì sao và nút làm tiếp; lỗi có câu nói chuyện gì và nút thử lại.
-+- Variable `state` bắt buộc, `options` có ít nhất `data` · `loading` · `empty` · `error`. Đang tải là khung chờ đúng hình dòng thật; rỗng có câu nói vì sao và nút làm tiếp; lỗi có câu nói chuyện gì và nút thử lại.
- - Dữ liệu giả sinh từ variables (đổi số là đổi dữ liệu), theo `## Dữ liệu chung`, có ca biên: tên dài tràn hai dòng, số `0`, số rất lớn, thiếu ảnh hay mô tả, một phần tử. Số giữa các khối phải khớp nhau (tổng ở đầu trang bằng tổng các dòng).
- - **Bấm được như thật** bằng state Alpine trong page: tab, lọc, tìm, sắp xếp, mở modal, thêm, xoá, đổi trên dữ liệu giả. Không gọi API. Nút nào thấy được cũng phải làm gì đó; không làm được (role thiếu quyền) thì `disabled` kèm `title` nói vì sao.
- - Mỗi khối chính có `data-block="<số>"`, số lấy từ bảng `## Khối` của `brief.md`.
+-- Variable `state` bắt buộc, `options` có ít nhất `data` · `loading` · `empty` · `error`, cộng trạng thái riêng của đề
+-  (vượt ngưỡng, quá hạn, sắp reset). Đang tải là khung chờ đúng hình dòng thật; rỗng có câu nói vì sao và nút làm
++- Variable `state` bắt buộc, `options` có ít nhất `data` · `loading` · `empty` · `error`. Đang tải là khung chờ đúng hình dòng thật; rỗng có câu nói vì sao và nút làm
+   tiếp; lỗi có câu nói chuyện gì và nút thử lại.
+ - Dữ liệu giả sinh từ variables (đổi số là đổi dữ liệu), theo `## Dữ liệu chung`, có ca biên: tên dài tràn hai dòng,
+   số `0`, số rất lớn, thiếu ảnh hay mô tả, một phần tử. Số giữa các khối phải khớp nhau (tổng ở đầu trang bằng tổng
+@@ -208,7 +206,7 @@
+ 1. dòng cuối của `check.mjs` đầy đủ;
+ 2. khối **Tự kiểm**: mỗi dòng **Tự kiểm** là một dòng. Dòng trượt mà sửa được thì sửa rồi tick; còn trượt thì để
+    `[ ]` kèm chỗ và lý do chưa sửa;
+-3. `variables`, `tweaks`, `presets` đã khai; trạng thái riêng đã thêm; `pageWidth` kèm lý do nếu có khai;
++3. `variables`, `tweaks`, `presets` đã khai; `pageWidth` kèm lý do nếu có khai;
+ 4. các số trong `## Số kiểm chéo ở mặc định` của brief, đọc trên page ở giá trị mặc định;
+ 5. chỗ còn lấn cấn: khối, cặp màu phải báo lại, lỗi chưa sửa, lỗi ở `brief.md`.
+ 

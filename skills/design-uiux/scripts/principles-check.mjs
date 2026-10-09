@@ -1,5 +1,6 @@
-// Kiểm bằng code phần đo được của nguyên tắc (N) và giới hạn (G) trong ../references/page-principles.md. check.mjs gọi file này;
-// mỗi lỗi mang ID luật để agent mở đúng mục trong references/page-principles.md. Phần máy không đo được là dòng "Tự kiểm" ở đó.
+// Kiểm bằng code phần đo được của luật UX (../references/ux-principles.md) và luật UI (../references/ui-principles.md).
+// check.mjs gọi file này; mỗi lỗi mang ID luật (UX…, UI…) để agent mở đúng mục trong file luật. Phần máy không đo được là
+// dòng "Tự kiểm" ở đó.
 //
 // Bốn lượt:
 //   - tĩnh: đọc từng dòng page (staticIssues)
@@ -8,39 +9,39 @@
 //   - bấm: rê và bấm từng loại thứ bấm được (hoverShift, rowRects, afterClick)
 //   - thư mục: gom kết quả mọi page (folderIssues)
 //
-// Luật nào trong references/page-principles.md cũng phải có ít nhất một dòng trong `checks`; check.mjs so hai bên, lệch thì dừng.
+// Luật nào trong hai file luật cũng phải có ít nhất một dòng trong `checks`; check.mjs so hai bên, lệch thì dừng.
 //
 // spec: F5.2
 
 export const checks = [
-  { rule: "G1", pass: "tĩnh", what: "class màu của bảng Tailwind" },
-  { rule: "G3", pass: "tĩnh", what: "text-[…] · leading-[…] · tracking-[…] · style font-size" },
-  { rule: "G4", pass: "tĩnh", what: "p-[…] · m-[…] · gap-[…] · space-[…] · style padding/margin/gap" },
-  { rule: "G5", pass: "tĩnh", what: "rounded-[…] · style border-radius" },
-  { rule: "G6", pass: "tĩnh", what: "shadow-[…] · style box-shadow" },
-  { rule: "N11", pass: "tĩnh", what: "số âm không có ghi chú" },
-  { rule: "N13", pass: "trang", what: "tương phản chữ và placeholder" },
-  { rule: "N5", pass: "trang", what: "khối màu không chữ" },
-  { rule: "G1", pass: "trang", what: "màu phụ hay màu ngoài design system ngoài [data-chart]" },
-  { rule: "G7", pass: "trang", what: "số màu viền" },
-  { rule: "G2", pass: "trang", what: "font ngoài --font-*" },
-  { rule: "G3", pass: "trang", what: "cỡ chữ ngoài thang · một h1 · h1 > h2 > h3" },
-  { rule: "G9", pass: "trang", what: "ký tự mỗi dòng" },
-  { rule: "N12", pass: "trang", what: "cỡ chữ trong khối lặp · h3 cắt một dòng" },
-  { rule: "N9", pass: "trang", what: "chữ cắt: title, phần còn lại, số bị giấu" },
-  { rule: "N4", pass: "trang", what: "một nút chính mỗi khối · absolute chồng · câu lặp" },
-  { rule: "G5", pass: "trang", what: "bo góc ngoài thang · bo con lớn hơn cha" },
-  { rule: "G6", pass: "trang", what: "bóng trên khối trong trang" },
-  { rule: "G8", pass: "trang", what: "tầng khung lồng nhau" },
-  { rule: "N6", pass: "trang", what: "đơn vị số trong khối lặp" },
-  { rule: "N1", pass: "trang", what: "hộp thoại: role, nút đóng, nút chính phải nhất · ô required có * đỏ" },
-  { rule: "N3", pass: "trang", what: "thứ đang chọn khác thứ chưa chọn" },
-  { rule: "N7", pass: "trang", what: "state empty / error có nút làm tiếp" },
-  { rule: "N10", pass: "trang", what: "@click tới được bằng phím · cursor · vùng bấm 32px" },
-  { rule: "N2", pass: "bấm", what: "rê và bấm không làm xô phần tử khác" },
-  { rule: "N8", pass: "bấm", what: "form tạo mới mở ra trống" },
-  { rule: "N9", pass: "bấm", what: "lớp nổi không che nút mở nó" },
-  { rule: "G10", pass: "thư mục", what: "số dạng nút" },
+  { rule: "UI1", pass: "tĩnh", what: "class màu của bảng Tailwind" },
+  { rule: "UI3", pass: "tĩnh", what: "text-[…] · leading-[…] · tracking-[…] · style font-size" },
+  { rule: "UI4", pass: "tĩnh", what: "p-[…] · m-[…] · gap-[…] · space-[…] · style padding/margin/gap" },
+  { rule: "UI5", pass: "tĩnh", what: "rounded-[…] · style border-radius" },
+  { rule: "UI6", pass: "tĩnh", what: "shadow-[…] · style box-shadow" },
+  { rule: "UI12", pass: "tĩnh", what: "số âm không có ghi chú" },
+  { rule: "UX10", pass: "trang", what: "tương phản chữ và placeholder" },
+  { rule: "UX5", pass: "trang", what: "khối màu không chữ" },
+  { rule: "UI1", pass: "trang", what: "màu phụ hay màu ngoài design system ngoài [data-chart]" },
+  { rule: "UI7", pass: "trang", what: "số màu viền" },
+  { rule: "UI2", pass: "trang", what: "font ngoài --font-*" },
+  { rule: "UI3", pass: "trang", what: "cỡ chữ ngoài thang · một h1 · h1 > h2 > h3" },
+  { rule: "UI9", pass: "trang", what: "ký tự mỗi dòng" },
+  { rule: "UI13", pass: "trang", what: "cỡ chữ trong khối lặp · h3 cắt một dòng" },
+  { rule: "UX8", pass: "trang", what: "chữ cắt: title, phần còn lại, số bị giấu" },
+  { rule: "UX4", pass: "trang", what: "một nút chính mỗi khối · absolute chồng · câu lặp" },
+  { rule: "UI5", pass: "trang", what: "bo góc ngoài thang · bo con lớn hơn cha" },
+  { rule: "UI6", pass: "trang", what: "bóng trên khối trong trang" },
+  { rule: "UI8", pass: "trang", what: "tầng khung lồng nhau" },
+  { rule: "UI11", pass: "trang", what: "đơn vị số trong khối lặp" },
+  { rule: "UX1", pass: "trang", what: "hộp thoại: role, nút đóng, nút chính phải nhất · ô required có * đỏ" },
+  { rule: "UX3", pass: "trang", what: "thứ đang chọn khác thứ chưa chọn" },
+  { rule: "UX6", pass: "trang", what: "state empty / error có nút làm tiếp" },
+  { rule: "UX9", pass: "trang", what: "@click tới được bằng phím · cursor · vùng bấm 32px" },
+  { rule: "UX2", pass: "bấm", what: "rê và bấm không làm xô phần tử khác" },
+  { rule: "UX7", pass: "bấm", what: "form tạo mới mở ra trống" },
+  { rule: "UX8", pass: "bấm", what: "lớp nổi không che nút mở nó" },
+  { rule: "UI10", pass: "thư mục", what: "số dạng nút" },
 ];
 
 // ---------- design system ----------
@@ -69,19 +70,34 @@ export function readTokens(source) {
   };
 }
 
-// Bảng "Giới hạn nhường cho design system" trong mục ## Design system của brief.md.
-export function readYielded(brief, knownRules) {
+// Luật UI và luật UX mà nó phục vụ, đọc từ dòng **Phục vụ:** ngay dưới tên luật trong references/ui-principles.md.
+// Luật chỉ thuần gu ghi "—" thì danh sách rỗng.
+export function readServes(uiRulesText) {
+  const serves = new Map();
+  for (const match of uiRulesText.matchAll(/^\*\*(UI\d+)\.[^\n]*\n+\*\*Phục vụ:\*\*([^\n]*)/gm)) {
+    serves.set(match[1], [...match[2].split("—")[0].matchAll(/UX\d+/g)].map((ux) => ux[0]));
+  }
+  return serves;
+}
+
+// Bảng "Luật UI theo design system" trong mục ## Design system của brief.md. serves: Map luật UI → luật UX nó phục vụ.
+export function readYielded(brief, serves) {
   const problems = [];
-  const part = brief.split(/^### Giới hạn nhường cho design system\s*$/m)[1];
-  if (part === undefined) return { yielded: [], problems: ['thiếu "### Giới hạn nhường cho design system" trong ## Design system (references/page-principles.md, "Thứ tự ưu tiên")'] };
+  const title = "Luật UI theo design system";
+  const part = brief.split(new RegExp(`^### ${title}\\s*$`, "m"))[1];
+  if (part === undefined) return { yielded: [], problems: [`thiếu "### ${title}" trong ## Design system (references/ui-principles.md, "Khi design system làm khác")`] };
   const section = part.split(/^##+ /m)[0];
   const rows = section.split("\n").filter((line) => line.trim().startsWith("|")).slice(2)
     .map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim().replace(/`/g, "")));
-  if (!rows.length && !/Không có\./.test(section)) problems.push('bảng "Giới hạn nhường cho design system" trống mà không ghi "Không có."');
+  if (!rows.length && !/Không có\./.test(section)) problems.push(`bảng "${title}" trống mà không ghi "Không có."`);
   const yielded = [];
-  for (const [rule = "", says = "", proof = ""] of rows) {
-    if (!/^G\d+$/.test(rule) || !knownRules.includes(rule)) problems.push(`giới hạn nhường "${rule}" không phải một G trong references/page-principles.md (nguyên tắc N không nhường được)`);
-    else if (!proof || !says) problems.push(`giới hạn nhường ${rule} thiếu "Design system nói" hay "Dẫn chứng"`);
+  for (const [rule = "", says = "", proof = "", keep = ""] of rows) {
+    const old = rule.match(/^G(\d+)$/);
+    if (old) problems.push(`${rule} là mã cũ, đổi thành UI${old[1]}`);
+    else if (/^UX\d+$/.test(rule)) problems.push(`${rule} là luật UX, không nhường được`);
+    else if (!serves.has(rule)) problems.push(`"${rule}" không phải một luật trong references/ui-principles.md`);
+    else if (!proof || !says) problems.push(`luật ${rule} thiếu "Design system nói" hay "Dẫn chứng"`);
+    else if (serves.get(rule).length && !keep) problems.push(`luật ${rule} nhường mà chưa ghi cách giữ ${serves.get(rule).join(", ")} (cột "Giữ luật UX bằng")`);
     else yielded.push(rule);
   }
   return { yielded, problems };
@@ -95,12 +111,12 @@ const paletteNames = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime
 const palettePattern = new RegExp(`(?<![\\w-])${variantPrefix}(?:bg|text|border(?:-[trblxy])?|ring|fill|stroke|from|via|to|outline|divide|decoration|accent|caret|shadow|placeholder)-(?:${paletteNames})-\\d{2,3}(?:\\/\\d+)?(?![\\w-])`, "g");
 const negativePattern = new RegExp(`(?<![\\w-])${variantPrefix}-(?:m[trblxyse]?|space-[xy]|translate-[xy]|inset(?:-[xy])?|top|left|right|bottom|start|end)-[\\w./\\[\\]]+`, "g");
 const styleProperty = [
-  [/font-size|fontSize|line-height|lineHeight|letter-spacing|letterSpacing/, "G3"],
-  [/padding|margin|(?<![-\w])gap/, "G4"],
-  [/border-radius|borderRadius/, "G5"],
-  [/box-shadow|boxShadow/, "G6"],
+  [/font-size|fontSize|line-height|lineHeight|letter-spacing|letterSpacing/, "UI3"],
+  [/padding|margin|(?<![-\w])gap/, "UI4"],
+  [/border-radius|borderRadius/, "UI5"],
+  [/box-shadow|boxShadow/, "UI6"],
 ];
-const arbitraryRule = (utility) => (/^(text|leading|tracking)$/.test(utility) ? "G3" : /^rounded/.test(utility) ? "G5" : utility === "shadow" ? "G6" : "G4");
+const arbitraryRule = (utility) => (/^(text|leading|tracking)$/.test(utility) ? "UI3" : /^rounded/.test(utility) ? "UI5" : utility === "shadow" ? "UI6" : "UI4");
 
 export function staticIssues(html) {
   const issues = [];
@@ -120,11 +136,11 @@ export function staticIssues(html) {
       // text-[#…] là mã màu, check.mjs đã báo riêng.
       if (match[2] === "text" && /^(#|rgb|hsl|oklch|color)/.test(match[3])) continue;
       const rule = arbitraryRule(match[2]);
-      const hint = rule === "G3" ? "dùng token chữ của design system" : rule === "G5" ? "dùng bo góc trong thang --radius-*" : rule === "G6" ? "bóng lấy từ token --shadow-*, chỉ cho lớp nổi" : "dùng class trong thang; căn chữ với icon bằng items-* hay leading";
+      const hint = rule === "UI3" ? "dùng token chữ của design system" : rule === "UI5" ? "dùng bo góc trong thang --radius-*" : rule === "UI6" ? "bóng lấy từ token --shadow-*, chỉ cho lớp nổi" : "dùng class trong thang; căn chữ với icon bằng items-* hay leading";
       issues.push({ rule, line: lineNo, message: `giá trị tự đặt ngoài thang \`${match[0].trim()}\` — ${hint}` });
     }
     for (const match of line.matchAll(palettePattern)) {
-      issues.push({ rule: "G1", line: lineNo, message: `màu của bảng Tailwind \`${match[0]}\` — màu chỉ lấy từ token trong tokens.js` });
+      issues.push({ rule: "UI1", line: lineNo, message: `màu của bảng Tailwind \`${match[0]}\` — màu chỉ lấy từ token trong tokens.js` });
     }
     for (const attribute of scriptLines[index] ? [] : line.matchAll(/(?:^|\s)(?::style|x-bind:style|style)="([^"]*)"/g)) {
       for (const [pattern, rule] of styleProperty) {
@@ -139,7 +155,7 @@ export function staticIssues(html) {
       const transitionSpans = [...line.matchAll(/x-transition[\w:.-]*="[^"]*"/g)].map((match) => [match.index, match.index + match[0].length]);
       for (const match of line.matchAll(negativePattern)) {
         if (transitionSpans.some(([start, end]) => match.index >= start && match.index < end)) continue;
-        issues.push({ rule: "N11", line: lineNo, message: `số âm \`${match[0].trim()}\` không có ghi chú — ghi <!-- lý do --> ngay dòng trên, hay căn bằng gap / items-* / khối w-0 flex justify-center` });
+        issues.push({ rule: "UI12", line: lineNo, message: `số âm \`${match[0].trim()}\` không có ghi chú — ghi <!-- lý do --> ngay dòng trên, hay căn bằng gap / items-* / khối w-0 flex justify-center` });
       }
     }
   });
@@ -332,7 +348,7 @@ export function pageProbe(ctx) {
   const srOnly = (element) => style(element).position === "absolute" && /rect\(0/.test(style(element).clip || "") ;
   const textElements = elements.filter((element) => ownText(element) && !srOnly(element) && element.tagName !== "OPTION");
 
-  // N13 tương phản. Bỏ chữ đang chạy hiệu ứng (animate-pulse: đo lúc mờ lúc rõ) và chữ aria-hidden (logo, ký hiệu
+  // UX10 tương phản. Bỏ chữ đang chạy hiệu ứng (animate-pulse: đo lúc mờ lúc rõ) và chữ aria-hidden (logo, ký hiệu
   // trang trí: WCAG không đòi tương phản).
   const animated = new Set(document.getAnimations().map((animation) => animation.effect?.target).filter(Boolean));
   const isAnimated = (element) => { for (let node = element; node && node !== main; node = node.parentElement) if (animated.has(node)) return true; return false; };
@@ -347,17 +363,17 @@ export function pageProbe(ctx) {
     const large = size >= 24 || (size >= 18.66 && parseInt(s.fontWeight, 10) >= 700);
     const need = large ? 3 : 4.5;
     const ratio = contrast(text, back);
-    if (ratio < need - 0.01) add("N13", `${describe(element)} tương phản ${ratio.toFixed(2)} : 1, cần ${need} : 1`);
+    if (ratio < need - 0.01) add("UX10", `${describe(element)} tương phản ${ratio.toFixed(2)} : 1, cần ${need} : 1`);
   }
   for (const field of elements.filter((element) => /^(INPUT|TEXTAREA)$/.test(element.tagName) && element.placeholder && !element.value && !element.disabled)) {
     const color = parse(getComputedStyle(field, "::placeholder").color);
     const back = backdrop(field);
     if (!color || !back) continue;
     const ratio = contrast(over(color, back), back);
-    if (ratio < 4.49) add("N13", `placeholder "${field.placeholder.slice(0, 24)}" tương phản ${ratio.toFixed(2)} : 1, cần 4.5 : 1`);
+    if (ratio < 4.49) add("UX10", `placeholder "${field.placeholder.slice(0, 24)}" tương phản ${ratio.toFixed(2)} : 1, cần 4.5 : 1`);
   }
 
-  // N5 khối màu không chữ · G1 màu phụ
+  // UX5 khối màu không chữ · UI1 màu phụ
   for (const element of elements) {
     if (inChart(element)) continue;
     const s = style(element);
@@ -369,7 +385,7 @@ export function pageProbe(ctx) {
       const named = element.getAttribute("aria-label") || element.getAttribute("title") || element.closest("[role=progressbar][aria-valuenow], [aria-label], [title]");
       let near = false;
       for (let node = element.parentElement, level = 0; node && level < 3 && node !== main; node = node.parentElement, level += 1) if (textOf(node)) near = true;
-      if (meaningful && !named && !near) add("N5", `${describe(element)} tô màu ${backgroundToken?.name ?? hex(background)} mà không có chữ, aria-label hay title đi kèm`);
+      if (meaningful && !named && !near) add("UX5", `${describe(element)} tô màu ${backgroundToken?.name ?? hex(background)} mà không có chữ, aria-label hay title đi kèm`);
     }
     const uses = [];
     if (ownText(element) || tag === "svg") uses.push(["chữ", s.color]);
@@ -380,12 +396,12 @@ export function pageProbe(ctx) {
       const color = parse(value);
       if (!color || color.a <= 0.05) continue;
       const token = tokenOf(color);
-      if (!token) add("G1", `${describe(element)} dùng màu ${hex(color)} làm ${property}, không có trong design system`);
-      else if (token.role === "phụ") add("G1", `${describe(element)} dùng màu phụ ${token.name} làm ${property} ngoài khối [data-chart]`);
+      if (!token) add("UI1", `${describe(element)} dùng màu ${hex(color)} làm ${property}, không có trong design system`);
+      else if (token.role === "phụ") add("UI1", `${describe(element)} dùng màu phụ ${token.name} làm ${property} ngoài khối [data-chart]`);
     }
   }
 
-  // G7 số màu viền
+  // UI7 số màu viền
   const borderColors = [];
   for (const element of elements) {
     if (inChart(element)) continue;
@@ -394,37 +410,37 @@ export function pageProbe(ctx) {
       if (!(parseFloat(s[`border${name}Width`]) > 0) || /none|hidden/.test(s[`border${name}Style`])) continue;
       const color = parse(s[`border${name}Color`]);
       if (!color || color.a <= 0.05) continue;
-      // Chỉ đếm viền trung tính (đường tóc). Viền màu nhấn, trạng thái, màu phụ (badge) là chuyện của G1, N5.
+      // Chỉ đếm viền trung tính (đường tóc). Viền màu nhấn, trạng thái, màu phụ (badge) là chuyện của UI1, UX5.
       const token = tokenOf(color);
       if (token && token.role !== "trung tính") continue;
       if (!borderColors.some((known) => distance(known.color, color) <= 4 && Math.abs(known.color.a - color.a) < 0.05)) borderColors.push({ color, name: token?.name ?? hex(color), example: describe(element) });
     }
   }
-  if (borderColors.length > 2) add("G7", `${borderColors.length} màu viền: ${borderColors.map((entry) => `${entry.name}${entry.color.a < 1 ? `/${Math.round(entry.color.a * 100)}` : ""} (${entry.example})`).join(" · ")}`);
+  if (borderColors.length > 2) add("UI7", `${borderColors.length} màu viền: ${borderColors.map((entry) => `${entry.name}${entry.color.a < 1 ? `/${Math.round(entry.color.a * 100)}` : ""} (${entry.example})`).join(" · ")}`);
 
-  // G2 font
+  // UI2 font
   const allowedFonts = ctx.fonts.map((name) => rootStyle.getPropertyValue(`--font-${name}`).split(",")[0].trim().replace(/['"]/g, "").toLowerCase()).filter(Boolean);
   for (const element of textElements) {
     const family = style(element).fontFamily.split(",")[0].trim().replace(/['"]/g, "").toLowerCase();
-    if (allowedFonts.length && !allowedFonts.includes(family)) add("G2", `${describe(element)} dùng font "${family}", không khai trong --font-* của tokens.js`);
+    if (allowedFonts.length && !allowedFonts.includes(family)) add("UI2", `${describe(element)} dùng font "${family}", không khai trong --font-* của tokens.js`);
   }
 
-  // G3 cỡ chữ, thứ bậc tiêu đề
+  // UI3 cỡ chữ, thứ bậc tiêu đề
   const inScale = (px, scale) => scale.some((step) => Math.abs(step - px) <= 0.5);
   for (const element of textElements) {
     const px = parseFloat(style(element).fontSize);
-    if (!inScale(px, ctx.textScale)) add("G3", `${describe(element)} cỡ chữ ${px}px ngoài thang (${ctx.textScale.join(", ")})`);
+    if (!inScale(px, ctx.textScale)) add("UI3", `${describe(element)} cỡ chữ ${px}px ngoài thang (${ctx.textScale.join(", ")})`);
   }
   const headings = (level) => elements.filter((element) => element.tagName === `H${level}` && !layerOf(element));
   const [h1s, h2s, h3s] = [headings(1), headings(2), headings(3)];
-  if (h1s.length !== 1) add("G3", `trang có ${h1s.length} h1, cần đúng một h1 cho tên trang`);
+  if (h1s.length !== 1) add("UI3", `trang có ${h1s.length} h1, cần đúng một h1 cho tên trang`);
   const size = (element) => parseFloat(style(element).fontSize);
   const minOf = (list) => Math.min(...list.map(size));
   const maxOf = (list) => Math.max(...list.map(size));
-  if (h1s.length && h2s.length && maxOf(h2s) >= minOf(h1s)) add("G3", `h2 cỡ ${maxOf(h2s)}px không nhỏ hơn h1 ${minOf(h1s)}px`);
-  if (h2s.length && h3s.length && maxOf(h3s) >= minOf(h2s)) add("G3", `h3 cỡ ${maxOf(h3s)}px không nhỏ hơn h2 ${minOf(h2s)}px`);
+  if (h1s.length && h2s.length && maxOf(h2s) >= minOf(h1s)) add("UI3", `h2 cỡ ${maxOf(h2s)}px không nhỏ hơn h1 ${minOf(h1s)}px`);
+  if (h2s.length && h3s.length && maxOf(h3s) >= minOf(h2s)) add("UI3", `h3 cỡ ${maxOf(h3s)}px không nhỏ hơn h2 ${minOf(h2s)}px`);
 
-  // G9 ký tự mỗi dòng
+  // UI9 ký tự mỗi dòng
   const lineCount = (element) => {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -434,7 +450,7 @@ export function pageProbe(ctx) {
     if (style(element).display === "inline") continue;
     const lines = lineCount(element);
     const characters = textOf(element).length;
-    if (lines >= 2 && characters / lines > 75) add("G9", `${describe(element)} dài ${Math.round(characters / lines)} ký tự mỗi dòng, tối đa 75`);
+    if (lines >= 2 && characters / lines > 75) add("UI9", `${describe(element)} dài ${Math.round(characters / lines)} ký tự mỗi dòng, tối đa 75`);
   }
 
   // Khối lặp: ≥ 3 anh em cùng thẻ, cùng class
@@ -451,19 +467,19 @@ export function pageProbe(ctx) {
     for (const members of buckets.values()) if (members.length >= 3 && members.some((member) => member.children.length)) groups.push({ parent, members });
   }
 
-  // N12
+  // UI13
   for (const { parent, members } of groups) {
     for (const member of members.slice(0, 6)) {
       const sizes = new Set([member, ...member.querySelectorAll("*")].filter((node) => isVisible(node) && ownText(node)).map((node) => parseFloat(style(node).fontSize)));
-      if (sizes.size > 3) add("N12", `khối lặp ${describe(member)} có ${sizes.size} cỡ chữ (${[...sizes].sort((a, b) => a - b).join(", ")}px), tối đa 3`);
+      if (sizes.size > 3) add("UI13", `khối lặp ${describe(member)} có ${sizes.size} cỡ chữ (${[...sizes].sort((a, b) => a - b).join(", ")}px), tối đa 3`);
       const title = member.querySelector("h3");
       if (title && isVisible(title) && style(title).whiteSpace === "nowrap" && style(title).textOverflow === "ellipsis" && rectOf(member).width < rectOf(parent).width / 2) {
-        add("N12", `tên ${describe(title)} trong card bị cắt còn một dòng — dùng line-clamp-2`);
+        add("UI13", `tên ${describe(title)} trong card bị cắt còn một dòng — dùng line-clamp-2`);
       }
     }
   }
 
-  // N9 chữ bị cắt
+  // UX8 chữ bị cắt
   const unitNumber = /\d[\d.,]*\s*(%|đ|₫|triệu|tr\b|tỷ|nghìn|k\b|K\b|m²|USD|VND|\$)/;
   for (const element of textElements) {
     const s = style(element);
@@ -471,15 +487,15 @@ export function pageProbe(ctx) {
     const clamped = s.webkitLineClamp && s.webkitLineClamp !== "none" && element.scrollHeight > element.clientHeight + 1;
     if (!ellipsis && !clamped) continue;
     const text = textOf(element);
-    if (!element.getAttribute("title") && !element.parentElement?.getAttribute("title")) add("N9", `${describe(element)} bị cắt mà không có title để đọc đủ`);
+    if (!element.getAttribute("title") && !element.parentElement?.getAttribute("title")) add("UX8", `${describe(element)} bị cắt mà không có title để đọc đủ`);
     if (ellipsis) {
       const shown = Math.floor((text.length * element.clientWidth) / element.scrollWidth);
-      if (shown < 8) add("N9", `${describe(element)} bị cắt còn khoảng ${shown} ký tự`);
-      if (unitNumber.test(text.slice(Math.max(0, shown - 3))) || /^[\d.,\s%₫đ$+−-]+$/.test(text)) add("N9", `${describe(element)} bị cắt mất số: "${text.slice(0, 40)}"`);
+      if (shown < 8) add("UX8", `${describe(element)} bị cắt còn khoảng ${shown} ký tự`);
+      if (unitNumber.test(text.slice(Math.max(0, shown - 3))) || /^[\d.,\s%₫đ$+−-]+$/.test(text)) add("UX8", `${describe(element)} bị cắt mất số: "${text.slice(0, 40)}"`);
     }
   }
 
-  // N4 một nút chính mỗi khối · absolute chồng · câu lặp
+  // UX4 một nút chính mỗi khối · absolute chồng · câu lặp
   const clickableSelector = "button, a[href], [role=button], [role=tab], summary, input[type=checkbox], input[type=radio], select, [\\@click], [x-on\\:click]";
   const clickables = elements.filter((element) => element.matches(clickableSelector));
   // Nút chính là nút có chữ, nền nhấn đặc. Chấm bấm được trên timeline, biểu đồ không phải nút chính.
@@ -497,7 +513,7 @@ export function pageProbe(ctx) {
     if (!primaryByPlace.has(key)) primaryByPlace.set(key, []);
     primaryByPlace.get(key).push(textOf(element) || element.getAttribute("aria-label") || "?");
   }
-  for (const [place, labels] of primaryByPlace) if (labels.length > 1) add("N4", `${labels.length} nút nền màu nhấn trong ${place}: ${labels.map((label) => `"${label.slice(0, 20)}"`).join(", ")} — mỗi khối một nút chính`);
+  for (const [place, labels] of primaryByPlace) if (labels.length > 1) add("UX4", `${labels.length} nút nền màu nhấn trong ${place}: ${labels.map((label) => `"${label.slice(0, 20)}"`).join(", ")} — mỗi khối một nút chính`);
   const stacked = new Map();
   for (const element of elements) {
     if (style(element).position !== "absolute" || inChart(element)) continue;
@@ -509,7 +525,7 @@ export function pageProbe(ctx) {
     if (!stacked.has(parent)) stacked.set(parent, []);
     stacked.get(parent).push(element);
   }
-  for (const [parent, list] of stacked) if (list.length > 3) add("N4", `${list.length} phần tử đè lên ${describe(parent)} — tối đa ba thứ chồng lên một khung`);
+  for (const [parent, list] of stacked) if (list.length > 3) add("UX4", `${list.length} phần tử đè lên ${describe(parent)} — tối đa ba thứ chồng lên một khung`);
   for (const { members } of groups) {
     if (members.length < 5) continue;
     const counts = new Map();
@@ -519,10 +535,10 @@ export function pageProbe(ctx) {
         .map(textOf).filter((text) => text.split(" ").length >= 2 && !/\d/.test(text)));
       for (const phrase of phrases) counts.set(phrase, (counts.get(phrase) ?? 0) + 1);
     }
-    for (const [phrase, count] of counts) if (count >= members.length * 0.8) add("N4", `câu "${phrase.slice(0, 40)}" lặp ở ${count}/${members.length} khối lặp — ghi một lần ở đầu nhóm`);
+    for (const [phrase, count] of counts) if (count >= members.length * 0.8) add("UX4", `câu "${phrase.slice(0, 40)}" lặp ở ${count}/${members.length} khối lặp — ghi một lần ở đầu nhóm`);
   }
 
-  // G5 bo góc
+  // UI5 bo góc
   const radii = (element) => ["TopLeft", "TopRight", "BottomRight", "BottomLeft"].map((corner) => parseFloat(style(element)[`border${corner}Radius`]) || 0);
   const pill = (element, radius) => radius >= Math.min(rectOf(element).width, rectOf(element).height) / 2 - 0.5;
   const painted = (element) => {
@@ -536,7 +552,7 @@ export function pageProbe(ctx) {
     if (radius <= 0) continue;
     for (const value of list) {
       if (value > 0 && !pill(element, value) && !inScale(value, ctx.radiusScale)) {
-        add("G5", `${describe(element)} bo góc ${value}px ngoài thang (${ctx.radiusScale.join(", ")})`);
+        add("UI5", `${describe(element)} bo góc ${value}px ngoài thang (${ctx.radiusScale.join(", ")})`);
         break;
       }
     }
@@ -545,13 +561,13 @@ export function pageProbe(ctx) {
       if (["fixed", "absolute"].includes(style(node).position) && node !== element.parentElement) break;
       const outer = Math.max(...radii(node));
       if (outer > 0 && painted(node) && !pill(node, outer)) {
-        if (radius > outer + 0.5) add("G5", `${describe(element)} bo ${radius}px lớn hơn khối cha ${describe(node)} bo ${outer}px`);
+        if (radius > outer + 0.5) add("UI5", `${describe(element)} bo ${radius}px lớn hơn khối cha ${describe(node)} bo ${outer}px`);
         break;
       }
     }
   }
 
-  // G6 bóng trong trang
+  // UI6 bóng trong trang
   const blurred = (shadow) => shadow.split(/,(?![^(]*\))/).some((part) => {
     if (/inset/.test(part)) return false;
     const lengths = part.replace(/(rgba?|oklab|oklch|color|hsla?)\([^)]*\)/g, "").match(/-?[\d.]+px/g) ?? [];
@@ -562,10 +578,10 @@ export function pageProbe(ctx) {
     if (!shadow || shadow === "none" || !blurred(shadow)) continue;
     const rect = rectOf(element);
     if (rect.width < 64 || rect.height < 64 || layerOf(element)) continue;
-    add("G6", `${describe(element)} có bóng mà nằm trong trang — bóng chỉ cho lớp nổi`);
+    add("UI6", `${describe(element)} có bóng mà nằm trong trang — bóng chỉ cho lớp nổi`);
   }
 
-  // G8 tầng khung
+  // UI8 tầng khung
   const frameCache = new Map();
   const isFrame = (element) => {
     if (frameCache.has(element)) return frameCache.get(element);
@@ -592,10 +608,10 @@ export function pageProbe(ctx) {
       if (isFrame(node)) { depth += 1; chain.push(node); }
       if (["fixed", "absolute"].includes(style(node).position)) break;
     }
-    if (depth === 3) add("G8", `${depth} tầng khung lồng nhau: ${chain.reverse().map(describe).join(" › ")} — tối đa 2`);
+    if (depth === 3) add("UI8", `${depth} tầng khung lồng nhau: ${chain.reverse().map(describe).join(" › ")} — tối đa 2`);
   }
 
-  // N6 đơn vị số trong khối lặp
+  // UI11 đơn vị số trong khối lặp
   // Chỉ so đơn vị cùng loại: ô số liệu của các chỉ số khác nhau ($ cạnh M token, % cạnh $) khác đơn vị là đúng.
   const unitPattern = /(\$)\s*\d|\d[\d.,]*\s*(triệu|tr|tỷ|nghìn|k|đ|₫|VND|USD)(?![\p{L}])/u;
   for (const { members } of groups) {
@@ -610,20 +626,20 @@ export function pageProbe(ctx) {
         slots.get(key).set(unit, textOf(node).slice(0, 20));
       }
     }
-    for (const units of slots.values()) if (units.size > 1) add("N6", `khối lặp viết số khác đơn vị ở cùng chỗ: ${[...units.values()].map((text) => `"${text}"`).join(" · ")}`);
+    for (const units of slots.values()) if (units.size > 1) add("UI11", `khối lặp viết số khác đơn vị ở cùng chỗ: ${[...units.values()].map((text) => `"${text}"`).join(" · ")}`);
   }
 
-  // N1 quy ước: hộp thoại, nút chính phải nhất, * đỏ
+  // UX1 quy ước: hộp thoại, nút chính phải nhất, * đỏ
   for (const layer of elements.filter((element) => style(element).position === "fixed" && !fixedOf(element.parentElement ?? main))) {
     const rect = rectOf(layer);
     const looksLikeDialog = rect.height >= 120 && rect.width >= 200 && (layer.querySelector("h2, form") || layer.querySelectorAll("button").length >= 2);
-    if (looksLikeDialog && !layer.matches("[role=dialog]") && !layer.querySelector("[role=dialog]")) add("N1", `lớp nổi ${describe(layer)} chưa đánh dấu role="dialog"`);
+    if (looksLikeDialog && !layer.matches("[role=dialog]") && !layer.querySelector("[role=dialog]")) add("UX1", `lớp nổi ${describe(layer)} chưa đánh dấu role="dialog"`);
   }
   for (const dialog of elements.filter((element) => element.matches("[role=dialog]"))) {
     const close = [...dialog.querySelectorAll("button, [role=button]")].find((button) => /^(đóng|close)$/i.test((button.getAttribute("aria-label") ?? "").trim()) && isVisible(button));
     const box = rectOf(dialog);
-    if (!close) add("N1", `hộp thoại ${describe(dialog)} thiếu nút đóng aria-label="Đóng" ở góc trên phải`);
-    else if (rectOf(close).right < box.right - 72 || rectOf(close).top > box.top + 72) add("N1", `nút đóng của hộp thoại ${describe(dialog)} không ở góc trên phải`);
+    if (!close) add("UX1", `hộp thoại ${describe(dialog)} thiếu nút đóng aria-label="Đóng" ở góc trên phải`);
+    else if (rectOf(close).right < box.right - 72 || rectOf(close).top > box.top + 72) add("UX1", `nút đóng của hộp thoại ${describe(dialog)} không ở góc trên phải`);
   }
   if (ctx.width >= 640) {
     for (const row of elements.filter((element) => element.closest("[role=dialog], form"))) {
@@ -631,21 +647,21 @@ export function pageProbe(ctx) {
       if (buttons.length < 2 || buttons.some((button) => Math.abs(rectOf(button).top - rectOf(buttons[0]).top) > 4)) continue;
       const primary = buttons.find(solidPrimary);
       const rightmost = buttons.reduce((best, button) => (rectOf(button).right > rectOf(best).right ? button : best));
-      if (primary && primary !== rightmost) add("N1", `nút chính "${textOf(primary).slice(0, 20)}" không đứng phải nhất hàng nút`);
+      if (primary && primary !== rightmost) add("UX1", `nút chính "${textOf(primary).slice(0, 20)}" không đứng phải nhất hàng nút`);
     }
   }
   for (const field of elements.filter((element) => element.matches("input[required], select[required], textarea[required]"))) {
     const label = field.closest("label") ?? (field.id ? document.querySelector(`label[for="${CSS.escape(field.id)}"]`) : null);
     if (!label) {
-      add("N1", `ô bắt buộc ${describe(field)} không có nhãn`);
+      add("UX1", `ô bắt buộc ${describe(field)} không có nhãn`);
       continue;
     }
     const star = [label, ...label.querySelectorAll("*")].find((node) => [...node.childNodes].some((child) => child.nodeType === 3 && child.textContent.includes("*")));
     const token = star ? tokenOf(parse(style(star).color) ?? { r: 0, g: 0, b: 0, a: 1 }) : null;
-    if (!star || !token || !/error|danger/.test(token.name)) add("N1", `nhãn "${textOf(label).slice(0, 24)}" của ô bắt buộc thiếu dấu * màu error`);
+    if (!star || !token || !/error|danger/.test(token.name)) add("UX1", `nhãn "${textOf(label).slice(0, 24)}" của ô bắt buộc thiếu dấu * màu error`);
   }
 
-  // N3 thứ đang chọn khác thứ chưa chọn
+  // UX3 thứ đang chọn khác thứ chưa chọn
   const look = (element) => {
     const s = style(element);
     return [s.backgroundColor, s.color, s.borderTopColor, s.borderTopWidth, s.borderBottomColor, s.borderBottomWidth, s.fontWeight, s.boxShadow, s.textDecorationLine].join("|");
@@ -654,19 +670,19 @@ export function pageProbe(ctx) {
     for (const element of elements.filter((node) => node.hasAttribute(attribute) && node.getAttribute(attribute) !== "false")) {
       const others = [...(element.parentElement?.parentElement ?? element.parentElement).querySelectorAll(element.tagName)]
         .filter((node) => node !== element && isVisible(node) && (!node.hasAttribute(attribute) || node.getAttribute(attribute) === "false") && (attribute === "aria-current" || node.hasAttribute(attribute)));
-      if (others.some((other) => look(other) === look(element))) add("N3", `${describe(element)} đang chọn (${attribute}) mà trông giống hệt mục chưa chọn`);
+      if (others.some((other) => look(other) === look(element))) add("UX3", `${describe(element)} đang chọn (${attribute}) mà trông giống hệt mục chưa chọn`);
     }
   }
 
-  // N10 tới được bằng phím · cursor · vùng bấm
+  // UX9 tới được bằng phím · cursor · vùng bấm
   for (const element of elements) {
     const handler = [...element.attributes].some((attribute) => /^(@click|x-on:click)(?![\w.]*\.(self|outside))/.test(attribute.name));
     if (handler && !/^(BUTTON|A|INPUT|LABEL|SUMMARY|SELECT|TEXTAREA|OPTION)$/.test(element.tagName) && !element.hasAttribute("tabindex")) {
-      add("N10", `${describe(element)} có @click mà không phải button và không có tabindex — Tab không tới được`);
+      add("UX9", `${describe(element)} có @click mà không phải button và không có tabindex — Tab không tới được`);
     }
   }
   const pointerTargets = clickables.filter((element) => !disabled(element) && !/^(SELECT|INPUT)$/.test(element.tagName));
-  for (const element of pointerTargets) if (style(element).cursor !== "pointer") add("N10", `${describe(element)} bấm được mà con trỏ không phải pointer`);
+  for (const element of pointerTargets) if (style(element).cursor !== "pointer") add("UX9", `${describe(element)} bấm được mà con trỏ không phải pointer`);
   if (ctx.width <= 400) {
     const topDialog = elements.filter((element) => element.matches("[role=dialog]")).at(-1);
     const scrollX = window.scrollX;
@@ -687,12 +703,12 @@ export function pageProbe(ctx) {
         const hit = document.elementFromPoint(Math.max(0, Math.min(innerWidth - 1, x)), Math.max(0, Math.min(innerHeight - 1, y)));
         return hit && (hit === element || element.contains(hit));
       });
-      if (!covered) add("N10", `${describe(element)} vùng bấm ${Math.round(rect.width)}×${Math.round(rect.height)}px, cần từ 32px — nới bằng before:absolute`);
+      if (!covered) add("UX9", `${describe(element)} vùng bấm ${Math.round(rect.width)}×${Math.round(rect.height)}px, cần từ 32px — nới bằng before:absolute`);
     }
     window.scrollTo(scrollX, scrollY);
   }
 
-  // G10 dạng nút
+  // UI10 dạng nút
   const buttons = [];
   for (const element of elements.filter((node) => (node.tagName === "BUTTON" || node.matches("a[role=button], [role=button]")) && !node.matches("[role=tab], [role=menuitem], [role=option], [role=switch], [role=checkbox], [aria-pressed], [aria-checked]") && !inChart(node))) {
     const label = textOf(element);
@@ -714,7 +730,7 @@ export function pageProbe(ctx) {
     buttons.push({ sig: `${fill} · ${bordered ? "có viền" : "không viền"} · chữ ${s.fontWeight}`, label: label.slice(0, 20), primary });
   }
 
-  // N7: chữ và nút của từng khối, và nhãn mọi thứ bấm được ngoài lớp nổi; check.mjs so giữa các state.
+  // UX6: chữ và nút của từng khối, và nhãn mọi thứ bấm được ngoài lớp nổi; check.mjs so giữa các state.
   const actions = [...main.querySelectorAll("button, a[href], [role=button]")]
     .filter((node) => isVisible(node) && !layerOf(node) && (!disabled(node) || node.getAttribute("title")))
     .map((node) => node.getAttribute("aria-label") || textOf(node))
@@ -795,7 +811,7 @@ export function hitsItself(index) {
   return !!hit && (hit === element || element.contains(hit));
 }
 
-// Sau cú bấm: N8 form tạo mới có sẵn giá trị · N9 lớp nổi che thứ vừa bấm.
+// Sau cú bấm: UX7 form tạo mới có sẵn giá trị · UX8 lớp nổi che thứ vừa bấm.
 export function afterClick({ index, createLike, wasHittable }) {
   const issues = [];
   const element = document.querySelectorAll("#design *")[index];
@@ -812,9 +828,9 @@ export function afterClick({ index, createLike, wasHittable }) {
     for (const form of forms) {
       for (const field of form.querySelectorAll("input, textarea")) {
         if (!visible(field) || field.disabled) continue;
-        if (field.type === "checkbox" && field.checked) issues.push({ rule: "N8", message: `form tạo mới mở ra đã tick sẵn "${(field.closest("label")?.textContent ?? field.name ?? "").trim().slice(0, 24)}"` });
-        if (/^(text|email|search|tel|url|number|password|date|time|)$/.test(field.type) && field.tagName !== "SELECT" && field.value) issues.push({ rule: "N8", message: `form tạo mới mở ra ô "${field.name || field.placeholder || field.type}" đã có giá trị "${field.value.slice(0, 20)}"` });
-        if (field.tagName === "TEXTAREA" && field.value) issues.push({ rule: "N8", message: "form tạo mới mở ra ô chữ dài đã có giá trị" });
+        if (field.type === "checkbox" && field.checked) issues.push({ rule: "UX7", message: `form tạo mới mở ra đã tick sẵn "${(field.closest("label")?.textContent ?? field.name ?? "").trim().slice(0, 24)}"` });
+        if (/^(text|email|search|tel|url|number|password|date|time|)$/.test(field.type) && field.tagName !== "SELECT" && field.value) issues.push({ rule: "UX7", message: `form tạo mới mở ra ô "${field.name || field.placeholder || field.type}" đã có giá trị "${field.value.slice(0, 20)}"` });
+        if (field.tagName === "TEXTAREA" && field.value) issues.push({ rule: "UX7", message: "form tạo mới mở ra ô chữ dài đã có giá trị" });
       }
     }
   }
@@ -825,11 +841,11 @@ export function afterClick({ index, createLike, wasHittable }) {
       const layer = fixedOf(hit);
       const box = layer?.getBoundingClientRect();
       const dialog = layer && (layer.matches("[role=dialog]") || layer.querySelector("[role=dialog]") || layer.closest("[role=dialog]"));
-      // Lớp cao từ 60% màn là sheet hay ngăn kéo, không phải popover; thiếu role="dialog" thì N1 báo.
+      // Lớp cao từ 60% màn là sheet hay ngăn kéo, không phải popover; thiếu role="dialog" thì UX1 báo.
       const fullScreen = box && ((box.width >= innerWidth * 0.9 && box.height >= innerHeight * 0.9) || box.height >= innerHeight * 0.6);
       // Toast chỉ có chữ là thông báo thoáng qua, không phải lớp được mở ra như menu, popover.
       const interactive = layer?.querySelector("button, a[href], input, select, textarea, [role=menuitem], [role=option], [tabindex]");
-      if (layer && interactive && !dialog && !fullScreen && !layer.contains(element)) issues.push({ rule: "N9", message: "lớp nổi vừa mở che mất thứ mở ra nó" });
+      if (layer && interactive && !dialog && !fullScreen && !layer.contains(element)) issues.push({ rule: "UX8", message: "lớp nổi vừa mở che mất thứ mở ra nó" });
     }
   }
   return issues;
@@ -843,8 +859,8 @@ export function folderIssues(buttonsByPage, skip) {
   for (const [file, list] of buttonsByPage) {
     for (const { sig, label } of list) if (!kinds.has(sig)) kinds.set(sig, `${file} "${label}"`);
   }
-  if (!skip.includes("G10") && kinds.size > 4) {
-    issues.push({ rule: "G10", message: `${kinds.size} dạng nút trong thư mục, tối đa 4: ${[...kinds].map(([sig, example]) => `${sig} (${example})`).join(" · ")}` });
+  if (!skip.includes("UI10") && kinds.size > 4) {
+    issues.push({ rule: "UI10", message: `${kinds.size} dạng nút trong thư mục, tối đa 4: ${[...kinds].map(([sig, example]) => `${sig} (${example})`).join(" · ")}` });
   }
   return issues;
 }

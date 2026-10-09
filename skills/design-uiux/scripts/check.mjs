@@ -6,11 +6,11 @@
 //   node check.mjs <page.html> --quick [--state <giá trị>] [--preset "<nhãn>"] [--pw <dir>]
 //
 // --quick: kiểm nhanh một page ở một tổ hợp, chạy trước mỗi lần đánh dấu một bước dựng xong (1–2 giây). Gồm lượt tĩnh,
-// lỗi console, lỗi JS, request hỏng, và bố cục cùng nguyên tắc ở 1280px, sáng, tweak mặc định, state theo --state hay
+// lỗi console, lỗi JS, request hỏng, và bố cục cùng luật UX, UI ở 1280px, sáng, tweak mặc định, state theo --state hay
 // preset theo --preset. Không vặn từng nút, không bấm, không mở lại URL, không khổ tablet / mobile, không đo 1920px, không
 // soát cả thư mục. Ảnh: shots/<page>--quick.png.
-// Kiểm đầy đủ còn báo page có danh sách bước dựng (<page>.progress.js) mà còn bước chưa xong, trừ bước kiểm đầy đủ của
-// vòng đang mở. Page không có danh sách thì bỏ qua.
+// Kiểm đầy đủ còn báo page có danh sách bước dựng (<page>.progress.js) mà còn bước chưa xong, gồm bước chuẩn bị, trừ
+// bước kiểm đầy đủ của vòng đang mở. Page không có danh sách thì bỏ qua.
 //
 // Lượt tĩnh (đọc file): đủ file khung, pages.js hợp lệ và liệt kê mọi page, thứ tự nạp script, không mã màu
 // ngoài tokens.js; brief.md đủ mục, hết chỗ trống <…>, cột "Ai quyết" hợp lệ, bảng Pages khớp pages.js. Thư mục
@@ -35,9 +35,9 @@
 //   - lượt bấm: cú bấm làm page sang một file trong pages.js là hợp lệ (nút "Tiếp tục" của luồng)
 // Lượt đi luồng (cả thư mục luồng): mở màn 1, điền các ô form.* bằng chữ mẫu, bấm thứ gọi next() tới màn cuối, rồi
 // prev() một lần và kiểm ô của màn trước còn chữ.
-// Nguyên tắc và giới hạn của ../references/page-principles.md: kiểm trong principles-check.mjs, chạy ở lượt tĩnh, mỗi tổ hợp, lượt bấm
-// (rê, bấm) và cả thư mục; lỗi mang ID luật ([N13], [G4]). Giới hạn G ghi trong bảng "Giới hạn nhường cho design system"
-// của brief.md thì bỏ qua. Luật trong references/page-principles.md không có kiểm thì dừng ngay (exit 2).
+// Luật UX (../references/ux-principles.md) và luật UI (../references/ui-principles.md): kiểm trong principles-check.mjs, chạy
+// ở lượt tĩnh, mỗi tổ hợp, lượt bấm (rê, bấm) và cả thư mục; lỗi mang ID luật ([UX10], [UI4]). Luật UI ghi trong bảng
+// "Luật UI theo design system" của brief.md thì bỏ qua. Luật trong hai file không có kiểm thì dừng ngay (exit 2).
 // Exit 0 khi sạch, 1 khi có lỗi, 2 khi không chạy được (thiếu Playwright, không mở được page).
 //
 // spec: F1.3 F1.2 F1.13 F1.17 F5.1 F5.4 F5.6 F5.7 F5.8
@@ -47,7 +47,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { afterClick, animationsDone, checks, describeAt, folderIssues, hitsItself, pageProbe, positionsAround, readTokens, readYielded, rowRects, shifted, staticIssues } from "./principles-check.mjs";
+import { afterClick, animationsDone, checks, describeAt, folderIssues, hitsItself, pageProbe, positionsAround, readServes, readTokens, readYielded, rowRects, shifted, staticIssues } from "./principles-check.mjs";
 
 const widths = [375, 1280];
 const requiredStates = ["data", "loading", "empty", "error"];
@@ -84,15 +84,18 @@ const targetPath = resolve(target);
 const designDir = statSync(targetPath).isDirectory() ? targetPath : dirname(targetPath);
 const onlyFile = statSync(targetPath).isDirectory() ? null : basename(targetPath);
 
-// Luật trong references/page-principles.md và kiểm trong principles-check.mjs phải khớp nhau: luật không có kiểm thì chỉ nằm trên giấy.
-const principlesPath = join(dirname(fileURLToPath(import.meta.url)), "../references/page-principles.md");
-const ruleIds = [...readFileSync(principlesPath, "utf8").matchAll(/^\*\*([NG]\d+)\./gm)].map((match) => match[1]);
+// Luật trong hai file luật và kiểm trong principles-check.mjs phải khớp nhau: luật không có kiểm thì chỉ nằm trên giấy.
+const rulesFiles = ["ux-principles.md", "ui-principles.md"].map((name) => ({ name: `references/${name}`, text: readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../references", name), "utf8") }));
+const ruleIds = rulesFiles.flatMap((file) => [...file.text.matchAll(/^\*\*(UX\d+|UI\d+)\./gm)].map((match) => match[1]));
 const checkedRules = [...new Set(checks.map((check) => check.rule))];
 const unchecked = ruleIds.filter((rule) => !checkedRules.includes(rule));
 const orphan = checkedRules.filter((rule) => !ruleIds.includes(rule));
 if (unchecked.length || orphan.length) {
-  if (unchecked.length) console.error(`skill lệch: ${unchecked.join(", ")} chưa có kiểm trong scripts/principles-check.mjs`);
-  if (orphan.length) console.error(`skill lệch: kiểm trỏ luật không có trong references/page-principles.md: ${orphan.join(", ")}`);
+  for (const file of rulesFiles) {
+    const missing = unchecked.filter((rule) => file.text.includes(`**${rule}.`));
+    if (missing.length) console.error(`skill lệch: ${missing.join(", ")} trong ${file.name} chưa có kiểm trong scripts/principles-check.mjs`);
+  }
+  if (orphan.length) console.error(`skill lệch: kiểm trỏ luật không có trong references/ux-principles.md hay references/ui-principles.md: ${orphan.join(", ")}`);
   process.exit(2);
 }
 const ruleTag = (rule, message) => `[${rule}] ${message}`;
@@ -132,12 +135,12 @@ for (const [index, page] of pages.entries()) {
     if (number !== index + 1) report("pages.js", page.file ?? "?", `screen phải có dạng "${index + 1} · tên màn" (màn thứ ${index + 1} trong pages.js), đang là "${page.screen ?? ""}"`);
     if (!page.purpose) report("pages.js", page.file ?? "?", "thiếu purpose (màn để làm gì, hiện khi đưa chuột vào dãy màn)");
   }
-  // Thư mục phương án ≥ 2 page: nút chữ riêng ở option-switcher, khung mô tả có câu hỏi trung tâm.
+  // Thư mục phương án ≥ 2 page: nút chữ riêng ở option-switcher, khung mô tả có bố cục page.
   else if (pages.length >= 2) {
     const letter = page.option?.match(/^\s*([A-Za-z])\s*·/)?.[1]?.toUpperCase();
     if (!letter) report("pages.js", page.file ?? "?", `option phải có dạng "A · tên phương án", đang là "${page.option ?? ""}"`);
     else if (pages.filter((other) => other.option?.match(/^\s*([A-Za-z])\s*·/)?.[1]?.toUpperCase() === letter).length > 1) report("pages.js", page.file, `chữ ${letter} trùng với page khác`);
-    if (!page.question) report("pages.js", page.file ?? "?", "thiếu question (câu hỏi trung tâm, hiện khi đưa chuột vào nút phương án)");
+    if (!page.layout) report("pages.js", page.file ?? "?", "thiếu layout (bố cục page, hiện khi đưa chuột vào nút phương án)");
   }
   if (page.file && !htmlFiles.includes(page.file)) report("pages.js", page.file, "file không tồn tại");
 }
@@ -178,10 +181,10 @@ if (existsSync(join(designDir, "brief.md"))) {
     if (isFlow && !notListed.length && !unknown.length && listed.join() !== pages.map((page) => page.file).join()) {
       report("brief.md", "", `bảng ## Luồng khác thứ tự pages.js: ${listed.join(" → ")} / ${pages.map((page) => page.file).join(" → ")}`);
     }
-    // Giới hạn G nào design system nói khác thì kiểm của nó tắt cho cả thư mục (references/page-principles.md, "Thứ tự ưu tiên").
+    // Luật UI nào design system làm khác thì kiểm của nó tắt cho cả thư mục (references/ui-principles.md, "Khi design system làm khác").
     // Bảng ## Khối: số data-block chung của các page, để cùng khối ở các phương án mang cùng số.
     if (headings.includes("Khối")) blockNumbers = sectionRows(brief, "Khối").map((cells) => cells[0]).filter((number) => /^\d+$/.test(number));
-    const table = readYielded(brief, ruleIds.filter((rule) => rule.startsWith("G")));
+    const table = readYielded(brief, readServes(rulesFiles[1].text));
     yielded = table.yielded;
     for (const problem of table.problems) report("brief.md", "", problem);
   }
@@ -236,15 +239,16 @@ if (!quick) {
     if (!existsSync(progressFile)) continue;
     const json = readFileSync(progressFile, "utf8").match(/\]\s*=\s*(\{[\s\S]*\});\s*$/)?.[1];
     let build = null;
+    let prep = null;
     try {
-      build = JSON.parse(json ?? "null")?.build;
+      ({ build, prep } = JSON.parse(json ?? "null") ?? {});
     } catch {}
     if (!Array.isArray(build)) {
       report(file, basename(progressFile), "danh sách bước dựng không đọc được; chỉ ghi bằng new-design.mjs progress");
       continue;
     }
     const openRound = build.find((step) => !step.done)?.round;
-    const unfinished = build.filter((step) => !step.done && !(step.final && step.round === openRound));
+    const unfinished = [...(prep && !prep.done ? [prep] : []), ...build.filter((step) => !step.done && !(step.final && step.round === openRound))];
     if (unfinished.length) report(file, basename(progressFile), `còn bước chưa xong: ${unfinished.map((step) => step.task).join(" · ")}`);
   }
 }
@@ -655,7 +659,7 @@ for (const file of checkedFiles) {
   }
   for (const preset of info.design.presets ?? []) for (const theme of ["light", "dark"]) combos.push({ ...preset.values, theme, preset: preset.label });
 
-  // N7 so chữ của từng khối ở state empty / error với state mặc định cùng tổ hợp.
+  // UX6 so chữ của từng khối ở state empty / error với state mặc định cùng tổ hợp.
   const baselines = new Map();
   for (const width of widths) {
     const issues = [];
@@ -682,7 +686,7 @@ for (const file of checkedFiles) {
           const base = baselines.get(key) ?? { blocks: {}, actions: [] };
           const changed = Object.entries(probe.blocks).filter(([id, block]) => block.text && block.text !== base.blocks[id]?.text);
           const fresh = probe.actions.filter((label) => !base.actions.includes(label));
-          if (changed.length && !changed.some(([, block]) => block.actionable) && !fresh.length) report(file, where, ruleTag("N7", `state=${comboState}: khối ${changed.map(([id]) => id).join(", ")} đổi chữ mà không có nút hay link làm tiếp`));
+          if (changed.length && !changed.some(([, block]) => block.actionable) && !fresh.length) report(file, where, ruleTag("UX6", `state=${comboState}: khối ${changed.map(([id]) => id).join(", ")} đổi chữ mà không có nút hay link làm tiếp`));
         }
       }
       comboCount += 1;
@@ -717,7 +721,7 @@ for (const file of checkedFiles) {
       if (!(await element.evaluate((node) => Boolean(node && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden")))) continue;
       const fixedBefore = await clicker.evaluate(() => [...document.querySelectorAll("#design *")].filter((node) => getComputedStyle(node).position === "fixed" && node.getClientRects().length).length);
       await element.asElement().scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-      // N2: rê vào thì không phần tử nào khác xô đi (chỉ đo ở khổ có chuột).
+      // UX2: rê vào thì không phần tử nào khác xô đi (chỉ đo ở khổ có chuột).
       if (width >= 1024) {
         const before = await clicker.evaluate(positionsAround, target.index);
         await element.asElement().hover({ timeout: 2000 }).catch(() => {});
@@ -725,7 +729,7 @@ for (const file of checkedFiles) {
         const moved = shifted(before, await clicker.evaluate(positionsAround, target.index));
         if (moved.length) {
           const names = await Promise.all(moved.slice(0, 2).map((entry) => clicker.evaluate(describeAt, entry.index)));
-          report(file, `${width}px rê "${target.label}"`, ruleTag("N2", `rê vào "${target.label}" làm ${moved.length} phần tử khác xô đi, vd ${names.join(", ")}`));
+          report(file, `${width}px rê "${target.label}"`, ruleTag("UX2", `rê vào "${target.label}" làm ${moved.length} phần tử khác xô đi, vd ${names.join(", ")}`));
         }
       }
       const rowBefore = await clicker.evaluate(rowRects, target.index);
@@ -747,7 +751,7 @@ for (const file of checkedFiles) {
       reportLayout(file, where, await inspect(clicker));
       const rowAfter = await clicker.evaluate(rowRects, target.index);
       if (rowBefore && rowAfter && rowBefore.length === rowAfter.length && rowBefore.some((rect, index) => Math.abs(rect[0] - rowAfter[index][0]) > 0.5 || Math.abs(rect[1] - rowAfter[index][1]) > 0.5)) {
-        report(file, where, ruleTag("N2", `bấm "${target.label}" làm các nút cùng hàng xô đi`));
+        report(file, where, ruleTag("UX2", `bấm "${target.label}" làm các nút cùng hàng xô đi`));
       }
       const createLike = /^(thêm|tạo|mời|mới|add|new|create|invite)/i.test(target.label.trim());
       for (const issue of await clicker.evaluate(afterClick, { index: target.index, createLike, wasHittable })) report(file, where, ruleTag(issue.rule, issue.message));

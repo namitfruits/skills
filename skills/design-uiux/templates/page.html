@@ -31,11 +31,12 @@
 </script>
 <main id="design" class="min-h-screen bg-canvas font-sans text-body" x-data>
   <div class="mx-auto max-w-page px-6 py-16">
-    <!-- Khối chờ: bước dựng 1 "Khung các khối" thay cả khối này bằng các khối thật. -->
-    <section data-ds-waiting class="flex flex-col items-center gap-2 text-center">
-      <p class="text-sm text-muted">Đang dựng</p>
+    <!-- Khối chờ: tên màn, tên page, bố cục page hay việc của màn, các việc page tiện cho, lấy từ cờ của lệnh page. Bước dựng 1 "Khung các khối" thay cả khối này bằng các khối thật. -->
+    <section data-ds-waiting class="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
+      <p class="text-xs font-semibold uppercase tracking-wider text-muted">{{screenName}}</p>
       <h1 class="font-display text-3xl text-ink">{{name}}</h1>
-      <p class="text-sm text-muted">Page tự hiện phần mới mỗi khi một bước dựng xong. Bấm nhãn tiến độ trên thanh công cụ để xem các bước.</p>
+      <p class="text-lg text-body">{{subtitle}}</p>
+      <p class="text-sm text-muted">{{meta}}</p>
     </section>
   </div>
 </main>

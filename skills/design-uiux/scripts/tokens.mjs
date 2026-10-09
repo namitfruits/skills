@@ -314,7 +314,7 @@ export function buildTokens(sourcePath, { pageWidth, source = basename(sourcePat
   ].join("\n");
 }
 
-// Cặp màu dưới 4.5 : 1 (nguyên tắc N13), ở giao diện gốc và giao diện suy ra. Agent chính đọc danh sách này lúc tạo thư
+// Cặp màu dưới 4.5 : 1 (luật UX10), ở giao diện gốc và giao diện suy ra. Agent chính đọc danh sách này lúc tạo thư
 // mục để chốt một cách dùng thay cho cả thư mục, trước khi các agent con dựng song song và mỗi agent lách một kiểu.
 // Cặp được xét: `on-<x>` trên `<x>` (hay `surface-<x>`); mọi màu không phải nền, viền, lớp phủ trên `canvas` và
 // `surface-card`. Màu nhấn dùng làm nền (nút, cột biểu đồ) cũng nằm trong danh sách: chỉ đáng lo khi dùng làm chữ.

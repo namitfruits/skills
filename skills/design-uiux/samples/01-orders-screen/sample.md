@@ -8,7 +8,7 @@ trang, màn hiện có, component; rồi tìm phương án theo tình huống d�
 | Skill cần tìm | Nằm ở |
 | --- | --- |
 | design system | `src/styles/tokens.css`: khối `@theme`, chỉ có giao diện tối, chữ IBM Plex |
-| cách dùng design system | `DESIGN.md`: chỉ có chữ; đơn hoả tốc nằm trong card có bóng, khác giới hạn `G6` |
+| cách dùng design system | `DESIGN.md`: chỉ có chữ; đơn hoả tốc nằm trong card có bóng, khác luật UI `UI6` |
 | bề rộng trang | `src/components/app-shell.tsx`: `max-w-content` → `--container-content: 1152px` |
 | màn hiện có | `src/routes/orders.tsx`: bảng 9 cột, 5 tab trạng thái, ô tìm, phân trang 20 dòng |
 | dữ liệu | `src/contract/orders.ts`: `Order` có `express`, `handoffDeadline` |

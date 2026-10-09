@@ -33,23 +33,24 @@ mọi page theo đúng cách đó. Không cặp nào page dùng làm chữ thì 
 | --- | --------- | ---------- | --------- |
 | <`on-primary` trên `primary`> | <sáng / tối (suy ra)> | <3.28 : 1> | <cách dùng thay, vd chữ `ink` trên nền `primary`> |
 
-### Giới hạn nhường cho design system
+### Luật UI theo design system
 
-Giới hạn `G` nào trong `references/page-principles.md` mà design system nói khác: tài liệu của nó viết ra, hay component của dự án
-đang làm vậy. Chỉ có token thì chưa tính. Có dòng `G<n>` thì `check.mjs` bỏ kiểm của giới hạn đó cho cả thư mục.
-Không giới hạn nào nhường thì xoá bảng, ghi `Không có.`
+Luật UI (`references/ui-principles.md`) nào mà design system làm khác: tài liệu của nó viết ra, hay component của dự án
+đang làm vậy. Chỉ có token thì chưa tính. Có dòng `UI<n>` thì `check.mjs` bỏ kiểm của luật đó cho cả thư mục. Luật có
+dòng **Phục vụ** khác `—` thì cột "Giữ luật UX bằng" ghi cách page vẫn giữ luật UX đó; luật ghi `—` thì để trống.
+Không luật nào theo design system thì xoá bảng, ghi `Không có.`
 
-| Giới hạn | Design system nói | Dẫn chứng |
-| -------- | ----------------- | --------- |
-| <G…> | <design system làm gì khác giới hạn> | <câu trích từ DESIGN.md, hay đường dẫn component> |
+| Luật | Design system nói | Dẫn chứng | Giữ luật UX bằng |
+| ---- | ----------------- | --------- | ---------------- |
+| <UI…> | <design system làm gì khác luật> | <câu trích từ DESIGN.md, hay đường dẫn component> | <vd `UX4`: modal tách khỏi trang bằng lớp phủ tối> |
 
 ## Pages
 
 Đề một màn: phương án A, B được dựng và các hướng không dựng (`chưa chọn`). Mỗi màn tối đa hai page.
 
-| File | Phương án | Câu hỏi trung tâm | Đơn vị chính | Hy sinh | Trạng thái |
-| ---- | --------- | ----------------- | ------------ | ------- | ---------- |
-| `<NN-slug.html>` | <A · tên> | <câu người dùng tự hỏi> | <tuần, người, ngày…> | <câu hỏi nào chậm đi> | <đã dựng / chưa chọn> |
+| File | Phương án | Bố cục | Tiện cho | Trạng thái |
+| ---- | --------- | ------ | -------- | ---------- |
+| `<NN-slug.html>` | <A · tên> | <thứ gì trên cùng, thứ gì chiếm phần lớn trang, thứ gì ở cạnh> | <việc 1 · việc 2> | <đã dựng / chưa chọn> |
 
 ## Luồng
 

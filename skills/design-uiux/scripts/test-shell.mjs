@@ -8,7 +8,7 @@
 // có 1 page đang dựng dở; cả bốn dùng chung .design/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
 // đánh dấu xong mọi bước dựng, như page đã giao.
 //
-// spec: F2 F6.3 F6.4 F6.5
+// spec: F2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -31,20 +31,22 @@ mkdirSync(out, { recursive: true });
 
 const run = (...params) => execFileSync(process.execPath, [join(here, "new-design.mjs"), ...params], { cwd: work, encoding: "utf8" }).trim();
 const options = [
-  ["forecast", "A · Dự báo tuần", "Tuần này có đủ quota tới reset không?", "tuần", "lịch sử từng ngày"],
-  ["timeline", "B · Timeline tuần", "Quota đã dùng vào những lúc nào?", "session", "dự báo"],
-  ["habit", "C · Lưới thói quen", "Ngày nào trong tuần dùng nặng?", "ngày", "giờ và từng session"],
+  ["forecast", "A · Thẻ dự báo tuần, lịch sử bên dưới", "Trên cùng là thẻ dự báo quota tới ngày reset. Dưới là bảng từng ngày.", "xem tuần này có đủ quota không"],
+  ["timeline", "B · Timeline các session trong tuần", "Phần lớn trang là timeline 7 ngày, mỗi session một vạch.", "xem quota đã dùng vào lúc nào"],
+  ["habit", "C · Lưới ngày × giờ", "Phần lớn trang là lưới 7 ngày × 24 giờ, ô đậm là giờ dùng nặng.", "xem ngày nào dùng nặng · so các tuần"],
 ];
 const example = readFileSync(join(here, "../templates/example.html"), "utf8");
 const progress = (dir, file, ...params) => run("progress", dir, file, ...params);
 function builtPage(dir, ...params) {
   const file = run("page", dir, ...params);
   writeFileSync(file, example);
+  progress(dir, basename(file), "--prepared");
   for (let step = 1; step <= 6; step += 1) progress(dir, basename(file), "--done", String(step));
+  progress(dir, basename(file), "--delivered");
 }
 const multi = run("init", "shell-test", "--root", root);
-for (const [slug, option, question, unit, tradeoff] of options) {
-  builtPage(multi, slug, "--title", option.slice(4), "--option", option, "--question", question, "--unit", unit, "--tradeoff", tradeoff);
+for (const [slug, option, layout, goodFor] of options) {
+  builtPage(multi, slug, "--title", option.slice(4), "--option", option, "--layout", layout, "--good-for", goodFor);
 }
 const single = run("init", "one-page", "--root", root);
 builtPage(single, "settings", "--title", "Cài đặt");
@@ -60,7 +62,9 @@ for (const [slug, screen, purpose, body] of screens) {
   const file = run("page", flow, slug, "--title", `Onboarding · ${screen.slice(4)}`, "--screen", screen, "--purpose", purpose);
   const html = readFileSync(file, "utf8").replace(/<main id="design"[\s\S]*<\/main>/, `<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><h1>${screen}</h1>${body}</div></main>`);
   writeFileSync(file, html);
+  progress(flow, basename(file), "--prepared");
   for (let step = 1; step <= 6; step += 1) progress(flow, basename(file), "--done", String(step));
+  progress(flow, basename(file), "--delivered");
 }
 const refused = (...params) => {
   try {
@@ -203,7 +207,7 @@ for (const width of [1600, 1280, 700, 375]) {
     }
     const tipBox = (await tip.isVisible()) ? await tip.boundingBox() : null;
     const tipText = tipBox ? (await tip.innerText()).replace(/\n/g, " | ") : "";
-    expect(`${width}px: ${touch ? "chạm giữ" : "đưa chuột vào"} nút C → khung mô tả có câu hỏi của C, trong màn hình, vẫn ở page A`, tipText.includes(options[2][2]) && tipBox.x >= 0 && tipBox.x + tipBox.width <= width && page.url().includes("01-forecast.html"), tipText);
+    expect(`${width}px: ${touch ? "chạm giữ" : "đưa chuột vào"} nút C → khung mô tả có tên, bố cục, "Tiện cho:" của C, trong màn hình, vẫn ở page A`, tipText.includes(options[2][1]) && tipText.includes(options[2][2]) && tipText.includes(`Tiện cho: ${options[2][3]}`) && tipBox.x >= 0 && tipBox.x + tipBox.width <= width && page.url().includes("01-forecast.html"), tipText);
     await page.screenshot({ path: join(out, `${width}-tip.png`) });
     await page.close();
   }
@@ -343,24 +347,65 @@ for (const width of [1600, 1280, 700, 375]) {
   const file = basename(run("page", building, "dang-nhap", "--title", "Đăng nhập"));
   const body = '<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><input data-q placeholder="Tìm"><div style="height:3000px"></div></div></main>';
   writeFileSync(join(building, file), readFileSync(join(building, file), "utf8").replace(/<main id="design"[\s\S]*<\/main>/, body));
-  const today = new Date().toISOString().slice(5, 10).split("-").reverse().join("/");
-  progress(building, file, "--done", "1");
-  progress(building, file, "--done", "2");
+  const [month, day] = new Date().toISOString().slice(5, 10).split("-").map(Number);
+  const edited = `Sửa lần cuối ${day} thg ${month}`;
   const page = await open(pageUrl(building, file, "?theme=dark"), 1280);
   let loads = 0;
   page.on("load", () => (loads += 1));
   const ready = () => page.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
-  const label = () => page.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+  // Chữ nhãn: trạng thái và số bước; việc con trên nhãn đọc riêng.
+  const label = () => page.$eval("[data-ds-status]", (element) => [...element.querySelectorAll(".ds-status-label, .ds-status-count")].map((part) => part.textContent).join(" ").replace(/\s+/g, " ").trim()).catch(() => "");
+  const badge = () => page.$eval("[data-ds-status]", (element) => ({
+    doing: element.querySelector("[data-ds-status-doing]")?.textContent.trim() ?? "",
+    ripple: element.querySelector(".ds-status-dot") ? getComputedStyle(element.querySelector(".ds-status-dot"), "::after").animationName : "",
+    done: element.querySelector(".ds-status-track")?.style.getPropertyValue("--ds-done") ?? "",
+  })).catch(() => ({}));
   const quiet = async () => {
     const before = loads;
     await page.waitForTimeout(4500);
     return loads === before;
   };
   await ready();
+  // Bước chuẩn bị: agent chính đang viết brief. Đánh dấu xong không tăng rev: nhãn đổi mà page không tải lại.
+  const prepping = { label: await label(), ...(await badge()) };
+  await page.click("[data-ds-status]");
+  const prepRows = await page.$$eval("[data-ds-status-list] li", (items) => items.map((item) => `${item.dataset.step ?? "nhóm"}:${item.textContent.trim()}`).slice(0, 3).join(" | "));
+  await page.keyboard.press("Escape");
+  expect('tiến độ: page mới hiện "Đang chuẩn bị · Viết brief chung", chấm có vòng lan, thanh tiến độ 0%; danh sách mở đầu bằng nhóm Chuẩn bị, ● Viết brief chung', prepping.label === "Đang chuẩn bị" && prepping.doing === "· Viết brief chung" && prepping.ripple === "ds-ripple" && prepping.done === "0.0%" && prepRows.startsWith("nhóm:Chuẩn bị | current:●Viết brief chung | nhóm:Dựng"), `${JSON.stringify(prepping)} · ${prepRows}`);
+  progress(building, file, "--prepared");
+  await page.waitForFunction(() => document.querySelector("[data-ds-status]")?.textContent.includes("0/6"), null, { timeout: 4000 }).catch(() => null);
+  const afterPrep = await badge();
+  expect('tiến độ: --prepared → "Đang dựng 0/6 · Đọc brief và luật UX, UI", page không tải lại', (await label()) === "Đang dựng 0/6" && afterPrep.doing === "· Đọc brief và luật UX, UI" && loads === 0, `${await label()} · ${afterPrep.doing} · ${loads} lần tải`);
+  progress(building, file, "--done", "1");
+  progress(building, file, "--done", "2");
+  await page.waitForFunction(() => document.querySelector("[data-ds-status]")?.textContent.includes("2/6"), null, { timeout: 8000 }).catch(() => null);
+  await ready();
+  loads = 0;
   expect('tiến độ: page đang dựng hiện nhãn "Đang dựng 2/6"', (await label()) === "Đang dựng 2/6", await label());
   await page.click("[data-ds-status]");
   const marks = await page.$$eval("[data-ds-status-list] li[data-step] span", (items) => items.map((item) => item.textContent).join(""));
-  expect("tiến độ: bấm nhãn thấy danh sách ✓ ✓ ● ○ ○ ○", marks === "✓✓●○○○", marks);
+  expect("tiến độ: bấm nhãn thấy danh sách ✓ (chuẩn bị) rồi ✓ ✓ ● ○ ○ ○, rồi ○ (giao)", marks === "✓✓✓●○○○○", marks);
+  expect("tiến độ: thanh tiến độ ở đáy nhãn tô 2/6", (await badge()).done === "33.3%", (await badge()).done);
+  // Nội dung không đổi thì shell không vẽ lại nhãn: chấm vẫn là phần tử cũ sau hai lượt đọc, vòng lan không giật về đầu.
+  await page.$eval(".ds-status-dot", (dot) => (dot.dataset.mark = "cu"));
+  await page.waitForTimeout(4500);
+  expect("tiến độ: nội dung không đổi thì nhãn không vẽ lại", (await page.$eval(".ds-status-dot", (dot) => dot.dataset.mark ?? "").catch(() => "")) === "cu");
+  // Việc con: ghi không tăng rev, nên page không tải lại, danh sách đang mở vẽ lại dòng thụt dưới bước ●.
+  const doingRow = () => page.$eval("[data-ds-status-list]", (list) => {
+    const row = list.querySelector('li[data-step="doing"]');
+    return row ? { text: row.textContent.trim(), after: row.previousElementSibling?.dataset.step } : null;
+  });
+  const loadsBeforeDoing = loads;
+  progress(building, file, "--doing", "Chuẩn bị dữ liệu");
+  await page.waitForFunction(() => document.querySelector('[data-ds-status-list] li[data-step="doing"]'), null, { timeout: 4000 }).catch(() => null);
+  const firstDoing = await doingRow();
+  progress(building, file, "--doing", "Viết bảng đơn hàng");
+  await page.waitForFunction(() => document.querySelector('[data-ds-status-list] li[data-step="doing"]')?.textContent.includes("Viết bảng"), null, { timeout: 4000 }).catch(() => null);
+  const secondDoing = await doingRow();
+  const onBadge = await badge();
+  expect("tiến độ: việc con hiện cả trên nhãn, trượt lên khi đổi", onBadge.doing === "· Viết bảng đơn hàng" && (await page.$eval("[data-ds-status-doing]", (el) => el.hasAttribute("data-fresh")).catch(() => false)), JSON.stringify(onBadge));
+  expect("tiến độ: --doing hiện dòng việc con ngay dưới bước ●, đổi việc con thì dòng đổi, page không tải lại", firstDoing?.text === "Chuẩn bị dữ liệu" && firstDoing.after === "current" && secondDoing?.text === "Viết bảng đơn hàng" && loads === loadsBeforeDoing, JSON.stringify({ firstDoing, secondDoing, loads: loads - loadsBeforeDoing }));
+  await page.screenshot({ path: join(out, "progress-doing.png"), clip: { x: 0, y: 0, width: 640, height: 320 } });
   await page.keyboard.press("Escape");
   await page.evaluate(() => window.scrollTo(0, 900));
   await page.waitForTimeout(100);
@@ -370,6 +415,10 @@ for (const width of [1600, 1280, 700, 375]) {
   await ready();
   await page.waitForTimeout(400);
   const after = { seconds: (Date.now() - started) / 1000, theme: new URL(page.url()).searchParams.get("theme"), scroll: await page.evaluate(() => window.scrollY), label: await label() };
+  await page.click("[data-ds-status]");
+  const doingAfterDone = await page.$$eval('[data-ds-status-list] li[data-step="doing"]', (rows) => rows.length);
+  await page.keyboard.press("Escape");
+  expect("tiến độ: --done xoá dòng việc con của bước vừa xong", doingAfterDone === 0, `${doingAfterDone} dòng`);
   expect("tiến độ: bước mới xong → page tự tải lại trong ≤ 4s, giữ giá trị trên URL và vị trí cuộn", loads === 1 && after.seconds <= 4 && after.theme === "dark" && Math.abs(after.scroll - 900) <= 1 && after.label === "Đang dựng 3/6", JSON.stringify(after));
 
   await page.focus("[data-q]");
@@ -408,8 +457,18 @@ for (const width of [1600, 1280, 700, 375]) {
   await narrow.click("[data-ds-status]");
   await narrow.waitForEvent("load", { timeout: 3000 }).catch(() => null);
   await narrow.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
-  const done = await narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
-  expect(`tiến độ: rời ô trong iframe thì tải lại; xong hết → "Xong · ${today}"`, narrowLoads === 1 && done === `Xong · ${today}`, `${narrowLoads} lần tải · ${done}`);
+  // Nhãn và việc con là hai span sát nhau: chuẩn hoá khoảng trắng quanh "·" để so chữ.
+  const statusText = () => narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").replace(/\s*·\s*/g, " · ").trim());
+  const checking = await statusText();
+  const checkingRipple = await narrow.$eval(".ds-status-dot", (dot) => getComputedStyle(dot, "::after").animationName).catch(() => "");
+  expect('tiến độ: rời ô trong iframe thì tải lại; hết bước dựng mà chưa giao → "Đang kiểm lại · Kiểm lại và giao", chấm có vòng lan', narrowLoads === 1 && checking === "Đang kiểm lại · Kiểm lại và giao" && checkingRipple === "ds-ripple", `${narrowLoads} lần tải · ${checking} · ${checkingRipple}`);
+  progress(building, file, "--delivered");
+  await narrow.waitForFunction(() => document.querySelector("[data-ds-status]")?.dataset.state === "done", null, { timeout: 4000 }).catch(() => null);
+  const done = await statusText();
+  await narrow.click("[data-ds-status]");
+  const doneRows = await narrow.$$eval("[data-ds-status-list] li", (items) => items.map((item) => item.textContent.trim()));
+  await narrow.keyboard.press("Escape");
+  expect(`tiến độ: --delivered → "Xong", không có số, page không tải lại; danh sách có nhóm Giao, dòng cuối "${edited}"`, done === "Xong" && narrowLoads === 1 && doneRows.slice(-3).join(" | ") === `Giao | ✓Kiểm lại và giao | ${edited}`, `${done} · ${narrowLoads} lần tải · ${doneRows.slice(-3).join(" | ")}`);
 
   progress(building, file, "--round", "nút to hơn", "đổi chữ nút");
   await narrow.waitForEvent("load", { timeout: 6000 }).catch(() => null);
@@ -417,7 +476,7 @@ for (const width of [1600, 1280, 700, 375]) {
   await narrow.click("[data-ds-status]");
   const revising = await narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
   const rounds = await narrow.$$eval("[data-ds-status-list] .ds-status-round", (items) => items.map((item) => item.textContent).join(" | "));
-  expect('tiến độ: vòng góp ý → "Đang sửa 0/3", danh sách có nhóm "Góp ý vòng 2"', revising === "Đang sửa 0/3" && rounds === "Dựng | Góp ý vòng 2", `${revising} · ${rounds}`);
+  expect('tiến độ: vòng góp ý → "Đang sửa 0/3", danh sách có nhóm "Chuẩn bị", "Dựng", "Góp ý vòng 2", "Giao"; bước giao mở lại', revising === "Đang sửa 0/3" && rounds === "Chuẩn bị | Dựng | Góp ý vòng 2 | Giao" && (await narrow.$$eval('[data-ds-status-list] li[data-step="todo"]', (items) => items.at(-1)?.textContent.trim())) === "○Kiểm lại và giao", `${revising} · ${rounds}`);
   await narrow.screenshot({ path: join(out, "progress-revising.png") });
   await narrow.close();
 
@@ -429,7 +488,7 @@ for (const width of [1600, 1280, 700, 375]) {
   await old.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
   await old.waitForTimeout(4500);
   const oldLabel = await old.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
-  expect(`tiến độ: page không có danh sách → "Xong · ${today}", đọc một lần rồi thôi`, oldLabel === `Xong · ${today}` && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
+  expect('tiến độ: page không có danh sách → "Xong", đọc một lần rồi thôi', oldLabel === "Xong" && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
   await old.close();
   renameSync(`${progressFile}.bak`, progressFile);
 }
