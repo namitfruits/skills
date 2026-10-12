@@ -193,3 +193,8 @@ Kết quả mỗi lần chạy thử để ở `.test/<tên-skill>/NNN-<slug>/`.
 
 Sơ đồ trong SKILL.md, doc, README luôn vẽ bằng mermaid (theo skill `mermaid-diagram-design`), không vẽ bằng ký tự
 ASCII (`─►`, `│`, `└──`).
+
+## Git
+
+Agent làm việc và commit thẳng trên `main`. Agent không tạo nhánh feature, kể cả khi bắt đầu một plan mới. Nếu người
+dùng yêu cầu làm trên nhánh riêng, thì agent mới tạo nhánh.
