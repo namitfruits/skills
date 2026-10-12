@@ -62,6 +62,23 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
   mới tải. Ô chọn, thanh kéo không tính: chúng giữ con trỏ sau khi chọn, tính vào thì page đợi mãi.
 - Màn hẹp (≤ 720px) nhãn chỉ giữ dấu, số bước và thanh tiến độ, bỏ chữ, việc con và ngày, để toolbar vẫn vừa một dòng.
 
+## Chế độ comment: chỉ đúng chỗ, không đụng page
+
+- **Nút comment nằm ở view-controller**, cạnh nút số khối: comment là một cách nhìn page, không đổi page.
+- **Bật thì cú bấm vào bản thiết kế không tới page.** Nút, link, form của page không chạy; con trỏ thành dấu cộng, khối
+  dưới con trỏ có viền accent. Đáy màn có một dòng nhắc "Bấm một khối hay kéo chọn một vùng · Esc để thoát".
+- **Bấm là chọn khối, kéo quá 6px là chọn vùng.** Ô viết nổi ngay dưới chỗ chọn, lật lên trên khi sát đáy, luôn nằm
+  trong màn hình kể cả ở 375px.
+- **Ô viết nói rõ gửi đi đâu.** "Claude đang nghe" (xanh lá) thì nút Gửi bật. "Claude không nghe" thì nút Gửi tắt,
+  nút Chép vẫn chép được. Cmd/Ctrl+Enter gửi, Esc đóng ô, Esc lần nữa thoát chế độ comment.
+- **Ô viết đang mở là đang gõ.** Page có bản mới thì đợi ô đóng mới tải lại, kể cả lúc con trỏ ở nút Gửi.
+- **Ghim là con số, màu theo trạng thái**: accent đã gửi, vàng đang sửa, xanh lá đã sửa. Ghim chưa sửa luôn hiện; ghim đã
+  sửa chỉ hiện khi đang bật chế độ comment, để page đã sửa xong không đầy ghim cũ.
+- Khổ tablet, mobile: chế độ comment chạy trong khung, như bản thiết kế. Trang cha chỉ giữ nút bật tắt và dòng nhắc.
+- Màn ≤ 480px không có nút comment: toolbar không đủ chỗ, và bấm, kéo trên màn đó không chính xác. Muốn comment khổ
+  mobile thì xem trên màn rộng, trong khung mobile.
+- Đang bật chế độ comment thì tải lại page vẫn còn bật (`sessionStorage` của tab).
+
 ## data-panel và config-panel: thấy ngay, khó nhập sai
 
 - **data-panel bên trái vặn dữ liệu** (variables, bộ dữ liệu); **config-panel bên phải vặn cấu hình** (tweaks:
@@ -83,6 +100,7 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 node $SKILL/scripts/new-design.mjs shell [--root .design]   # chép shell mới nhất vào .design/_shell/; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
 node $SKILL/scripts/test-shell.mjs [--pw <thư mục có playwright>] [--out <thư mục ảnh>]
 node $SKILL/scripts/test-progress.mjs   # sau khi sửa lệnh progress của new-design.mjs
+node $SKILL/scripts/test-listen.mjs     # sau khi sửa lệnh listen, comment của new-design.mjs
 ```
 
 `test-shell.mjs` tự dựng một `.design/` mẫu trong thư mục tạm, kiểm toolbar và panel ở 1600 / 1280 / 700 / 375px, sáng

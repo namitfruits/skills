@@ -367,6 +367,32 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F6.15` | new      | máy không có Chrome thì agent mở bằng trình duyệt mặc định và báo trong chat |
 | `F1.4`  | update   | `--auto` không hỏi và không mở trình duyệt |
 
+### 017 · Comment trên page, gửi về session đang chạy skill
+
+- **Plan:** [017-design-uiux-comment-tren-page.md](../../.plan/017-design-uiux-comment-tren-page.md)
+- **Status:** done
+- **Mục tiêu:** muốn góp ý một chỗ trên page, người dùng phải quay sang chat và tả bằng chữ chỗ đó, kèm phương án,
+  khổ màn, bộ dữ liệu đang xem. Agent đoán vị trí, đoán sai thì thêm một vòng. Xong thì người xem bật chế độ comment
+  trên toolbar, bấm vào một khối hay kéo chọn một vùng, viết comment rồi gửi. Comment mang theo chỗ đã chọn và mọi giá
+  trị đang xem. Các quyết định đã chốt với người dùng:
+  - Mọi thứ chạy trên máy. Skill không đăng page lên claude.ai hay dịch vụ ngoài nào.
+  - Session chạy skill có thể là terminal, VS Code hay công cụ khác. Lối chép comment rồi dán vào chat chạy ở mọi nơi.
+    Lối session tự thức dậy khi có comment chỉ hứa cho nơi probe đã xác nhận.
+
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F7.1` | new      | bật chế độ comment, chọn khối hay vùng, viết tại chỗ |
+| `F7.2` | new      | comment mang page, giá trị trên URL, chỗ đã chọn, chữ trong khối |
+| `F7.3` | new      | gửi tới lệnh nghe trên máy |
+| `F7.4` | new      | không ai nghe thì báo và cho chép |
+| `F7.5` | new      | session thức dậy, mỗi comment một vòng góp ý riêng |
+| `F7.6` | new      | ghim đánh số ghi trạng thái |
+| `F7.7` | new      | comment chưa sửa được sửa trước |
+| `F7.8` | new      | bỏ comment sai token |
+| `F7.9` | new      | giao page thì bật lệnh nghe, trừ `--auto` |
+| `F7.10` | new     | comment tới khi đang có vòng thì chờ vòng đó giao xong |
+
 ## Plan Queue
 
 ### PQ-03 · Sửa 7 chỗ SKILL.md mơ hồ còn lại, tìm được khi nghiệm thu 005

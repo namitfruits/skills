@@ -8,10 +8,10 @@
 // có 1 page đang dựng dở; cả bốn dùng chung .design/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
 // đánh dấu xong mọi bước dựng, như page đã giao.
 //
-// spec: F2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11
+// spec: F2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
 
-import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
@@ -491,6 +491,86 @@ for (const width of [1600, 1280, 700, 375]) {
   expect('tiến độ: page không có danh sách → "Xong", đọc một lần rồi thôi', oldLabel === "Xong" && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
   await old.close();
   renameSync(`${progressFile}.bak`, progressFile);
+}
+
+// Chế độ comment: bật, chọn khối, không ai nghe thì nút Gửi tắt; bật lệnh nghe thì gửi được, ghim hiện; bấm nút của page
+// không kích hoạt nút; kéo chọn vùng; khổ mobile chạy trong iframe; ô viết nằm trong màn hình ở 375px.
+{
+  const comments = () => (existsSync(join(multi, "comments.json")) ? JSON.parse(readFileSync(join(multi, "comments.json"), "utf8")) : []);
+  const page = await open(pageUrl(multi, "01-forecast.html"), 1280);
+  await page.click("[data-ds-comment-toggle]");
+  const heading = await (await page.$("#design h1")).boundingBox();
+  await page.mouse.click(heading.x + 10, heading.y + 8);
+  await page.waitForSelector(".ds-comment-popover");
+  await page.waitForTimeout(600);
+  const idle = await page.$eval(".ds-comment-popover", (box) => ({ state: box.querySelector("[data-ds-comment-state]").dataset.listening, send: box.querySelector(".ds-comment-send").disabled, where: box.querySelector(".ds-comment-where").textContent }));
+  expect("comment: bấm một khối mở ô viết; không ai nghe thì ghi không nghe, nút Gửi tắt", idle.state === "0" && idle.send, idle.where);
+  await page.evaluate(() => (navigator.clipboard.writeText = (value) => ((window.copied = value), Promise.resolve())));
+  await page.fill(".ds-comment-popover textarea", "tiêu đề ngắn lại");
+  await page.click('.ds-comment-popover [data-act="copy"]');
+  const copied = await page.evaluate(() => window.copied ?? "");
+  expect("comment: nút Chép đưa page, query đang xem, selector, chữ của khối, góp ý vào bộ nhớ tạm", copied.startsWith("Comment trên 01-forecast.html") && copied.includes("`#design") && copied.includes('"') && copied.endsWith(": tiêu đề ngắn lại"), copied);
+  await page.keyboard.press("Escape");
+
+  const listener = spawn(process.execPath, [join(here, "new-design.mjs"), "listen", multi], { stdio: ["ignore", "pipe", "ignore"] });
+  const lines = [];
+  listener.stdout.on("data", (chunk) => lines.push(...chunk.toString().trim().split("\n")));
+  for (let i = 0; i < 50 && !existsSync(join(multi, "_listen.js")); i += 1) await page.waitForTimeout(100);
+  const button = await page.$("#design button");
+  const before = await page.$eval("#design", (main) => main.innerHTML);
+  await button.click();
+  await page.waitForSelector(".ds-comment-popover");
+  await page.waitForTimeout(600);
+  const same = before === (await page.$eval("#design", (main) => main.innerHTML));
+  await page.fill(".ds-comment-popover textarea", "nút này to hơn");
+  const live = await page.$eval("[data-ds-comment-state]", (state) => state.dataset.listening);
+  await page.click(".ds-comment-send");
+  await page.waitForSelector(".ds-comment-pin");
+  const sent = comments()[0];
+  expect("comment: bấm nút của page không kích hoạt nút; có lệnh nghe thì gửi được, comments.json có page, selector, chữ", same && live === "1" && sent?.page === "01-forecast.html" && sent.target.selector.startsWith("#design") && lines.some((line) => line.startsWith("comment ")), `${sent?.target.selector} · ${sent?.target.text?.slice(0, 30)}`);
+  expect("comment: ghim #1 hiện, trạng thái đã gửi", await page.$eval(".ds-comment-pin", (pin) => pin.textContent === "1" && pin.dataset.status === "sent"));
+  run("comment", multi, "--status", "1", "doing");
+  await page.waitForFunction(() => document.querySelector(".ds-comment-pin")?.dataset.status === "doing", null, { timeout: 4000 }).catch(() => null);
+  expect("comment: --status doing thì ghim đổi sang đang sửa trong 2 giây", (await page.$eval(".ds-comment-pin", (pin) => pin.dataset.status)) === "doing");
+
+  const main = await (await page.$("#design")).boundingBox();
+  await page.mouse.move(main.x + 40, main.y + 120);
+  await page.mouse.down();
+  await page.mouse.move(main.x + 240, main.y + 220, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForSelector(".ds-comment-popover");
+  await page.fill(".ds-comment-popover textarea", "vùng này thưa ra");
+  await page.keyboard.press("Meta+Enter");
+  await page.waitForFunction(() => document.querySelectorAll(".ds-comment-pin").length === 2, null, { timeout: 3000 }).catch(() => null);
+  expect("comment: kéo chọn vùng, Cmd+Enter gửi, target.kind area", comments()[1]?.target.kind === "area", comments()[1]?.target.selector);
+  await page.screenshot({ path: join(out, "comment-desktop.png") });
+  await page.keyboard.press("Escape");
+  expect("comment: Esc thoát chế độ comment", !(await page.evaluate(() => document.documentElement.hasAttribute("data-commenting"))));
+  await page.close();
+
+  const narrow = await open(pageUrl(multi, "01-forecast.html", "?viewport=mobile&theme=dark"), 1280);
+  const frame = await narrow.waitForSelector(".ds-frame-wrap iframe").then((element) => element.contentFrame());
+  await frame.waitForFunction(() => window.Alpine && document.querySelector("#design h1"));
+  await narrow.click("[data-ds-comment-toggle]");
+  await narrow.waitForTimeout(300);
+  await frame.click("#design h1");
+  await frame.waitForSelector(".ds-comment-popover");
+  const inside = await frame.$eval(".ds-comment-popover", (box) => {
+    const rect = box.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= document.documentElement.clientWidth;
+  });
+  await frame.fill(".ds-comment-popover textarea", "tiêu đề xuống dòng");
+  await narrow.waitForTimeout(600);
+  await frame.click(".ds-comment-send");
+  await narrow.waitForTimeout(500);
+  const mobile = comments()[2];
+  expect("comment: khổ mobile chạy trong khung, ô viết nằm trong khung, comment ghi viewport mobile, theme dark", inside && mobile?.viewport === "mobile" && mobile?.theme === "dark" && /viewport=mobile/.test(mobile?.url), mobile?.url);
+  await narrow.screenshot({ path: join(out, "comment-mobile.png") });
+  await narrow.close();
+  const phone = await open(pageUrl(multi, "01-forecast.html"), 375, true);
+  expect("comment: màn 375px không có nút comment", !(await phone.$eval("[data-ds-comment-toggle]", (button) => button.getClientRects().length)));
+  await phone.close();
+  listener.kill("SIGTERM");
 }
 
 expect("không có lỗi JS", errors.length === 0, errors.join(" · "));

@@ -6,8 +6,10 @@
 // màn kề, chữ người xem gõ nằm ở $store.design.form, lưu trong sessionStorage của thư mục design.
 // Tiến độ dựng: nhãn trạng thái ở cột trái toolbar đọc danh sách bước dựng `<file>.progress.js`; có bước mới xong thì
 // tự tải lại, giữ vị trí cuộn, đợi người xem gõ xong. Việc con agent đang làm hiện thành một dòng dưới bước dở.
+// Chế độ comment: nút trên view-controller; người xem bấm một khối hay kéo một vùng, viết, gửi tới lệnh nghe trên máy
+// (new-design.mjs listen) hay chép để dán vào chat; ghim đánh số hiện trạng thái từng comment.
 //
-// spec: F2 F4.2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11
+// spec: F2 F4.2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
 (() => {
   const design = window.DESIGN ?? {};
   const theme = window.DESIGN_THEME ?? { base: "light", derived: null, fonts: [] };
@@ -22,14 +24,22 @@
       status: "Tiến độ dựng page", preparing: "Đang chuẩn bị", building: "Đang dựng", revising: "Đang sửa", checking: "Đang kiểm lại", done: "Xong",
       roundPrep: "Chuẩn bị", roundBuild: "Dựng", roundFeedback: "Góp ý vòng", roundDeliver: "Giao", noBuild: "Page dựng trước khi có danh sách bước",
       lastEdited: (day, month) => `Sửa lần cuối ${day} thg ${month}`,
-      presetsHelp: "Một bộ giá trị dựng sẵn cho ca hay gặp hay ca biên. Chọn là đổi cả bộ; ô nào đổi sẽ nháy lên." },
+      presetsHelp: "Một bộ giá trị dựng sẵn cho ca hay gặp hay ca biên. Chọn là đổi cả bộ; ô nào đổi sẽ nháy lên.",
+      comment: "Comment", commentHint: "Bấm một khối hay kéo chọn một vùng · Esc để thoát", commentPlaceholder: "Cần sửa gì ở đây?",
+      send: "Gửi", copy: "Chép", cancel: "Huỷ", copied: "Đã chép", sending: "Đang gửi…", sendFailed: "Gửi không được",
+      listening: "Claude đang nghe: gửi xong là agent sửa", notListening: "Claude không nghe: chép rồi dán vào chat",
+      area: "vùng", block: "khối", commentStatus: { sent: "đã gửi", doing: "đang sửa", done: "đã sửa" } },
     en: { variables: "Data", tweaks: "Config", presets: "Presets…", reset: "Reset", light: "Light", dark: "Dark",
       derived: "derived", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Section numbers",
       options: "Options", screens: "Screens", goodFor: "Good for", updated: "edited",
       status: "Page build progress", preparing: "Preparing", building: "Building", revising: "Revising", checking: "Checking", done: "Done",
       roundPrep: "Prepare", roundBuild: "Build", roundFeedback: "Feedback round", roundDeliver: "Deliver", noBuild: "Built before step lists existed",
       lastEdited: (day, month) => `Last edited ${new Date(2000, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-      presetsHelp: "A ready-made set of values for a common or edge case. Picking one changes them all; changed fields flash." },
+      presetsHelp: "A ready-made set of values for a common or edge case. Picking one changes them all; changed fields flash.",
+      comment: "Comment", commentHint: "Click a block or drag an area · Esc to exit", commentPlaceholder: "What should change here?",
+      send: "Send", copy: "Copy", cancel: "Cancel", copied: "Copied", sending: "Sending…", sendFailed: "Could not send",
+      listening: "Claude is listening: the agent fixes it after you send", notListening: "Claude is not listening: copy and paste into the chat",
+      area: "area", block: "block", commentStatus: { sent: "sent", doing: "fixing", done: "fixed" } },
   }[lang];
 
   const controls = [
@@ -114,6 +124,7 @@
     info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
     hash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>',
     check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    comment: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
   };
 
   // Icon ⓘ cạnh nhãn, mang lời giải thích ô vặn (help). Khung giải thích là một phần tử chung, vẽ bằng helpTip().
@@ -237,8 +248,11 @@
   let pendingReload = false;
   let frameTyping = false;
   // Chỉ ô gõ chữ: select, thanh kéo, ô tick giữ con trỏ sau khi chọn, tính chúng vào thì page đợi mãi không tải lại.
+  // Ô comment đang mở cũng tính là đang gõ, kể cả lúc con trỏ ở nút Gửi: tải lại giữa chừng thì mất comment.
   const typingSelector = ["textarea", "[contenteditable]:not([contenteditable='false'])", "input:not([type])", ...["text", "search", "email", "password", "tel", "url", "number"].map((type) => `input[type=${type}]`)].join(", ");
-  const isTyping = () => frameTyping || Boolean(document.activeElement?.matches?.(typingSelector));
+  let commentOpen = false;
+  const typingHere = () => commentOpen || Boolean(document.activeElement?.matches?.(typingSelector));
+  const isTyping = () => frameTyping || typingHere();
   function reloadWhenIdle() {
     if (isTyping()) pendingReload = true;
     else location.reload();
@@ -389,6 +403,7 @@
         <div class="ds-bar-view">
           ${segmentedHtml("viewport", ["desktop", "tablet", "mobile"].map((value) => [value, icons[value], text[value]]))}
           ${segmentedHtml("theme", ["light", "dark"].map((value) => [value, themeLabel(value), theme.derived === value ? `${text[value]} — ${text.derived}` : text[value]]))}
+          <button type="button" class="ds-icon-button" data-ds-comment-toggle title="${text.comment}" :aria-pressed="String($store.comment.on)" @click="$store.comment.on = !$store.comment.on">${icons.comment}</button>
           <button type="button" class="ds-icon-button" title="${text.blocks}" :aria-pressed="String($store.design.sections)" @click="$store.design.sections = !$store.design.sections">${icons.hash}</button>
           <button type="button" class="ds-icon-button" title="${text.reset}" @click="Object.assign($store.design, ${escapeHtml(JSON.stringify({ ...Object.fromEntries(controls.map((control) => [control.key, defaultOf(control)])), form: {} }))})">${icons.reset}</button>
         </div>
@@ -465,7 +480,10 @@
       frame = document.createElement("iframe");
       frame.title = values.viewport;
       frame.src = `${location.pathname.split("/").pop()}${queryFor({ ...values, viewport: "desktop" }, { frame: "1" })}`;
-      frame.addEventListener("load", () => frame.contentWindow.postMessage({ type: "design:set", values: JSON.parse(JSON.stringify(Alpine.store("design"))) }, "*"));
+      frame.addEventListener("load", () => {
+        frame.contentWindow.postMessage({ type: "design:set", values: JSON.parse(JSON.stringify(Alpine.store("design"))) }, "*");
+        syncComment();
+      });
       wrap.append(frame);
     }
     Object.assign(frame.style, { width: `${size.width}px`, height: `${size.height}px` });
@@ -481,10 +499,11 @@
       frameTyping = Boolean(event.data.typing);
       reloadIfDoneTyping();
     }
+    if (event.data?.type === "design:comment-off") Alpine.store("comment").on = false;
   });
   // Trang cha không đọc được vào iframe trên file://, nên khung mobile / tablet tự báo khi con trỏ vào hay rời ô gõ.
+  const reportTyping = () => isFrame && setTimeout(() => parent.postMessage({ type: "design:typing", typing: typingHere() }, "*"), 0);
   if (isFrame) {
-    const reportTyping = () => setTimeout(() => parent.postMessage({ type: "design:typing", typing: Boolean(document.activeElement?.matches?.(typingSelector)) }, "*"), 0);
     document.addEventListener("focusin", reportTyping);
     document.addEventListener("focusout", reportTyping);
   }
@@ -512,6 +531,269 @@
     }
     button.setAttribute("data-copied", "");
     setTimeout(() => button.removeAttribute("data-copied"), 1500);
+  });
+
+  // Chế độ comment. Chạy ở nơi vẽ bản thiết kế: khổ desktop là trang cha, khổ tablet / mobile là iframe (trang cha gửi
+  // lệnh bật tắt bằng postMessage kèm khổ thật). Bật thì cú bấm vào #design không tới page: bấm chọn khối dưới con trỏ,
+  // kéo quá 6px chọn hình chữ nhật (khối của vùng là khối nhỏ nhất chứa trọn nó), rồi mở ô viết ngay dưới chỗ chọn.
+  // Gửi: đọc cổng và token trong _listen.js (new-design.mjs listen ghi), hỏi GET /health, POST /comment body text/plain
+  // (Chrome không gửi request kiểm trước). Không ai nghe thì nút Gửi tắt, nút Chép đưa comment kèm chỗ chọn vào bộ nhớ
+  // tạm. Ghim: đọc comments.js mỗi 2 giây như .progress.js; ghim đã sửa chỉ hiện khi đang bật chế độ comment.
+  const comments = { active: false, viewport: "desktop", listen: null, list: [], timer: null, polling: false };
+  const commentKey = `ds-comment:${currentFile}`;
+  const commentUi = (className, html = "") => {
+    const element = document.createElement("div");
+    element.className = `ds-comment-ui ${className}`;
+    element.innerHTML = html;
+    document.body.append(element);
+    return element;
+  };
+  const designRoot = () => document.querySelector("#design") ?? document.body;
+  const inDesign = (target) => target instanceof Element && !target.closest(".ds-comment-ui") && designRoot().contains(target);
+
+  // Đọc lại một file .js cạnh page bằng thẻ <script> mới: trên file:// không có cách khác. Trả về false khi không có file.
+  const loadScript = (name) =>
+    new Promise((resolve) => {
+      const tag = document.createElement("script");
+      tag.src = `${name}?t=${Date.now()}`;
+      tag.onload = () => (tag.remove(), resolve(true));
+      tag.onerror = () => (tag.remove(), resolve(false));
+      document.head.append(tag);
+    });
+  async function checkListen() {
+    window.DS_LISTEN = null;
+    const listen = (await loadScript("_listen.js")) ? window.DS_LISTEN : null;
+    if (!listen?.port) return (comments.listen = null);
+    const ok = await fetch(`http://127.0.0.1:${listen.port}/health`, { signal: AbortSignal.timeout(1500) }).then((res) => res.ok, () => false);
+    return (comments.listen = ok ? listen : null);
+  }
+
+  function cssPath(element) {
+    const parts = [];
+    for (let node = element; node && node !== designRoot() && node !== document.body; node = node.parentElement) {
+      if (node.id) {
+        parts.unshift(`#${CSS.escape(node.id)}`);
+        return parts.join(" > ");
+      }
+      const same = [...(node.parentElement?.children ?? [])].filter((child) => child.tagName === node.tagName);
+      parts.unshift(`${node.tagName.toLowerCase()}${same.length > 1 ? `:nth-of-type(${same.indexOf(node) + 1})` : ""}`);
+    }
+    return [designRoot().id ? `#${designRoot().id}` : "body", ...parts].join(" > ");
+  }
+  const docRect = (rect) => ({ x: rect.left + scrollX, y: rect.top + scrollY, w: rect.width, h: rect.height });
+  function areaElement(rect) {
+    let node = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    while (node && node !== designRoot()) {
+      const box = node.getBoundingClientRect();
+      if (box.left <= rect.left + 2 && box.top <= rect.top + 2 && box.right >= rect.right - 2 && box.bottom >= rect.bottom - 2) return node;
+      node = node.parentElement;
+    }
+    return designRoot();
+  }
+  function targetOf(element, kind, rect) {
+    return {
+      kind,
+      selector: cssPath(element),
+      block: element.closest("[data-block]")?.dataset.block ?? "",
+      text: (element.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 200),
+      rect: docRect(rect),
+    };
+  }
+  function currentValues() {
+    const values = JSON.parse(JSON.stringify(Alpine.store("design")));
+    if (isFrame) values.viewport = comments.viewport;
+    return values;
+  }
+
+  // shell.js nạp trong <head>: các lớp phủ tạo lúc alpine:init, khi đã có <body>.
+  let hoverBox, dragBox, pinLayer, commentHint;
+  function initCommentUi() {
+    hoverBox = commentUi("ds-comment-hover");
+    dragBox = commentUi("ds-comment-drag");
+    pinLayer = commentUi("ds-comment-pins");
+    if (!isFrame) commentHint = commentUi("ds-comment-hint", escapeHtml(text.commentHint));
+  }
+  const placeBox = (box, rect) => Object.assign(box.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, display: "block" });
+
+  let popover = null;
+  function closePopover() {
+    popover?.remove();
+    popover = null;
+    commentOpen = false;
+    dragBox.style.display = "none";
+    reportTyping();
+    reloadIfDoneTyping();
+  }
+  async function openPopover(target, rect) {
+    closePopover();
+    commentOpen = true;
+    reportTyping();
+    placeBox(dragBox, rect);
+    const where = target.kind === "area" ? text.area : target.block ? `${text.block} ${target.block}` : target.selector.split(" > ").pop();
+    popover = commentUi("ds-comment-popover", `<div class="ds-comment-where">${text.comment} · ${escapeHtml(where)}</div>
+      <textarea rows="3" placeholder="${text.commentPlaceholder}"></textarea>
+      <div class="ds-comment-state" data-ds-comment-state></div>
+      <div class="ds-comment-actions"><button type="button" data-act="cancel">${text.cancel}</button><button type="button" data-act="copy">${text.copy}</button><button type="button" data-act="send" class="ds-comment-send" disabled>${text.send}</button></div>`);
+    const width = Math.min(320, root.clientWidth - 16);
+    popover.style.width = `${width}px`;
+    popover.style.left = `${Math.max(8, Math.min(rect.left, root.clientWidth - width - 8))}px`;
+    const below = rect.bottom + 8;
+    popover.style.top = `${below + 170 > innerHeight ? Math.max(8, rect.top - 178) : below}px`;
+    const area = popover.querySelector("textarea");
+    const state = popover.querySelector("[data-ds-comment-state]");
+    const sendButton = popover.querySelector('[data-act="send"]');
+    area.focus();
+    const payload = () => ({ page: currentFile, url: queryFor(currentValues()), viewport: currentValues().viewport, theme: currentValues().theme, target, body: area.value.trim() });
+    const showListen = () => {
+      state.textContent = comments.listen ? text.listening : text.notListening;
+      state.dataset.listening = comments.listen ? "1" : "0";
+      sendButton.disabled = !comments.listen || !area.value.trim();
+    };
+    area.addEventListener("input", showListen);
+    showListen();
+    checkListen().then(() => popover && showListen());
+    const send = async () => {
+      if (sendButton.disabled) return;
+      sendButton.disabled = true;
+      state.textContent = text.sending;
+      const body = payload();
+      const res = await fetch(`http://127.0.0.1:${comments.listen.port}/comment`, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ ...body, token: comments.listen.token }) }).catch(() => null);
+      if (res?.status !== 201) {
+        await checkListen();
+        showListen();
+        state.textContent = `${text.sendFailed}${res ? ` (${res.status})` : ""} · ${state.textContent}`;
+        return;
+      }
+      const { id } = await res.json();
+      comments.list = [...comments.list.filter((item) => item.id !== id), { id, ...body, status: "sent" }];
+      closePopover();
+      renderPins();
+      watchComments();
+    };
+    popover.addEventListener("click", async (event) => {
+      const act = event.target.closest("[data-act]")?.dataset.act;
+      if (act === "cancel") closePopover();
+      if (act === "send") send();
+      if (act === "copy") {
+        const body = payload();
+        const line = `Comment trên ${body.page}${body.url} · ${where} \`${target.selector}\`${target.text ? ` "${target.text}"` : ""}: ${body.body}`;
+        try {
+          await navigator.clipboard.writeText(line);
+        } catch {
+          const copy = Object.assign(document.createElement("textarea"), { value: line });
+          popover.append(copy);
+          copy.select();
+          document.execCommand("copy");
+          copy.remove();
+        }
+        state.textContent = text.copied;
+      }
+    });
+    area.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) send();
+    });
+  }
+
+  // Ghim: số comment, màu theo trạng thái, ở góc trên phải của khối (theo selector) hay của vùng đã lưu.
+  function renderPins() {
+    const shown = comments.list.filter((item) => item.page === currentFile && (item.status !== "done" || comments.active));
+    pinLayer.innerHTML = shown
+      .map((item) => {
+        let rect = item.target?.rect ?? { x: 0, y: 0, w: 0, h: 0 };
+        if (item.target?.kind === "element") {
+          try {
+            const element = document.querySelector(item.target.selector);
+            if (element?.getClientRects().length) rect = docRect(element.getBoundingClientRect());
+          } catch {}
+        }
+        const label = `#${item.id} · ${text.commentStatus[item.status] ?? item.status}: ${item.body}`;
+        // Kẹp trong bề rộng trang: rect lưu từ màn rộng hơn (khối đã bị xoá) không được đẩy trang cuộn ngang.
+        const left = Math.max(0, Math.min(Math.round(rect.x + rect.w - 11), root.clientWidth - 32));
+        return `<span class="ds-comment-pin" data-status="${escapeHtml(item.status)}" style="left:${left}px;top:${Math.max(0, Math.round(rect.y - 11))}px" title="${escapeHtml(label)}">${item.id}</span>`;
+      })
+      .join("");
+  }
+  async function readComments() {
+    window.DS_COMMENTS = null;
+    if (!(await loadScript("comments.js"))) return false;
+    if (Array.isArray(window.DS_COMMENTS)) comments.list = window.DS_COMMENTS;
+    renderPins();
+    return true;
+  }
+  // Đọc comments.js lần đầu lúc mở page; có file, hay đang bật chế độ comment, thì đọc lại mỗi 2 giây.
+  function watchComments() {
+    if (comments.polling) return;
+    comments.polling = true;
+    comments.timer = setInterval(() => document.visibilityState === "visible" && readComments(), 2000);
+  }
+
+  let drag = null;
+  const block = (event) => {
+    if (!comments.active || !inDesign(event.target)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  function setCommentActive(on) {
+    comments.active = on;
+    root.toggleAttribute("data-commenting", on);
+    hoverBox.style.display = "none";
+    if (!on) closePopover();
+    if (on) watchComments();
+    renderPins();
+  }
+  window.addEventListener("pointermove", (event) => {
+    if (!comments.active || popover || !hoverBox) return;
+    if (drag) {
+      const left = Math.min(drag.x, event.clientX);
+      const top = Math.min(drag.y, event.clientY);
+      drag.rect = new DOMRect(left, top, Math.abs(event.clientX - drag.x), Math.abs(event.clientY - drag.y));
+      if (drag.rect.width > 6 || drag.rect.height > 6) placeBox(dragBox, drag.rect), (hoverBox.style.display = "none");
+      return;
+    }
+    if (inDesign(event.target)) placeBox(hoverBox, event.target.getBoundingClientRect());
+    else hoverBox.style.display = "none";
+  }, true);
+  window.addEventListener("pointerdown", (event) => {
+    if (!comments.active || !inDesign(event.target) || event.button !== 0) return;
+    block(event);
+    if (popover) return closePopover();
+    drag = { x: event.clientX, y: event.clientY, target: event.target, rect: null };
+  }, true);
+  window.addEventListener("pointerup", (event) => {
+    if (!drag) return;
+    block(event);
+    const { target, rect } = drag;
+    drag = null;
+    hoverBox.style.display = "none";
+    if (rect && (rect.width > 6 || rect.height > 6)) openPopover(targetOf(areaElement(rect), "area", rect), rect);
+    else openPopover(targetOf(target, "element", target.getBoundingClientRect()), target.getBoundingClientRect());
+  }, true);
+  for (const type of ["click", "mousedown", "mouseup", "dblclick", "submit", "contextmenu"]) window.addEventListener(type, block, true);
+  // Esc: ô viết đang mở thì đóng ô (con trỏ ở ô viết hay ở nút), không thì thoát chế độ comment.
+  window.addEventListener("keydown", (event) => {
+    if (!comments.active || event.key !== "Escape") return;
+    if (popover) return closePopover();
+    if (isFrame) parent.postMessage({ type: "design:comment-off" }, "*");
+    else Alpine.store("comment").on = false;
+  });
+  window.addEventListener("resize", () => pinLayer && renderPins());
+
+  // Trang cha: chế độ comment chạy ở đây khi khổ desktop, trong iframe khi khổ tablet / mobile; nhắc cách dùng ở đáy màn.
+  function syncComment() {
+    if (isFrame || !window.Alpine) return;
+    const on = Alpine.store("comment").on;
+    const viewport = Alpine.store("design").viewport;
+    try {
+      sessionStorage.setItem(commentKey, on ? "1" : "0");
+    } catch {}
+    commentHint.style.display = on ? "block" : "none";
+    setCommentActive(on && viewport === "desktop");
+    frame?.contentWindow?.postMessage({ type: "design:comment", on: on && viewport !== "desktop", viewport }, "*");
+  }
+  window.addEventListener("message", (event) => {
+    if (!isFrame || event.data?.type !== "design:comment") return;
+    comments.viewport = event.data.viewport;
+    setCommentActive(Boolean(event.data.on));
   });
 
   // Icon lucide: mỗi lần Alpine vẽ thêm <i data-lucide> thì vẽ lại. Có điều kiện i[data-lucide]: svg đã vẽ vẫn mang
@@ -560,7 +842,13 @@
   }
 
   document.addEventListener("alpine:init", () => {
+    initCommentUi();
     Alpine.store("design", state);
+    let commentWasOn = false;
+    try {
+      commentWasOn = !isFrame && sessionStorage.getItem(commentKey) === "1";
+    } catch {}
+    Alpine.store("comment", { on: commentWasOn });
     if (!document.body.hasAttribute("x-data")) document.body.setAttribute("x-data", "");
     if (!isFrame) {
       document.body.insertAdjacentHTML("afterbegin", toolbarHtml());
@@ -589,11 +877,17 @@
       };
       window.addEventListener("resize", relayout);
       new ResizeObserver(() => alignBar(Alpine.store("design").viewport)).observe(document.body);
+      Alpine.effect(() => {
+        Alpine.store("comment").on;
+        Alpine.store("design").viewport;
+        syncComment();
+      });
     }
   });
   document.addEventListener("alpine:initialized", () => {
     watchIcons();
     restoreScroll();
     if (!isFrame) watchProgress();
+    readComments().then((found) => found && watchComments());
   });
 })();

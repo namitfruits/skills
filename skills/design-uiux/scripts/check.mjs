@@ -339,8 +339,9 @@ async function openPage(url, width, issues) {
   const page = await context.newPage();
   page.on("close", () => context.close().catch(() => {}));
   page.on("pageerror", (error) => issues.push(`lỗi JS: ${error.message}`));
-  // Shell đọc <page>.progress.js mỗi 2 giây; page dựng trước khi có danh sách bước không có file đó, nạp hỏng là bình thường.
-  const ofProgress = (url) => /\.progress\.js(\?|$)/.test(url ?? "");
+  // Shell đọc <page>.progress.js mỗi 2 giây, comments.js và _listen.js của chế độ comment; page dựng trước khi có danh
+  // sách bước, hay thư mục chưa bật lệnh nghe lần nào, không có các file đó, nạp hỏng là bình thường.
+  const ofProgress = (url) => /(\.progress|\/comments|\/_listen)\.js(\?|$)/.test(url ?? "");
   page.on("console", (message) => {
     if (ofProgress(message.location()?.url)) return;
     if (message.type() === "error" || /Alpine Expression Error/.test(message.text())) issues.push(`console: ${message.text().split("\n")[0].slice(0, 160)}`);

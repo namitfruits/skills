@@ -12,6 +12,8 @@
 //   node new-design.mjs tokens <DESIGN.md | tokens.css> [--page-width <…>] [--out <tokens.js>]
 //   node new-design.mjs shell [--root .design]
 //   node new-design.mjs open <thư mục design> [--dry-run]
+//   node new-design.mjs listen <thư mục design>
+//   node new-design.mjs comment <thư mục design> (--pending | --status <id> doing|done)
 //
 // Mỗi phương án được dựng đúng một page; góp ý thì sửa thẳng page đó rồi touch để pages.js ghi ngày sửa và góp ý.
 // Thư mục luồng: mỗi màn một page, tạo bằng --screen theo thứ tự màn. Một thư mục là thư mục phương án (--option) hay
@@ -43,9 +45,18 @@
 // google-chrome --new-window; thiếu Chrome thì mở bằng trình duyệt mặc định (open, xdg-open); hệ khác không mở gì.
 // stdout một dòng `chrome | default | none <url>`; --dry-run in thêm `$ <lệnh>` và không chạy. Exit 2: không mở được.
 //
-// spec: F1.2 F1.17 F4 F3.6 F3.8 F6.2 F6.6 F6.10 F6.14 F6.15
+// listen nhận comment người xem gửi từ chế độ comment của shell, chạy tới khi bị tắt. Lệnh nghe 127.0.0.1 ở một cổng
+// trống, tạo token mới, ghi cổng và token vào <thư mục design>/_listen.js để shell biết gửi tới đâu, in `listen <cổng>`.
+// Mỗi comment đúng token: đánh số, status `sent`, thêm vào comments.json (và bản sao comments.js cho shell đọc), in một
+// dòng `comment {json}`. Session chạy lệnh này bằng công cụ theo dõi tiến trình nền (Claude Code: Monitor) để mỗi dòng
+// đánh thức nó. Tắt thì xoá _listen.js. Exit 1: đã có một lệnh nghe khác đang chạy trên thư mục đó.
+// comment --pending in mỗi comment chưa sửa (sent, doing) một dòng JSON; --status đổi trạng thái một comment.
+//
+// spec: F1.2 F1.17 F4 F3.6 F3.8 F6.2 F6.6 F6.10 F6.14 F6.15 F7.3 F7.5 F7.7 F7.8
 
 import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { createServer } from "node:http";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -494,6 +505,122 @@ function openPage(designDir, flags) {
   done("none");
 }
 
+// Comment trên page. comments.json là nơi lưu chính; comments.js là bản sao shell đọc lại mỗi 2 giây bằng thẻ <script>
+// (file:// không đọc được file bằng fetch). Ghi file tạm rồi rename như .progress.js.
+const COMMENT_STATUS = ["sent", "doing", "done"];
+const commentsPath = (dir) => join(dir, "comments.json");
+export function readComments(dir) {
+  return existsSync(commentsPath(dir)) ? JSON.parse(readFileSync(commentsPath(dir), "utf8")) : [];
+}
+function writeComments(dir, comments) {
+  const json = JSON.stringify(comments, null, 2);
+  for (const [path, text] of [
+    [commentsPath(dir), `${json}\n`],
+    [join(dir, "comments.js"), `// Comment người xem gửi từ page. Chỉ ghi bằng: node new-design.mjs listen · comment\nwindow.DS_COMMENTS = ${json};\n`],
+  ]) {
+    writeFileSync(`${path}.tmp`, text);
+    renameSync(`${path}.tmp`, path);
+  }
+}
+
+// Chỉ giữ field shell gửi, cắt chữ dài: comment là dữ liệu người xem gõ, không để nó phình comments.json.
+function cleanComment(raw) {
+  const text = (value, max) => (typeof value === "string" ? value.slice(0, max) : "");
+  const rect = raw.target?.rect ?? {};
+  return {
+    page: text(raw.page, 200),
+    url: text(raw.url, 2000),
+    viewport: text(raw.viewport, 20),
+    theme: text(raw.theme, 20),
+    target: {
+      kind: raw.target?.kind === "area" ? "area" : "element",
+      selector: text(raw.target?.selector, 500),
+      block: text(raw.target?.block, 40),
+      text: text(raw.target?.text, 200),
+      rect: Object.fromEntries(["x", "y", "w", "h"].map((key) => [key, Math.round(Number(rect[key]) || 0)])),
+    },
+    body: text(raw.body, 4000),
+  };
+}
+
+async function listen(designDir) {
+  if (!designDir) fail("cần <thư mục design>");
+  const dir = resolve(designDir);
+  if (!existsSync(join(dir, "pages.js"))) fail(`${dir} không phải thư mục design (thiếu pages.js)`);
+  const listenFile = join(dir, "_listen.js");
+  const old = existsSync(listenFile) ? readFileSync(listenFile, "utf8").match(/"port":\s*(\d+)/)?.[1] : null;
+  if (old && (await fetch(`http://127.0.0.1:${old}/health`).then((res) => res.ok, () => false))) fail(`đã có lệnh nghe ở cổng ${old} cho ${dir}`);
+  const token = randomBytes(16).toString("hex");
+  const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Private-Network": "true" };
+  const reply = (res, code, body) => {
+    res.writeHead(code, { ...cors, "Content-Type": "application/json" });
+    res.end(JSON.stringify(body));
+  };
+  const server = createServer((req, res) => {
+    if (req.method === "OPTIONS") return reply(res, 204, {});
+    if (req.method === "GET" && req.url === "/health") return reply(res, 200, { ok: true });
+    if (req.method !== "POST" || req.url !== "/comment") return reply(res, 404, { error: "not found" });
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 64 * 1024) req.destroy();
+    });
+    req.on("end", () => {
+      let raw;
+      try {
+        raw = JSON.parse(body);
+      } catch {
+        return reply(res, 400, { error: "body không phải JSON" });
+      }
+      if (raw?.token !== token) return reply(res, 403, { error: "token sai" });
+      const comment = cleanComment(raw);
+      if (!comment.page || !comment.body.trim()) return reply(res, 400, { error: "thiếu page hay body" });
+      const comments = readComments(dir);
+      const entry = { id: comments.reduce((max, item) => Math.max(max, item.id), 0) + 1, ...comment, status: "sent", at: new Date().toISOString() };
+      writeComments(dir, [...comments, entry]);
+      appendRun(dir, "new-design", "comment", entry.page, process.uptime(), `#${entry.id} ${entry.body}`);
+      console.log(`comment ${JSON.stringify(entry)}`);
+      reply(res, 201, { id: entry.id });
+    });
+  });
+  server.listen(0, "127.0.0.1", () => {
+    const { port } = server.address();
+    writeFileSync(listenFile, `// Lệnh nghe comment đang chạy. new-design.mjs listen ghi lúc bật, xoá lúc tắt.\nwindow.DS_LISTEN = ${JSON.stringify({ port, token })};\n`);
+    if (!existsSync(commentsPath(dir))) writeComments(dir, []);
+    appendRun(dir, "new-design", "listen", "", process.uptime(), `cổng ${port}`);
+    console.log(`listen ${port}`);
+  });
+  const stop = () => {
+    try {
+      if (readFileSync(listenFile, "utf8").includes(token)) unlinkSync(listenFile);
+    } catch {}
+    process.exit(0);
+  };
+  for (const signal of ["SIGTERM", "SIGINT", "SIGHUP"]) process.on(signal, stop);
+}
+
+function comment(designDir, flags, rest) {
+  if (!designDir) fail("cần <thư mục design>");
+  const dir = resolve(designDir);
+  const comments = readComments(dir);
+  if ("pending" in flags) {
+    for (const item of comments.filter((item) => item.status !== "done")) console.log(JSON.stringify(item));
+    return;
+  }
+  if (flags.status) {
+    const [id, status] = [Number(flags.status), rest[0]];
+    const item = comments.find((entry) => entry.id === id);
+    if (!item) fail(`không có comment #${flags.status}`);
+    if (!COMMENT_STATUS.includes(status) || status === "sent") fail("--status <id> doing|done");
+    item.status = status;
+    writeComments(dir, comments);
+    appendRun(dir, "new-design", "comment", item.page, process.uptime(), `#${id} ${status}`);
+    console.log(`#${id} ${status}`);
+    return;
+  }
+  fail("comment cần --pending hay --status <id> doing|done");
+}
+
 // So đường dẫn thật: gọi qua symlink (.claude/skills → skills/) thì argv[1] là đường symlink, import.meta.url là đường thật.
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [command, ...rest] = process.argv.slice(2);
@@ -506,5 +633,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   else if (command === "shell") shell(flags);
   else if (command === "designs") designs();
   else if (command === "open") openPage(positional[0], flags);
-  else fail("lệnh: init | designs | page | progress | touch | tokens | shell | open (xem đầu file)");
+  else if (command === "listen") listen(positional[0]);
+  else if (command === "comment") comment(positional[0], flags, positional.slice(1));
+  else fail("lệnh: init | designs | page | progress | touch | tokens | shell | open | listen | comment (xem đầu file)");
 }

@@ -105,6 +105,21 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F6.14` Khi người dùng chọn mở, agent mở page đầu tiên trong một cửa sổ Chrome mới có đúng một tab, ngay sau khi in
     link.
   - `F6.15` Nếu máy không có Chrome, thì agent mở page bằng trình duyệt mặc định và báo trong chat.
+- **`F7` Comment trên page**
+  - `F7.1` Khi người xem bật chế độ comment trên toolbar, shell cho chọn một khối bằng cú bấm hay một vùng bằng cú kéo,
+    rồi mở ô viết comment ngay tại chỗ đã chọn.
+  - `F7.2` Mỗi comment mang tên page, mọi giá trị đang xem trên URL, khối hay vùng đã chọn, và chữ trong khối đó.
+  - `F7.3` Khi người xem bấm gửi, shell giao comment cho lệnh nghe chạy trên máy, không qua dịch vụ ngoài nào.
+  - `F7.4` Nếu không có lệnh nghe nào chạy, thì shell báo Claude không nghe và cho chép comment kèm chỗ đã chọn để dán
+    vào chat.
+  - `F7.5` Khi lệnh nghe nhận một comment, session đang chạy skill thức dậy và sửa page theo comment đó trong một vòng
+    góp ý riêng của comment đó.
+  - `F7.6` Shell hiện một ghim đánh số tại chỗ được comment, ghi trạng thái: đã gửi, đang sửa, đã sửa.
+  - `F7.7` Khi agent chạy skill trên một thư mục design còn comment chưa sửa, agent sửa các comment đó trước việc khác.
+  - `F7.8` Nếu comment không mang token của lệnh nghe đang chạy, thì lệnh nghe bỏ comment đó.
+  - `F7.9` Khi agent giao page mà không chạy với `--auto`, agent bật lệnh nghe comment.
+  - `F7.10` Nếu một comment tới khi page đang có vòng sửa một comment khác, thì agent giao xong vòng đó và đánh dấu
+    comment đó đã sửa, rồi mới mở vòng cho comment mới.
 
 Bảng dưới phân biệt phương án (`F1.2`) và màn của luồng (`F1.17`) với thứ người xem vặn được (`F2`).
 
@@ -122,9 +137,10 @@ Bốn phần, mỗi phần một chủ:
 
 | Phần | Là gì | Chủ | Scope |
 | --- | --- | --- | --- |
-| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` cho agent chính, `references/build-page.md` cho agent dựng page | `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.8` `F6.10` |
+| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` cho agent chính, `references/build-page.md` cho agent dựng page | `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.8` `F6.10` `F7.5` `F7.7` `F7.9` `F7.10` |
 | **bản thiết kế** | page `NN-slug.html`, `tokens.js`, danh sách bước dựng `NN-slug.progress.js` | agent dựng, script sinh token, `new-design.mjs progress` | `F3` `F6.2` `F6.9` |
-| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` `F6.8` `F6.10` `F6.11` |
+| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại, chế độ comment | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` `F6.8` `F6.10` `F6.11` `F7.1`–`F7.4` `F7.6` |
+| **lệnh nghe** | `new-design.mjs listen`: nhận comment từ page, ghi `comments.json`, in một dòng cho session | skill mang theo, agent chính bật | `F7.3` `F7.5` `F7.8` |
 | **máy kiểm** | `check.mjs`, `principles-check.mjs` | skill mang theo | `F5` |
 
 ### 3.1 Thư mục design
@@ -143,6 +159,8 @@ Mỗi đề một thư mục `.design/NNN-slug/` ở thư mục làm việc lúc
 | `NN-slug.html` | `new-design.mjs page` tạo với khối chờ; agent con dựng tiếp, mỗi agent đúng một file | một phương án, hay một màn của luồng |
 | `NN-slug.progress.js` | `new-design.mjs page` tạo; agent chính đánh dấu bước chuẩn bị và bước giao; agent dựng page đó ghi phần còn lại; mọi lần ghi qua `new-design.mjs progress` | bước chuẩn bị (`prep`); bước giao (`deliver`); danh sách bước dựng của page: sáu bước dựng, rồi các bước góp ý theo vòng; bước nào xong; việc con của bước dở (`doing`); `rev` tăng mỗi lần đánh dấu, ghi việc con thì không |
 | `shots/` | `check.mjs` | ảnh từng tổ hợp, từng cú bấm |
+| `comments.json` · `comments.js` | `new-design.mjs listen` thêm comment; `new-design.mjs comment --status` đổi trạng thái | mọi comment của thư mục design; `comments.js` là bản sao để shell đọc lại trên `file://` |
+| `_listen.js` | `new-design.mjs listen` lúc bật, xoá lúc tắt | cổng và token của lệnh nghe đang chạy |
 
 Mỗi file đúng một người ghi tại một lúc, nên các agent con chạy song song không giẫm nhau. Agent chính chỉ ghi bước
 chuẩn bị và bước giao của mọi page: bước chuẩn bị trước khi gọi agent con, bước giao sau khi mọi agent con đã trả về.
@@ -474,6 +492,32 @@ flowchart TB
   mấy lần và bao nhiêu giây trong bước, phần còn lại là thời gian agent. Transcript cũng có giờ, nhưng chỉ có trên máy
   chạy và không gắn với page hay bước dựng.
 
+### 3.7 Comment trên page
+
+**Scope:** `F7`
+
+Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ chạy trên máy:
+
+| Chặng | Ai | Làm gì |
+| --- | --- | --- |
+| page → lệnh nghe | shell | đọc cổng và token trong `_listen.js`, gửi `POST http://127.0.0.1:<cổng>/comment`, body `text/plain` |
+| lệnh nghe → đĩa và stdout | `new-design.mjs listen` | kiểm token, đánh số, ghi `comments.json` và `comments.js` qua file tạm, in một dòng `comment {json}` |
+| stdout → session | công cụ theo dõi tiến trình nền của nơi chạy (Claude Code: `Monitor`) | mỗi dòng stdout thành một thông báo trong hội thoại; session đang rảnh thì harness mở một lượt mới |
+
+- **Page vẫn mở bằng `file://`.** Chỉ comment đi qua `127.0.0.1`. Lệnh nghe trả `Access-Control-Allow-Origin: *`; body
+  `text/plain` nên Chrome không gửi request kiểm trước. Chrome 154 cho page `file://` gọi `127.0.0.1` mà không hỏi
+  quyền (probe P4 của plan 017).
+- **Chế độ comment chạy ở nơi vẽ bản thiết kế.** Khổ desktop là trang cha. Khổ tablet, mobile là iframe: trang cha
+  gửi lệnh bật tắt vào iframe bằng `postMessage`, iframe tự đọc `_listen.js` và `comments.js`, tự gửi.
+- **Chọn khối, chọn vùng.** Bấm thì chọn khối dưới con trỏ. Kéo quá 6px thì chọn hình chữ nhật; khối của vùng là khối
+  nhỏ nhất chứa trọn hình đó. Trong chế độ comment, cú bấm vào bản thiết kế không tới page.
+- **Comment còn sau khi session đóng.** `comments.json` là nơi lưu chính; stdout chỉ để đánh thức. Comment `sent` hay
+  `doing` là comment chưa sửa; `comment --pending` in chúng ra.
+- **Không ai nghe.** `_listen.js` không có, hay `GET /health` lỗi, thì ô comment ghi "Claude không nghe", nút Gửi tắt,
+  nút Chép còn. Lệnh nghe bị giết bằng SIGKILL thì để lại `_listen.js` cũ; `GET /health` lỗi nên shell vẫn báo đúng.
+- **Ghim.** Shell đọc lại `comments.js` mỗi 2 giây cùng nhịp với `.progress.js`. Ghim đặt theo `selector` nếu khối còn,
+  theo `rect` nếu không. Ghim `done` chỉ hiện trong chế độ comment.
+
 ## 4. Vì sao thiết kế như vậy
 
 ### Hỏi và chọn phương án
@@ -576,6 +620,11 @@ flowchart TB
 | sửa xong thì ghi ngày và góp ý cuối vào nút phương án | không có bản nháp để so thì người mở page cần biết bản đang xem sửa lần cuối khi nào, theo ý nào |
 | đổi dữ liệu chung thì sửa brief trước, rồi sửa mọi page | các page chỉ so được khi cùng một bộ dữ liệu |
 | mỗi ý góp ý thành một bước trong cùng danh sách, ghi số vòng; bước vòng cũ giữ nguyên | page tự cập nhật trong lúc sửa như lúc dựng; xem lại được góp ý nào đã sửa. Xoá danh sách cũ viết lại thì mất dấu |
+| comment chọn chỗ ngay trên page, mang theo mọi giá trị đang xem | tả bằng chữ "thẻ thứ hai ở hàng trên, khổ mobile, bản tối" thì agent phải đoán, đoán sai thêm một vòng |
+| comment đi qua lệnh nghe trên máy, không qua claude.ai | skill chạy độc lập; page có thể chứa thiết kế của khách |
+| lệnh nghe in một dòng stdout cho mỗi comment | công cụ theo dõi tiến trình nền của Claude Code đổi mỗi dòng thành một thông báo, đánh thức session ở terminal, VS Code và `claude -p` (probe P1–P3 của plan 017). Công cụ không có thứ đó thì vẫn còn nút Chép |
+| token mỗi lần bật lệnh nghe | mọi trang web đang mở trên máy đều gọi được `127.0.0.1` |
+| mỗi comment một vòng riêng; comment tới khi đang có vòng thì chờ | chèn comment mới vào vòng đang mở thì ghim của comment trước đứng ở "đang sửa" tới khi comment sau xong, dù đã sửa xong từ trước: người xem không tách được lần góp ý nào đã xong |
 
 ## 5. I/O
 
@@ -597,13 +646,14 @@ flowchart TB
 | `references/shell-principles.md` | nguyên tắc thiết kế shell: màu, bố cục, cách vẽ từng loại ô; cách các khối điều khiển hiện ở từng khổ; lệnh và bẫy khi sửa shell |
 | `shell/` | shell (`shell.js`, `shell.css`), bộ token dự phòng (`default-design.md`) |
 | `templates/` | khuôn `brief.md`; khuôn page trống `page.html` mà `new-design.mjs page` chép ra; page mẫu `example.html` chỉ để đọc cách viết |
-| `scripts/new-design.mjs` | tạo thư mục design, page kèm danh sách bước dựng, đánh dấu bước dựng, ghi ngày sửa, chép shell; in danh sách design của getdesign, tải design đã chọn |
+| `scripts/new-design.mjs` | tạo thư mục design, page kèm danh sách bước dựng, đánh dấu bước dựng, ghi ngày sửa, chép shell; in danh sách design của getdesign, tải design đã chọn; nghe comment, đổi trạng thái comment |
 | `scripts/tokens.mjs` | đổi design system thành `tokens.js`, suy giao diện còn thiếu |
 | `scripts/check.mjs` · `principles-check.mjs` | máy kiểm page; phép kiểm của từng luật trong `references/ux-principles.md` và `references/ui-principles.md` |
 | `scripts/test-shell.mjs` | kiểm shell trên một thư mục design mẫu, gồm nhãn tiến độ và tự tải lại |
 | `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, vòng góp ý, chèn bước, ghi qua file tạm |
 | `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, `npx` hỏng (exit 2) |
 | `scripts/test-open.mjs` | kiểm lệnh `open`: page đầu của thư mục, URL có dấu cách và dấu, đổi sang trình duyệt mặc định khi thiếu Chrome |
+| `scripts/test-listen.mjs` | kiểm lệnh `listen` và `comment`: nhận comment, bỏ comment sai token, đổi trạng thái, xoá `_listen.js` khi tắt |
 | `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc. Bài 04 (một page) là bài mặc định khi nghiệm thu plan; `samples/README.md` có bảng plan chạm phần nào thì dùng bài nào |
 | `samples/lint.mjs` · `prepare.mjs` | soát hình dạng checklist: danh sách ngắn, không mã yêu cầu, không chữ cảm tính; tạo thư mục chạy thử cho một bài |
 | `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md hay file nó khai để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |
