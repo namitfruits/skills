@@ -542,7 +542,7 @@ Tin giao theo tiếng người dùng đang viết, ngắn:
 7. Dòng tự kiểm còn `[ ]` agent con trả về, mỗi dòng kèm page và lý do chưa sửa.
 8. Đề một màn còn hướng không dựng thì nhắc một dòng: "Còn <C · tên>, muốn xem thì nói, sẽ dựng thay A hay B." Chỉ dựng
    một page thì nhắc lại dòng `Chỉ một hướng: <lý do>` hay `Đề xin một phương án.`. Đề xin ≥ 3 phương án thì nhắc dòng "mỗi màn tối đa hai".
-9. Comment trên page: "Bấm nút comment (ô thoại có dấu +) trên toolbar, bấm một khối hay kéo một vùng, viết rồi Gửi."
+9. Comment trên page: "Bấm nút Comment bên phải toolbar (hay phím C), bấm một khối hay kéo một vùng, viết rồi Gửi."
    Đã bật lệnh nghe thì thêm "gửi xong là tôi sửa, không cần gõ vào chat". Không bật được (mục "Nghe comment") thì thêm
    "nút Chép đưa comment kèm chỗ đã chọn vào bộ nhớ tạm, dán vào chat".
 

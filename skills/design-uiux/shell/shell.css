@@ -16,6 +16,7 @@
   --ds-bar-field: #ffffff;
   --ds-bar-active: #ffffff;
   --ds-bar-accent: #2563eb;
+  --ds-bar-on-accent: #ffffff;
   --ds-frame-bg: #e9eaee;
   --ds-frame-line: #e5e7eb;
 }
@@ -29,6 +30,7 @@
   --ds-bar-field: #1f1f22;
   --ds-bar-active: #45454b;
   --ds-bar-accent: #7aa2ff;
+  --ds-bar-on-accent: #10131a;
   --ds-frame-bg: #0e0f11;
   --ds-frame-line: #2c2e33;
 }
@@ -75,6 +77,10 @@
    được khi xem trên màn rộng, trong khung mobile. */
 @media (max-width: 480px) {
   .ds-bar [data-ds-comment-toggle] { display: none; }
+}
+@media (max-width: 720px) {
+  .ds-comment-toggle-label { display: none; }
+  .ds-bar .ds-comment-toggle { width: 32px; padding: 0; justify-content: center; }
 }
 
 /* panel: data-panel ở mép trái, config-panel ở mép phải. Gập thì bấm nút trên toolbar mới mở, thẻ trồi ngay dưới
@@ -376,9 +382,15 @@
 
 /* Chế độ comment (shell.js): nút trên view-controller; bật thì con trỏ thành dấu cộng trên bản thiết kế, khối dưới con
    trỏ có viền, kéo thì vẽ hình chữ nhật, ô viết comment nổi ngay dưới chỗ chọn. Ghim đánh số theo trạng thái: đã gửi
-   (accent), đang sửa (vàng), đã sửa (xanh lá). Mọi lớp phủ không nhận chuột trừ ô viết. */
+   (accent), đang sửa (vàng), đã sửa (xanh lá). Mọi lớp phủ không nhận chuột trừ ô viết. Khung chọn, khung rê, ô viết
+   và ghim đặt theo toạ độ trang (absolute), không theo màn hình: page cuộn thì chúng trôi theo khối đã chọn. */
+/* Nút comment đứng đầu view-controller, có chữ. Đang bật thì nền accent đậm, chữ trắng: người xem luôn biết mình đang ở
+   chế độ comment, cú bấm vào page không chạy nút của page. */
+.ds-comment-toggle { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-bg); color: var(--ds-bar-fg); cursor: pointer; white-space: nowrap; }
+.ds-comment-toggle:hover { background: var(--ds-bar-field); }
+.ds-comment-toggle[aria-pressed="true"] { border-color: var(--ds-bar-accent); background: var(--ds-bar-accent); color: var(--ds-bar-on-accent); font-weight: 600; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-bar-accent) 25%, transparent); }
 :root[data-commenting] #design, :root[data-commenting] #design * { cursor: crosshair !important; }
-.ds-comment-hover, .ds-comment-drag { position: fixed; z-index: 1003; display: none; pointer-events: none; border: 2px solid var(--ds-bar-accent); border-radius: 4px; }
+.ds-comment-hover, .ds-comment-drag { position: absolute; z-index: 1003; display: none; pointer-events: none; border: 2px solid var(--ds-bar-accent); border-radius: 4px; }
 .ds-comment-drag { background: color-mix(in srgb, var(--ds-bar-accent) 12%, transparent); }
 .ds-comment-pins { position: absolute; top: 0; left: 0; z-index: 1003; width: 0; height: 0; pointer-events: none; }
 .ds-comment-pin {
@@ -400,7 +412,7 @@
 .ds-comment-pin[data-status="doing"] { background: #d97706; }
 .ds-comment-pin[data-status="done"] { background: #16a34a; }
 .ds-comment-popover {
-  position: fixed;
+  position: absolute;
   z-index: 1004;
   display: grid;
   gap: 8px;

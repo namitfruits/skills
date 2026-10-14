@@ -64,13 +64,19 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 
 ## Chế độ comment: chỉ đúng chỗ, không đụng page
 
-- **Nút comment nằm ở view-controller**, cạnh nút số khối: comment là một cách nhìn page, không đổi page.
+- **Nút comment đứng đầu view-controller**, có icon và chữ "Comment": comment là một cách nhìn page, không đổi page.
+  Đang bật thì nút nền accent đậm, chữ trắng, có quầng accent: người xem luôn biết cú bấm vào page đang thành comment.
+  Màn ≤ 720px chỉ còn icon.
+- **Phím C bật tắt chế độ comment**, như Figma. Không dùng Ctrl+C vì đó là chép. Con trỏ đang ở ô nhập hay ô viết comment
+  thì C là chữ c. Nhấn C trong khung mobile / tablet cũng bật tắt được.
 - **Bật thì cú bấm vào bản thiết kế không tới page.** Nút, link, form của page không chạy; con trỏ thành dấu cộng, khối
   dưới con trỏ có viền accent. Đáy màn có một dòng nhắc "Bấm một khối hay kéo chọn một vùng · Esc để thoát".
 - **Bấm là chọn khối, kéo quá 6px là chọn vùng.** Ô viết nổi ngay dưới chỗ chọn, lật lên trên khi sát đáy, luôn nằm
   trong màn hình kể cả ở 375px.
 - **Ô viết nói rõ gửi đi đâu.** "Claude đang nghe" (xanh lá) thì nút Gửi bật. "Claude không nghe" thì nút Gửi tắt,
-  nút Chép vẫn chép được. Cmd/Ctrl+Enter gửi, Esc đóng ô, Esc lần nữa thoát chế độ comment.
+  nút Chép vẫn chép được. Cmd/Ctrl+Enter gửi, Esc đóng ô, Esc lần nữa hay phím C thoát chế độ comment.
+- **Khung chọn và ô viết bám theo khối đã chọn.** Page cuộn thì khung chọn, ô viết và ghim trôi theo khối, không đứng
+  yên trên màn hình. Khung rê ẩn khi cuộn, rê chuột lại thì hiện.
 - **Ô viết đang mở là đang gõ.** Page có bản mới thì đợi ô đóng mới tải lại, kể cả lúc con trỏ ở nút Gửi.
 - **Ghim là con số, màu theo trạng thái**: accent đã gửi, vàng đang sửa, xanh lá đã sửa. Ghim chưa sửa luôn hiện; ghim đã
   sửa chỉ hiện khi đang bật chế độ comment, để page đã sửa xong không đầy ghim cũ.

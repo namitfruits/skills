@@ -544,15 +544,51 @@ for (const width of [1600, 1280, 700, 375]) {
   await page.waitForFunction(() => document.querySelectorAll(".ds-comment-pin").length === 2, null, { timeout: 3000 }).catch(() => null);
   expect("comment: kéo chọn vùng, Cmd+Enter gửi, target.kind area", comments()[1]?.target.kind === "area", comments()[1]?.target.selector);
   await page.screenshot({ path: join(out, "comment-desktop.png") });
+  // Cuộn trong lúc ô viết đang mở: khung chọn và ô viết trôi theo khối đã chọn.
+  const row = await page.$("#design h1");
+  await row.click();
+  await page.waitForSelector(".ds-comment-popover");
+  const gap = () => page.evaluate(() => {
+    const target = document.querySelector("#design h1").getBoundingClientRect();
+    const box = document.querySelector(".ds-comment-drag").getBoundingClientRect();
+    const popover = document.querySelector(".ds-comment-popover").getBoundingClientRect();
+    return { box: Math.round(box.top - target.top), popover: Math.round(popover.top - target.bottom) };
+  });
+  const beforeScroll = await gap();
+  await page.mouse.wheel(0, 300);
+  await page.waitForTimeout(300);
+  const afterScroll = await gap();
+  const scrolled = await page.evaluate(() => scrollY);
+  expect("comment: cuộn khi ô viết đang mở thì khung chọn và ô viết trôi theo khối", scrolled > 0 && beforeScroll.box === afterScroll.box && beforeScroll.popover === afterScroll.popover, `cuộn ${scrolled}px · trước ${JSON.stringify(beforeScroll)} · sau ${JSON.stringify(afterScroll)}`);
+  await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   expect("comment: Esc thoát chế độ comment", !(await page.evaluate(() => document.documentElement.hasAttribute("data-commenting"))));
   await page.close();
 
+  // Phím C bật tắt; đang gõ trong ô nhập của page thì C là chữ c.
+  const keys = await open(pageUrl(multi, "01-forecast.html"), 1280);
+  const commenting = () => keys.evaluate(() => document.documentElement.hasAttribute("data-commenting"));
+  await keys.keyboard.press("c");
+  const onByKey = await commenting();
+  await keys.keyboard.press("c");
+  const offByKey = !(await commenting());
+  const input = await keys.$("#design input[type=search], #design input:not([type]), #design input[type=text]");
+  let typed = true;
+  if (input) {
+    await input.click();
+    await keys.keyboard.press("c");
+    typed = !(await commenting()) && (await input.inputValue()).endsWith("c");
+  }
+  expect("comment: phím C bật rồi tắt chế độ comment; đang gõ trong ô nhập thì C là chữ c", onByKey && offByKey && typed, `bật ${onByKey} · tắt ${offByKey} · ô nhập ${input ? typed : "page không có"}`);
+  await keys.close();
+
   const narrow = await open(pageUrl(multi, "01-forecast.html", "?viewport=mobile&theme=dark"), 1280);
   const frame = await narrow.waitForSelector(".ds-frame-wrap iframe").then((element) => element.contentFrame());
   await frame.waitForFunction(() => window.Alpine && document.querySelector("#design h1"));
-  await narrow.click("[data-ds-comment-toggle]");
+  await frame.click("#design h1");
+  await frame.press("#design h1", "c").catch(() => narrow.keyboard.press("c"));
   await narrow.waitForTimeout(300);
+  expect("comment: nhấn C trong khung mobile thì trang cha bật chế độ comment", await narrow.$eval("[data-ds-comment-toggle]", (button) => button.getAttribute("aria-pressed") === "true"));
   await frame.click("#design h1");
   await frame.waitForSelector(".ds-comment-popover");
   const inside = await frame.$eval(".ds-comment-popover", (box) => {
