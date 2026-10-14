@@ -157,7 +157,7 @@ Luật cho từng probe:
   bị ghi đè.
 - Khi plan sau dùng lại probe của plan trước, dòng **Cách chạy lại:** của plan sau trỏ vào thư mục của plan trước.
   Agent không chép probe sang thư mục plan mới.
-- `.probe/` được commit cùng plan. Plan trong git trỏ tới lệnh nào thì lệnh đó phải có trong git.
+- `.probe/` nằm trong `.gitignore`. Probe chỉ có ở máy đã chạy nó, agent không commit probe.
 
 Probe khác chạy thử skill: probe hỏi thiết kế có đứng được không, chạy trước khi chốt plan. Chạy thử gọi skill thật để
 nghiệm thu, kết quả để ở `.test/`.
