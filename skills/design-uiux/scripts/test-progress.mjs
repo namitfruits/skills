@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Kiểm lệnh progress của new-design.mjs: danh sách bước dựng mà page mới tạo có sẵn, thứ tự đánh dấu, chèn bước, vòng
-// góp ý, ghi qua file tạm. Mỗi ca chạy lệnh thật trên một .design/ mẫu trong thư mục tạm rồi so mã thoát, stdout và
+// Kiểm lệnh progress của new-design.mjs: danh sách bước dựng mà page mới tạo có sẵn, thứ tự đánh dấu, chèn bước, mục
+// góp ý (comment, ý trong chat), đọc file kiểu cũ xếp theo vòng, ghi qua file tạm. Mỗi ca chạy lệnh thật trên một .design/ mẫu trong thư mục tạm rồi so mã thoát, stdout và
 // file <page>.progress.js với mong đợi. Không cần trình duyệt; chạy sau mỗi lần sửa phần progress của new-design.mjs.
 //
 //   node test-progress.mjs
 //
-// spec: F4.4 F6.2 F6.5 F6.6 F6.8 F6.9 F6.10
+// spec: F4.4 F6.2 F6.5 F6.6 F6.8 F6.9 F6.10 F6.16 F7.5 F7.10
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -36,7 +36,7 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
 {
   const data = read();
   const html = readFileSync(join(dir, file), "utf8");
-  expect("page mới có bước chuẩn bị chưa xong và danh sách sáu bước dựng, rev 0, bước cuối là kiểm đầy đủ", data.prep?.task === "Viết brief chung" && data.prep.done === false && data.rev === 0 && data.build.length === 6 && data.build.every((item) => !item.done && item.round === 1) && data.build[5].final === true, JSON.stringify(data.build.map((item) => item.task)));
+  expect("page mới có bước chuẩn bị chưa xong và danh sách sáu bước dựng, rev 0, bước cuối là kiểm đầy đủ", data.prep?.task === "Viết brief chung" && data.prep.done === false && data.rev === 0 && data.build.length === 6 && data.build.every((item) => !item.done && !("round" in item)) && data.build[5].final === true && Array.isArray(data.feedback) && data.feedback.length === 0, JSON.stringify(data.build.map((item) => item.task)));
   expect("page mới có bước giao chưa xong", data.deliver?.task === "Kiểm lại và giao" && data.deliver.done === false, JSON.stringify(data.deliver));
   const waiting = html.match(/<section data-ds-waiting[\s\S]*?<\/section>/)?.[0] ?? "";
   const lines = [...waiting.matchAll(/<(h1|p)[^>]*>([^<]*)</g)].map((match) => `${match[1]}: ${match[2]}`);
@@ -78,9 +78,9 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
 {
   const inserted = progress("--insert", "Bảng so sánh gói");
   const tasks = read().build.map((item) => item.task);
-  expect("--insert chèn ngay trước bước kiểm đầy đủ của vòng đang mở, rev + 1", inserted.code === 0 && tasks.length === 7 && tasks[5] === "Bảng so sánh gói" && read().build[6].final && read().rev === 2, tasks.join(" | "));
-  const early = progress("--round", "nút to hơn");
-  expect("--round khi vòng đang dở thì exit 1, không ghi", early.code === 1 && /2 · Đang tải/.test(early.err) && read().rev === 2, early.err);
+  expect("--insert chèn ngay trước bước kiểm đầy đủ của danh sách dựng, rev + 1", inserted.code === 0 && tasks.length === 7 && tasks[5] === "Bảng so sánh gói" && read().build[6].final && read().rev === 2, tasks.join(" | "));
+  const early = progress("--chat", "nút to hơn");
+  expect("--chat khi còn bước dựng thì exit 1, không ghi", early.code === 1 && /2 · Đang tải/.test(early.err) && read().feedback.length === 0 && read().rev === 2, early.err);
   const soon = progress("--delivered");
   expect("--delivered khi còn bước dựng thì exit 1, nói bước đầu tiên chưa xong, không ghi", soon.code === 1 && /2 · Đang tải/.test(soon.err) && !read().deliver.done && read().rev === 2, soon.err);
 }
@@ -88,28 +88,75 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
 {
   for (let step = 2; step <= 7; step += 1) progress("--done", String(step));
   const finished = progress();
-  expect("đánh dấu hết thì in mọi bước đã xong", /mọi bước dựng đã xong/.test(finished.out) && read().rev === 8, finished.out.split("\n").pop());
+  expect("đánh dấu hết thì in mọi bước đã xong", /mọi bước dựng và góp ý đã xong/.test(finished.out) && read().rev === 8, finished.out.split("\n").pop());
   const extra = progress("--done", "8");
   expect("--done khi mọi bước đã xong thì exit 1", extra.code === 1, extra.err);
   const late = progress("--doing", "Sửa thêm");
-  expect("--doing khi mọi bước đã xong thì exit 1, không ghi", late.code === 1 && read().build.every((item) => !item.doing), late.err);
+  expect("--doing khi mọi bước đã xong và không có góp ý mở thì exit 1, không ghi", late.code === 1 && read().build.every((item) => !item.doing) && /--comment <id> hay --chat/.test(late.err), late.err);
   expect("hết bước dựng mà chưa giao: progress không cờ nói chạy --delivered", /chưa giao; agent chính chạy --delivered/.test(finished.out), finished.out.split("\n").pop());
   const delivered = progress("--delivered");
   expect("--delivered đánh dấu bước giao xong, rev giữ nguyên", delivered.code === 0 && read().deliver.done === true && read().rev === 8 && /đã giao/.test(delivered.out), delivered.err || delivered.out.split("\n").pop());
   const twice = progress("--delivered");
-  expect("--delivered lần hai exit 1, nói mở vòng bằng --round", twice.code === 1 && /--round/.test(twice.err), twice.err);
-  const round = progress("--round", "nút to hơn", "đổi chữ nút");
-  const data = read();
-  const added = data.build.filter((item) => item.round === 2);
-  expect("--round mở vòng 2: mỗi ý một bước, thêm bước kiểm đầy đủ; bước vòng 1 giữ nguyên", round.code === 0 && added.map((item) => item.task).join(" | ") === "Góp ý: nút to hơn | Góp ý: đổi chữ nút | Kiểm đầy đủ" && added[2].final && data.build.filter((item) => item.round === 1).every((item) => item.done) && data.rev === 9, added.map((item) => item.task).join(" | "));
-  expect("--round mở lại bước giao", data.deliver.done === false, JSON.stringify(data.deliver));
-  const next = progress();
-  expect("vòng 2: bước dựng tiếp theo là ý góp ý đầu tiên", /bước dựng tiếp theo là 8 · Góp ý: nút to hơn/.test(next.out), next.out.split("\n").pop());
+  expect("--delivered lần hai exit 1, nói mở mục bằng --comment hay --chat", twice.code === 1 && /--comment <id> hay --chat/.test(twice.err), twice.err);
+  const round = progress("--round", "nút to hơn");
+  expect("--round không còn: exit 1, chỉ sang --comment, --chat", round.code === 1 && /--comment/.test(round.err) && /--chat/.test(round.err), round.err);
+
+  const opened = progress("--comment", "3", "tab lọc đậm hơn");
+  let data = read();
+  expect("--comment 3 mở mục comment: có việc cuối Kiểm đầy đủ, mở lại bước giao, rev giữ nguyên", opened.code === 0 && data.feedback.length === 1 && data.feedback[0].source === "comment" && data.feedback[0].id === 3 && data.feedback[0].task === "tab lọc đậm hơn" && data.feedback[0].actions.map((action) => action.task).join() === "Kiểm đầy đủ" && data.feedback[0].actions[0].final && !data.deliver.done && data.rev === 8, JSON.stringify(data.feedback[0]));
+  const busy = progress("--chat", "đổi tiêu đề");
+  expect("mở mục khi còn mục mở thì exit 1, nêu mục đang mở (comment chờ mục trước xong)", busy.code === 1 && /#3 tab lọc đậm hơn/.test(busy.err) && read().feedback.length === 1, busy.err);
+  progress("--doing", "Chữ tab đậm 600");
+  const first = read();
+  progress("--doing", "Giữ bề rộng tab");
+  data = read();
+  const actions = data.feedback[0].actions;
+  expect("--doing lần một thêm việc đang làm, rev giữ; lần hai: việc trước thành xong và ở lại, rev + 1", first.rev === 8 && actions.map((action) => `${action.done ? "✓" : "○"}${action.task}`).join(" | ") === "✓Chữ tab đậm 600 | ○Giữ bề rộng tab | ○Kiểm đầy đủ" && data.rev === 9, actions.map((action) => `${action.done ? "✓" : "○"}${action.task}`).join(" | "));
+  progress("--doing", "Kiểm đầy đủ");
+  data = read();
+  expect("--doing đúng tên việc cuối chỉ đóng việc đang làm, không thêm dòng Kiểm đầy đủ thứ hai", data.feedback[0].actions.filter((action) => action.task === "Kiểm đầy đủ").length === 1 && data.feedback[0].actions[1].done && data.rev === 10, data.feedback[0].actions.map((action) => action.task).join(" | "));
+  const listed = progress();
+  expect("progress không cờ: nhóm Comment, mục #3, việc thụt dưới mục, không chữ vòng", /\nComment\n  ● #3 tab lọc đậm hơn\n       ✓ Chữ tab đậm 600/.test(listed.out) && !/vòng/i.test(listed.out) && /đang sửa góp ý #3/.test(listed.out), listed.out.split("\n").slice(-6).join(" / "));
+  const blockedDeliver = progress("--delivered");
+  expect("--delivered khi còn mục góp ý mở thì exit 1", blockedDeliver.code === 1 && /góp ý #3/.test(blockedDeliver.err), blockedDeliver.err);
+  const checked = progress("--checked");
+  data = read();
+  expect("--checked đóng mục: mọi việc xong, mục xong, rev + 1", checked.code === 0 && data.feedback[0].done && data.feedback[0].actions.every((action) => action.done) && data.rev === 11, checked.out.split("\n").pop());
+  const again = progress("--comment", "3", "lần nữa");
+  expect("--comment với id đã có mục thì exit 1", again.code === 1 && /#3 đã có mục/.test(again.err), again.err);
+  progress("--chat", "đổi tiêu đề thành Hôm nay");
+  progress("--doing", "Sửa tiêu đề h1");
+  progress("--checked");
+  const both = progress();
+  expect("ý trong chat vào nhóm Góp ý trong chat, không số", /\nGóp ý trong chat\n  ✓ đổi tiêu đề thành Hôm nay\n       ✓ Sửa tiêu đề h1\n       ✓ Kiểm đầy đủ/.test(both.out) && read().feedback[1].source === "chat" && !("id" in read().feedback[1]), both.out.split("\n").slice(-8).join(" / "));
+  const noOpen = progress("--checked");
+  expect("--checked khi không có mục mở thì exit 1", noOpen.code === 1, noOpen.err);
+}
+
+{
+  // File kiểu cũ: góp ý là bước round ≥ 2 trong build. Lệnh đọc thành mục góp ý, ghi lại thì ghi dạng mới.
+  const old = basename(run("page", dir, "vong-cu", "--title", "Vòng cũ", "--option", "C · Vòng cũ").out);
+  const oldFile = join(dir, old.replace(/\.html$/, ".progress.js"));
+  const build = [
+    ...["Khung", "Tải", "Riêng", "Tương tác", "Preset"].map((task) => ({ task, done: true, round: 1 })),
+    { task: "Kiểm đầy đủ và tự kiểm", done: true, round: 1, final: true },
+    { task: "Góp ý: Comment #1: bỏ dòng Bây giờ", done: true, round: 2 },
+    { task: "Comment #2: phân trang", done: true, round: 2 },
+    { task: "Kiểm đầy đủ", done: true, round: 2, final: true },
+    { task: "Góp ý: nút to hơn", done: false, round: 3, doing: "Sửa nút" },
+    { task: "Kiểm đầy đủ", done: false, round: 3, final: true },
+  ];
+  writeFileSync(oldFile, `(window.DESIGN_PROGRESS ||= {})[${JSON.stringify(old)}] = ${JSON.stringify({ rev: 5, prep: { task: "Viết brief chung", done: true }, deliver: { task: "Kiểm lại và giao", done: false }, build })};\n`);
+  const shown = run("progress", dir, old);
+  expect("file kiểu cũ: vòng 2 thành mục #1, #2 trong nhóm Comment (cả bước chèn bằng --insert), vòng 3 thành mục chat đang mở có việc đang làm", /\nComment\n  ✓ #1 bỏ dòng Bây giờ\n       ✓ Kiểm đầy đủ\n  ✓ #2 phân trang\n       ✓ Kiểm đầy đủ\nGóp ý trong chat\n  ● nút to hơn\n       ● Sửa nút\n       ○ Kiểm đầy đủ/.test(shown.out) && !/vòng/i.test(shown.out.split("\n").slice(0, -1).join("\n")), shown.out.replace(/\n/g, " / "));
+  run("progress", dir, old, "--checked");
+  const rewritten = readFileSync(oldFile, "utf8");
+  expect("file kiểu cũ ghi lại thành dạng mới: build không còn round, có feedback", !/"round"/.test(rewritten) && /"feedback"/.test(rewritten), rewritten.slice(0, 120));
 }
 
 {
   const writes = read().rev;
-  expect("mọi lần ghi trừ --prepared, --doing, --delivered tăng rev đúng 1 (9 lần ghi → rev 9)", writes === 9, `rev ${writes}`);
+  expect("rev tăng ở --done, --insert, --checked, --doing đóng việc của mục góp ý (12 lần → rev 12)", writes === 12, `rev ${writes}`);
   expect("ghi xong không còn file tạm", leftovers().length === 0, leftovers().join(" "));
   // Page tạo trước khi có bước chuẩn bị: file không có prep, --done nhận như đã chuẩn bị xong.
   const legacy = basename(run("page", dir, "cu", "--title", "Cũ", "--option", "B · Cũ").out);

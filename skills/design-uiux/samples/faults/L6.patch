@@ -3,7 +3,7 @@
 @@ -465,7 +465,7 @@
  2. `Đọc:` lấy design system ở đâu (design của getdesign thì ghi `getdesign <tên>` và ai chọn); giao diện nào suy ra; font nào thay (`window.DESIGN_THEME.fonts`
     trong `tokens.js`).
- 3. Nút vặn: data-panel (variables chung, preset), config-panel (tweaks của từng page).
+ 3. Nút vặn: data-panel (variables chung, preset), layout-panel (tweaks của từng page).
 -4. Các dòng `AI đoán` và `--auto` trong `## Quyết định` của `brief.md`, mỗi dòng kèm "muốn khác thì nói". Chạy `--auto` thì mở đầu bằng "Chạy `--auto`, đã tự trả lời:" rồi liệt kê. Kèm link `brief.md`.
 +4. Các dòng `AI đoán` và `--auto` trong `## Quyết định` của `brief.md`, mỗi dòng kèm "muốn khác thì nói". Kèm link `brief.md`.
  5. Kết quả `check.mjs` cả thư mục: số page, số tổ hợp, số lỗi.

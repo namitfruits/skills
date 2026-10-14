@@ -15,7 +15,7 @@ page đang dựng.
   ghi file tạm rồi rename, sửa tay thì shell đọc trúng file ghi dở. Không đụng `brief.md`, `pages.js`, `tokens.js`,
   `../_shell/` hay page khác.
 - Không chạy `progress --delivered`. Bước giao là của agent chính, chạy ngay trước tin giao; đánh dấu sớm thì nhãn
-  ghi "✓ Xong" trong lúc agent chính còn kiểm cả thư mục.
+  ghi "Activity log" (page đã xong) trong lúc agent chính còn kiểm cả thư mục.
 - Mọi page của thư mục đọc chung `brief.md`, nên page theo đúng các bảng chung của brief:
   - `variables` khai đúng bảng "Nút dữ liệu chung"; dữ liệu giả theo "Dữ liệu chung"; `tweaks` tự chọn cho page này.
   - `data-block` lấy đúng số trong bảng "Khối". Khối chưa có trong bảng thì báo lại, không tự đặt số.
@@ -43,9 +43,9 @@ bước** trong `<file>.progress.js`, từng bước một:
 | Bước | Dựng gì, xong khi | Kiểm trước khi `--done` |
 | ---- | ----------------- | ----------------------- |
 | 1 · Khung các khối, dữ liệu mặc định | khai đủ `variables` theo "Nút dữ liệu chung" (có `state` đủ bốn giá trị) và `tweaks`; khối chờ thay bằng mọi khối thật, mỗi khối một `data-block` theo bảng "Khối", hiện đúng ở giá trị mặc định | `check.mjs <page> --quick` |
-| 2 · Đang tải · rỗng · lỗi | `state` `loading`, `empty`, `error` đã dựng | `--quick --state loading`, rồi `empty`, rồi `error` |
+| 2 · Đang tải · rỗng · lỗi | `state` `loading`, `empty`, `error` đã dựng; nút làm mới và nút thử lại có lúc chờ (mục "Nút chờ server") | `--quick --state loading`, rồi `empty`, rồi `error`; `--quick --state empty --click "<nút làm mới>"`, `--quick --state error --click "<nút thử lại>"` |
 | 3 · Trạng thái riêng của đề | các `state` riêng trong brief đã dựng | `--quick --state <từng giá trị>` |
-| 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick`, rồi `--quick --click "<nhãn>"` cho từng nút mở modal, sheet, thêm, xoá |
+| 4 · Tương tác: bấm, gõ, mở, đóng | mọi nút làm gì đó, hay khoá kèm `title`; tab, lọc, modal, thêm, xoá chạy trên dữ liệu giả; nút Lưu, Gửi có lúc chờ. Màn của luồng: có nút gọi `$store.design.next()` (trừ màn cuối) và `prev()` (trừ màn đầu), ô gõ dùng `$store.design.form.<key>` | `--quick`, rồi `--quick --click "<nhãn>"` cho từng nút mở modal, sheet, thêm, xoá, lưu, gửi |
 | 5 · Preset và ca biên | `presets` khai xong, ca biên (tên dài, số 0, số rất lớn) dựng xong | `--quick --preset "<từng nhãn>"` |
 | 6 · Kiểm đầy đủ và tự kiểm | `check.mjs` đầy đủ exit 0, đã đi danh sách tự kiểm trên ảnh | `check.mjs <page>` (mục "Kiểm") |
 
@@ -63,6 +63,21 @@ bước** trong `<file>.progress.js`, từng bước một:
 - **Màu dùng vào đâu, cỡ chữ, khoảng cách, bóng, nút chính**: theo hai file luật. `references/ux-principles.md` là
   luật UX: thứ người dùng cảm nhận (hiểu đúng, làm được). `references/ui-principles.md` là luật UI: thứ người dùng
   thấy (màu, chữ, khoảng cách, hình khối). Luật không chép lại ở đây.
+
+## Sửa theo góp ý
+
+<!-- spec: F4.4 F6.8 -->
+
+Agent chính đã mở mục góp ý cho page (`progress … --chat "<ý>"` hay `--comment <id> "<tóm tắt>"`). Mục là một góp ý,
+không phải một bước dựng: không dùng `--done <n>` hay `--insert` cho góp ý.
+
+1. Mỗi việc làm cho góp ý: `node $SKILL/scripts/new-design.mjs progress "$D" <file> --doing "<việc>"` lúc bắt đầu, vài
+   chữ như việc con. Việc kế tiếp lại `--doing`: việc trước thành ✓ và ở lại dưới mục, page đang mở tự tải lại.
+2. Sửa page, `check.mjs --quick` sạch trước mỗi `--doing` kế tiếp.
+3. Xong mọi việc: `progress "$D" <file> --doing "Kiểm đầy đủ"` (việc cuối có sẵn trong mục, lệnh chỉ đóng việc đang
+   làm, không thêm dòng), rồi `check.mjs` đầy đủ sạch, rồi `progress "$D" <file> --checked`. Kiểm đầy đủ khi việc trước
+   còn mở thì `check.mjs` báo "còn bước chưa xong".
+4. `progress` không cờ in danh sách và nói đang ở mục nào.
 
 ## Đánh dấu trong page
 
@@ -89,7 +104,8 @@ window.DESIGN = {
   lang: "vi",                                   // "en" khi đề tiếng Anh: chữ trên toolbar và panel đổi theo
   variables: [ /* đổi DỮ LIỆU UI hiển thị: đúng bảng "Nút dữ liệu chung" của brief.md */ ],
   tweaks:    [ /* đổi CẤU HÌNH UI: role, bố cục, độ dày */ ],
-  presets:   [{ label: "Dữ liệu dày", values: { weeks: 12, warnAt: 20 } }],
+  presets:   [{ label: "Bốn tuần, cảnh báo ở 80%", values: { weeks: 4, warnAt: 80 } },   // trùng default: bộ mặc định
+              { label: "Dữ liệu dày", values: { weeks: 12, warnAt: 20 } }],
   // pageWidth: { value: "90rem", why: "bảng 9 cột" },  // chỉ khi phương án cần rộng khác bề rộng chung
 };
 ```
@@ -113,6 +129,9 @@ window.DESIGN = {
   `state` ("Lưu thất bại": page hiện sẵn cảnh đã sửa mà lưu không được), đừng làm variable kiểu "khi bấm Lưu thì lỗi":
   vặn nó không thấy gì, người xem không biết nó có tác dụng.
 - `presets` cho ca biên và dữ liệu dày, để người xem bấm một lần ra cả bộ.
+- `presets` có đúng một bộ tả dữ liệu mặc định: `values` trùng `default` của mọi variables. Nhãn tả ca đó như mọi bộ
+  khác, vd "Giữa buổi sáng: 30 lịch, 10:30"; không ghi "Mặc định". Shell đưa bộ này lên đầu ô chọn và thêm
+  "· mặc định" sau nhãn. `check.mjs` báo khi thiếu bộ này hoặc có hai bộ cùng trùng.
 
 ## Trạng thái và dữ liệu giả
 
@@ -128,6 +147,46 @@ window.DESIGN = {
   giả. Không gọi API. Nút nào thấy được cũng phải làm gì đó; không làm được (role thiếu quyền) thì `disabled` kèm
   `title` nói vì sao.
 - Mỗi khối chính có `data-block="<số>"`, số lấy từ bảng `## Khối` của `brief.md`.
+
+### Nút chờ server
+
+<!-- spec: F3.10 -->
+
+Có những nút mà app thật phải hỏi server mới có kết quả. Trên page, các nút này giả một lúc chờ rồi mới ra kết quả,
+để người xem thấy app phản ứng thế nào khi bấm.
+
+| Loại nút | Ví dụ | Khi bấm |
+| --- | --- | --- |
+| làm mới dữ liệu | Tải lại, Thử lại, Làm mới | khối nhận kết quả hiện khung chờ (dùng lại khung của `state` `loading`) và có `aria-busy="true"`; 600–900 ms sau, page tạo lại dữ liệu từ variables |
+| gửi form | Lưu, Gửi, Đặt lịch, Xác nhận | nút `disabled`, chữ đổi thành "Đang lưu…" hay "Đang gửi…", form có `aria-busy="true"`; 600–900 ms sau, page đổi dữ liệu giả rồi đóng form |
+| thao tác trên một dòng | Đã đến, Xoá, đổi trạng thái | đổi ngay, không chờ |
+
+```js
+busy: false,
+async reload() {
+  this.busy = true;
+  await new Promise((done) => setTimeout(done, 700));
+  if (this.$store.design.state === "error") this.$store.design.state = "data";
+  this.reset();
+  this.busy = false;
+},
+```
+
+```html
+<section data-block="3" :aria-busy="busy">
+  <div x-show="$store.design.state === 'loading' || busy">…khung chờ…</div>
+  …
+</section>
+<button type="button" :disabled="busy" @click="reload()" x-text="busy ? 'Đang tải…' : 'Tải lại lịch'"></button>
+```
+
+- Nút luôn ra kết quả thành công. Người xem xem cảnh lỗi bằng giá trị `error` (hay "Lưu thất bại") của `state` ở
+  panel, không bằng cú bấm.
+- Khi `state` là `empty`, nút làm mới qua lúc chờ rồi vẫn ra cảnh rỗng: không tự đổi `state` sang `data`.
+- Khi `state` là `error`, nút "Thử lại" qua lúc chờ rồi đổi `state` sang `data`.
+- Khi `count` (hay variable số lượng) bằng `0`, nút làm mới qua lúc chờ rồi vẫn ra cảnh rỗng.
+- Lúc chờ không quá 900 ms. Máy kiểm đợi tối đa 3 giây, rồi báo `chờ quá 3 giây`.
+- Phần tử có `aria-busy="true"` phải đang hiện trong lúc chờ: gắn lên khối luôn hiện, hoặc lên chính khung chờ.
 
 ## Page của một màn trong luồng
 
@@ -170,7 +229,7 @@ window.DESIGN = {
 
 ## Kiểm
 
-<!-- spec: F1.13 F3.4 F3.5 F3.9 F5.1 F5.2 F5.4 F5.5 F5.6 F5.7 F5.8 F5.9 F5.10 -->
+<!-- spec: F1.13 F3.4 F3.5 F3.9 F5.1 F5.2 F5.4 F5.5 F5.6 F5.7 F5.8 F5.9 F5.10 F5.12 F5.13 -->
 
 ```bash
 node $SKILL/scripts/check.mjs "$D/<file>" --quick [--state <giá trị>] [--preset "<nhãn>"]   # trước mỗi progress --done
@@ -185,13 +244,21 @@ node $SKILL/scripts/check.mjs "$D/<file>" [--pw <thư mục có playwright>]    
   đầu bằng `<nhãn>`), chờ hiệu ứng xong, rồi đo như lượt bấm của kiểm đầy đủ: nút câm, khung nổi lọt màn hình hay nằm
   dưới toolbar, nút cùng hàng xô đi. Ảnh sau cú bấm: `shots/<page>--quick-click.png`. Không có nút tên đó thì lệnh in
   tên các nút đang hiện.
+- **Cú bấm phải đổi page.** Lượt bấm và `--click` báo `mà page không đổi gì` khi bấm xong mà chữ, phần tử đang hiện,
+  ô nhập, URL và vị trí cuộn đều như trước. Tab hay nút đang được chọn sẵn (`aria-selected`, `aria-pressed`,
+  `aria-current`) thì không bị báo. Sửa bằng cách cho nút làm một việc thấy được, hoặc khoá nút kèm `title`. Lượt bấm
+  chỉ bấm mỗi nút ở tổ hợp đầu tiên nó hiện ra. Vì vậy với nút làm mới ở cảnh rỗng, agent tự chạy thêm `--quick
+  --preset "<bộ rỗng>" --click "<nhãn>"`.
+- **Nút gọi server phải có lúc chờ.** Nhãn bắt đầu bằng Tải lại, Thử lại, Làm mới, Lưu, Gửi mà bấm xong không có
+  `aria-busy="true"` mới nào hiện, thì máy kiểm báo `gọi server mà không có lúc chờ`. Sửa theo mục "Nút chờ server".
+  Máy kiểm đợi hết `aria-busy` rồi mới đo bố cục sau cú bấm.
 - **Không viết script riêng** (Playwright, Puppeteer, Python) để bấm thử, chụp ảnh hay đo page: bấm thử dùng
   `--click`, ảnh có sẵn trong `shots/`. Script tự viết bắt nhầm nút của toolbar, của panel, và tốn mỗi lần chạy 30
   giây. Dữ liệu giả viết thẳng trong page, không viết bộ sinh dữ liệu ở `/tmp`.
 - **Kiểm đầy đủ** là bước dựng cuối của page: mọi tổ hợp tweak × sáng tối × `state` cộng từng preset ở 375 và 1280px,
   cộng một lượt bấm từng loại thứ bấm được, cộng lượt đi luồng với thư mục luồng. Thứ chỉ hiện ở một giá trị khác mặc
-  định được bấm ở đúng giá trị đó. Kiểm đầy đủ báo `còn bước chưa xong` khi danh sách bước dựng của page còn bước chưa
-  xong ngoài bước kiểm đầy đủ của vòng đang mở.
+  định được bấm ở đúng giá trị đó. Kiểm đầy đủ báo `còn bước chưa xong` khi page còn bước dựng chưa xong ngoài bước
+  kiểm đầy đủ, hay còn mục góp ý chưa xong ngoài việc kiểm đầy đủ của mục đang mở.
 - Chưa có Playwright thì lệnh in câu cài vào thư mục tạm (`npm i --prefix "$TMPDIR/design-uiux-pw" playwright`), chạy
   lại kèm `--pw`. **Không cài vào dự án.**
 - Lệnh của các agent con chạy song song được: mỗi page một bộ ảnh tên riêng trong cùng `shots/`.

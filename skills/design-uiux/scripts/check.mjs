@@ -33,6 +33,9 @@
 //   - khổ tablet / mobile: iframe đúng bề rộng, không toolbar bên trong, vặn nút ở panel thì iframe đổi
 //   - giao diện suy ra có ghi "(suy ra)" ở view-controller; option-switcher đủ số page
 //   - lượt bấm: cú bấm làm page sang một file trong pages.js là hợp lệ (nút "Tiếp tục" của luồng)
+//   - lượt bấm: cú bấm phải làm page đổi gì đó (chữ, phần tử, ô nhập, URL, vị trí cuộn), trừ thứ đang được chọn sẵn;
+//     nút có nhãn gọi server (Tải lại, Thử lại, Làm mới, Lưu, Gửi) phải hiện aria-busy="true" trước khi ra kết quả.
+//     Máy kiểm đợi hết aria-busy (tối đa 3 giây) rồi mới đo
 // Lượt đi luồng (cả thư mục luồng): mở màn 1, điền các ô form.* bằng chữ mẫu, bấm thứ gọi next() tới màn cuối, rồi
 // prev() một lần và kiểm ô của màn trước còn chữ.
 // Luật UX (../references/ux-principles.md) và luật UI (../references/ui-principles.md): kiểm trong principles-check.mjs, chạy
@@ -40,7 +43,7 @@
 // "Luật UI theo design system" của brief.md thì bỏ qua. Luật trong hai file không có kiểm thì dừng ngay (exit 2).
 // Exit 0 khi sạch, 1 khi có lỗi, 2 khi không chạy được (thiếu Playwright, không mở được page).
 //
-// spec: F1.3 F1.2 F1.13 F1.17 F5.1 F5.4 F5.6 F5.7 F5.8
+// spec: F1.3 F1.2 F1.13 F1.17 F5.1 F5.4 F5.6 F5.7 F5.8 F5.12 F5.13
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -49,6 +52,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { appendRun } from "./run-log.mjs";
+import { normalizeProgress } from "./new-design.mjs";
 import { afterClick, animationsDone, checks, describeAt, folderIssues, hitsItself, pageProbe, positionsAround, readServes, readTokens, readYielded, rowRects, shifted, staticIssues } from "./principles-check.mjs";
 
 const widths = [375, 1280];
@@ -260,23 +264,31 @@ for (const file of checkedFiles) {
     }
   }
 }
-// Danh sách bước dựng: kiểm đầy đủ chạy ở bước cuối của vòng, nên mọi bước khác của danh sách phải xong rồi.
+// Danh sách bước dựng: kiểm đầy đủ chạy ở bước cuối của danh sách dựng, hay ở việc cuối của mục góp ý đang mở, nên mọi
+// bước, mục, việc khác phải xong rồi. File kiểu cũ (góp ý xếp theo vòng) đọc qua normalizeProgress.
 if (!quick) {
   for (const file of checkedFiles) {
     const progressFile = join(designDir, `${file.replace(/\.html?$/, "")}.progress.js`);
     if (!existsSync(progressFile)) continue;
     const json = readFileSync(progressFile, "utf8").match(/\]\s*=\s*(\{[\s\S]*\});\s*$/)?.[1];
-    let build = null;
-    let prep = null;
+    let data = null;
     try {
-      ({ build, prep } = JSON.parse(json ?? "null") ?? {});
+      data = JSON.parse(json ?? "null");
     } catch {}
-    if (!Array.isArray(build)) {
+    if (!Array.isArray(data?.build)) {
       report(file, basename(progressFile), "danh sách bước dựng không đọc được; chỉ ghi bằng new-design.mjs progress");
       continue;
     }
-    const openRound = build.find((step) => !step.done)?.round;
-    const unfinished = [...(prep && !prep.done ? [prep] : []), ...build.filter((step) => !step.done && !(step.final && step.round === openRound))];
+    const { build, prep, feedback } = normalizeProgress(data);
+    const building = build.some((step) => !step.done);
+    const openItem = feedback.find((item) => !item.done);
+    const unfinished = [
+      ...(prep && !prep.done ? [prep] : []),
+      ...build.filter((step) => !step.done && !step.final),
+      // Đang dựng thì mục góp ý chưa có; đang sửa góp ý thì chỉ việc kiểm đầy đủ của mục đang mở được chưa xong.
+      ...feedback.filter((item) => !item.done && (building || item !== openItem)).map((item) => ({ task: `góp ý ${item.source === "comment" ? `#${item.id} ` : ""}${item.task}` })),
+      ...(openItem && !building ? openItem.actions.filter((action) => !action.done && !action.final) : []),
+    ];
     if (unfinished.length) report(file, basename(progressFile), `còn bước chưa xong: ${unfinished.map((step) => step.task).join(" · ")}`);
   }
 }
@@ -339,9 +351,9 @@ async function openPage(url, width, issues) {
   const page = await context.newPage();
   page.on("close", () => context.close().catch(() => {}));
   page.on("pageerror", (error) => issues.push(`lỗi JS: ${error.message}`));
-  // Shell đọc <page>.progress.js mỗi 2 giây, comments.js và _listen.js của chế độ comment; page dựng trước khi có danh
-  // sách bước, hay thư mục chưa bật lệnh nghe lần nào, không có các file đó, nạp hỏng là bình thường.
-  const ofProgress = (url) => /(\.progress|\/comments|\/_listen)\.js(\?|$)/.test(url ?? "");
+  // Shell đọc <page>.progress.js mỗi 2 giây, comments.js và _comment-bridge.js của chế độ comment; page dựng trước khi có danh
+  // sách bước, hay thư mục chưa bật cầu nối comment lần nào, không có các file đó, nạp hỏng là bình thường.
+  const ofProgress = (url) => /(\.progress|\/comments|\/_comment-bridge)\.js(\?|$)/.test(url ?? "");
   page.on("console", (message) => {
     if (ofProgress(message.location()?.url)) return;
     if (message.type() === "error" || /Alpine Expression Error/.test(message.text())) issues.push(`console: ${message.text().split("\n")[0].slice(0, 160)}`);
@@ -502,6 +514,51 @@ const visibleCounts = (page) => page.evaluate(() => {
   }
   return counts;
 });
+// F5.12 · F5.13: ghi #design ngay trước cú bấm rồi theo dõi DOM từ lúc bấm. Bản ghi là chữ, phần tử đang hiện theo
+// thứ tự kèm class và aria-* chọn, giá trị ô nhập, URL, vị trí cuộn: bấm tab thì số phần tử mỗi loại như cũ, chỉ thứ tự
+// đổi; ô bấm để cuộn tới một nhóm không đổi DOM. Đo trên 9 page cũ: 0 báo nhầm trên 391 cú bấm (probe 019 P1).
+function watchClick(index) {
+  const root = document.querySelector("#design");
+  const element = root.querySelectorAll("*")[index];
+  const visible = (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
+  const busy = () => [...root.querySelectorAll('[aria-busy="true"]')].filter(visible);
+  const shot = () => {
+    const order = [];
+    const scrolls = [window.scrollX, window.scrollY];
+    for (const node of root.querySelectorAll("*")) {
+      if (node.scrollTop || node.scrollLeft) scrolls.push(node.scrollTop, node.scrollLeft);
+      if (!visible(node)) continue;
+      const states = ["aria-selected", "aria-pressed", "aria-expanded", "aria-current", "aria-checked"].map((name) => node.getAttribute(name) ?? "").join(",");
+      order.push(`${node.tagName}.${node.getAttribute("class") ?? ""}|${states}`);
+    }
+    const fields = [...root.querySelectorAll("input, select, textarea")].map((field) => (field.type === "checkbox" || field.type === "radio" ? field.checked : field.value));
+    return JSON.stringify([root.innerText, order, fields, location.search, scrolls]);
+  };
+  const busyBefore = new Set(busy());
+  const state = {
+    selected: ["aria-selected", "aria-pressed"].some((name) => element?.getAttribute(name) === "true") || Boolean(element?.hasAttribute("aria-current")),
+    changed: false,
+    busySeen: false,
+  };
+  const before = shot();
+  const observer = new MutationObserver(() => {
+    if (!state.busySeen && busy().some((node) => !busyBefore.has(node))) state.busySeen = true;
+    if (!state.changed && shot() !== before) state.changed = true;
+  });
+  observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true });
+  window.__dsClick = { state, shot, before, busy, busyBefore, observer };
+}
+// Hết lúc chờ: không còn aria-busy nào đang hiện mà trước cú bấm không có.
+const clickSettled = () => !window.__dsClick || !window.__dsClick.busy().some((node) => !window.__dsClick.busyBefore.has(node));
+const clickOutcome = () => {
+  const watch = window.__dsClick;
+  if (!watch) return null;
+  watch.observer.disconnect();
+  return { ...watch.state, changed: watch.state.changed || watch.shot() !== watch.before };
+};
+// Nhãn của nút mà app thật phải hỏi server mới có kết quả (F5.13).
+const serverLabel = /^(tải lại|thử lại|làm mới|lưu|gửi|reload|retry|refresh|save|send|submit)/i;
+
 const countDiff = (inPlace, fresh) => {
   const extra = [];
   const missing = [];
@@ -591,6 +648,16 @@ for (const file of checkedFiles) {
   for (const control of controls) {
     if (!control.key || !control.type) report(file, "", `nút khai thiếu key hay type: ${JSON.stringify(control).slice(0, 80)}`);
     if (!info.toolbarKeys.includes(control.key)) report(file, "", `nút "${control.key}" khai trong DESIGN mà không có ở panel`);
+  }
+  // Bộ dữ liệu mặc định: đúng một preset có values trùng default của variables, nhãn tả ca đó. Shell đưa bộ này lên đầu ô
+  // chọn và thêm "· mặc định".
+  const presets = info.design.presets ?? [];
+  if (presets.length) {
+    const defaultOf = (control) => control.default ?? (control.options ? (control.options[0]?.value ?? control.options[0]) : control.type === "toggle" ? false : control.type === "number" ? 0 : "");
+    const defaults = Object.fromEntries(variables.map((control) => [control.key, defaultOf(control)]));
+    const atDefault = presets.filter((preset) => Object.entries(preset.values ?? {}).every(([key, value]) => defaults[key] === value));
+    if (!atDefault.length) report(file, "", `presets không có bộ nào tả dữ liệu mặc định (values trùng default của variables: ${Object.entries(defaults).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join(", ")}). Thêm một bộ có nhãn tả ca đó`);
+    if (atDefault.length > 1) report(file, "", `presets có ${atDefault.length} bộ cùng trùng dữ liệu mặc định: ${atDefault.map((preset) => `"${preset.label}"`).join(", ")}. Giữ một bộ`);
   }
   if (info.theme.derived) {
     const label = info.themeLabels[info.theme.derived] ?? "";
@@ -877,6 +944,7 @@ async function clickOnce(clicker, issues, { file, fileUrl, width, defaults, targ
   }
   const rowBefore = await clicker.evaluate(rowRects, target.index);
   const wasHittable = await clicker.evaluate(hitsItself, target.index);
+  await clicker.evaluate(watchClick, target.index);
   // Cú bấm gọi next() hay link sang file khác thì trang tải lại: nhận ra từ request điều hướng, chờ trang mới lên.
   let navigating = false;
   const onRequest = (request) => request.isNavigationRequest() && request.frame() === clicker.mainFrame() && (navigating = true);
@@ -901,6 +969,18 @@ async function clickOnce(clicker, issues, { file, fileUrl, width, defaults, targ
     const landed = decodeURIComponent(new URL(clicker.url()).pathname.split("/").pop());
     if (!pages.some((page) => page.file === landed)) rep(file, where, `bấm "${target.label}" sang ${landed}, file không có trong pages.js`);
     return;
+  }
+  // Nút chờ server: đo bố cục lúc đã tải xong, không đo khung chờ.
+  const settled = await clicker.waitForFunction(clickSettled, null, { timeout: 3000, polling: 100 }).then(() => true, () => false);
+  if (!settled) rep(file, where, `bấm "${target.label}" mà page chờ quá 3 giây: lúc chờ giả chỉ 600–900 ms, hết thì bỏ aria-busy="true"`);
+  await settle(clicker);
+  await clicker.evaluate(animationsDone);
+  const outcome = await clicker.evaluate(clickOutcome);
+  if (outcome && !outcome.selected && !outcome.changed) {
+    rep(file, where, `bấm "${target.label}" mà page không đổi gì: cho nút làm một việc thấy được trên dữ liệu giả, hoặc khoá nút (disabled) kèm title nói vì sao`);
+  }
+  if (outcome && serverLabel.test(target.label.trim()) && !outcome.busySeen) {
+    rep(file, where, `nút "${target.label}" gọi server mà không có lúc chờ: gắn aria-busy="true" lên vùng nhận kết quả, khoá nút 600–900 ms rồi mới đổi dữ liệu (build-page.md, "Nút chờ server")`);
   }
   for (const issue of issues) rep(file, where, issue);
   reportLayout(file, where, await inspect(clicker), rep);

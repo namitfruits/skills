@@ -393,6 +393,70 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | `F7.9` | new      | giao page thì bật lệnh nghe, trừ `--auto` |
 | `F7.10` | new     | comment tới khi đang có vòng thì chờ vòng đó giao xong |
 
+### 018 · Danh sách góp ý theo từng comment, bỏ "vòng"
+
+- **Plan:** [018-design-uiux-danh-sach-gop-y.md](../../.plan/018-design-uiux-danh-sach-gop-y.md)
+- **Status:** approved
+- **Mục tiêu:** bấm nhãn tiến độ thì toolbar xếp góp ý theo "Góp ý vòng 2, vòng 3…": người xem không biết vòng là gì,
+  comment và ý gõ trong chat bị trộn, việc agent làm cho một góp ý xong là mất. Andy thử năm comment trên page 076 và
+  đề nghị bỏ vòng. Xong thì danh sách có nhóm "Comment" (có số) và "Góp ý trong chat"; mỗi mục có dấu xong riêng, các
+  việc agent đã làm thụt dưới mục, việc cuối là kiểm đầy đủ. Page có danh sách kiểu vòng vẫn mở được. Các quyết định
+  đã chốt với người dùng:
+  - Bỏ vòng khỏi giao diện và dữ liệu; mỗi comment, mỗi ý trong chat là một mục.
+  - Ý gõ trong chat không tính là comment: hai nhóm riêng.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F4.4`  | update   | mỗi ý trong chat là một mục góp ý, tách khỏi comment |
+| `F6.8`  | update   | việc đang làm thụt dưới bước dựng hay mục góp ý |
+| `F6.16` | new      | hai nhóm Comment và Góp ý trong chat, việc đã làm thụt dưới mục |
+| `F7.5`  | update   | mỗi comment một mục góp ý riêng |
+| `F7.10` | update   | comment tới khi còn mục mở thì chờ mục đó xong |
+| `F5.7`  | update   | kiểm đầy đủ báo mục góp ý chưa xong |
+
+### 019 · Nút gọi server chạy như thật, máy kiểm bắt cú bấm không đổi gì
+
+- **Plan:** [019-design-uiux-bam-nhu-that.md](../../.plan/019-design-uiux-bam-nhu-that.md)
+- **Status:** approved
+- **Mục tiêu:** các nút như "Tải lại lịch", "Thử lại", "Lưu", "Gửi" trên page hoặc đứng y nguyên, hoặc nhảy thẳng
+  sang kết quả. Andy bấm "Tải lại lịch" ở cảnh 0 lịch hẹn của page 076 và không thấy gì xảy ra. Máy kiểm cho qua, vì
+  nó chỉ báo nút không gắn việc gì. Xong thì nút làm mới và nút gửi form hiện đang tải chừng một giây, khoá nút trong
+  lúc chờ, rồi hiện kết quả trên dữ liệu giả. Máy kiểm báo cú bấm không làm page đổi gì, và nút gọi server không có
+  lúc chờ. Các quyết định đã chốt với người dùng:
+  - Nút gọi server luôn trả thành công. Cảnh lỗi xem bằng trạng thái lỗi ở panel.
+  - Tải lại ở cảnh rỗng qua lúc chờ rồi vẫn rỗng.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F3.10` | new      | nút làm mới và nút gửi form có lúc chờ rồi ra kết quả |
+| `F5.12` | new      | máy kiểm báo cú bấm không làm page đổi gì |
+| `F5.13` | new      | máy kiểm báo nút gọi server không có lúc chờ |
+
+### 020 · Cầu nối comment sống suốt session, chỉ đường khi session đã đóng
+
+- **Plan:** [020-design-uiux-nghe-comment-suot-session.md](../../.plan/020-design-uiux-nghe-comment-suot-session.md)
+- **Status:** approved
+- **Mục tiêu:** lệnh nghe comment chỉ sống 30 phút một lượt. Agent dừng bật lại sau một giờ không có comment, và từ lúc
+  đó page báo "Claude không nghe: chép rồi dán vào chat" mà không nói dán vào đâu. Andy gặp ca này trên page 076 dù
+  session vẫn mở. Xong thì lệnh nghe được thay bằng cầu nối comment: một tiến trình chạy riêng cạnh session Claude, nhận
+  comment từ page, gửi tin vào hộp thư của session để đánh thức nó, và tắt khi session đóng. Page gửi được comment suốt
+  lúc session còn mở. Khi session đã đóng, ô comment ghi session cũ chạy ở đâu, cách mở lại, và cho chép một prompt dán
+  được vào session cũ hay session mới. Các quyết định đã chốt với người dùng:
+  - Ô comment nói người xem phải làm gì trong từng trạng thái.
+  - Prompt chép ra dán được vào session cũ lẫn session mới, vì người xem có thể không nhớ session cũ ở đâu.
+  - Chương trình gọi là cầu nối comment (`comment-bridge`), không gọi là lệnh nghe hay monitor.
+
+| Mã      | Thay đổi | Tóm tắt |
+| ------- | -------- | ------- |
+| `F7.3`  | update   | comment gửi tới cầu nối comment |
+| `F7.4`  | update   | không có cầu nối thì chỉ đường và cho chép prompt |
+| `F7.5`  | update   | cầu nối gửi tin vào hộp thư, session thức dậy |
+| `F7.8`  | update   | token của cầu nối |
+| `F7.9`  | update   | cầu nối sống tới khi session đóng |
+| `F7.11` | new      | session đóng thì cầu nối tắt theo |
+| `F7.12` | new      | dán prompt chép từ page thì agent ghi comment, sửa, bật lại cầu nối |
+| `F7.13` | new      | không có hộp thư thì cầu nối vẫn lưu comment |
+
 ## Plan Queue
 
 ### PQ-03 · Sửa 7 chỗ SKILL.md mơ hồ còn lại, tìm được khi nghiệm thu 005
@@ -456,3 +520,63 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 | Mã     | Thay đổi | Tóm tắt |
 | ------ | -------- | ------- |
 | `F2.8` | new      | thư mục một page có nhãn phương án, rê vào thấy mô tả |
+
+### PQ-07 · Chia sẻ design qua link: chia sẻ trực tiếp và publish
+
+- **Status:** new
+- **Mục tiêu:** page chỉ mở được bằng `file://` trên máy chạy skill. Muốn cho người khác xem thì người dùng phải gửi cả
+  thư mục design, và người nhận phải tự mở file. Người nhận cũng không comment được, vì comment chỉ tới lệnh nghe trên
+  máy chạy skill. Xong thì người dùng chọn một trong hai chế độ trên toolbar và nhận một link mở được trên máy khác.
+
+  - **Chia sẻ trực tiếp.** Lệnh nghe phục vụ cả thư mục design qua `http`. Lệnh nghe mở một Cloudflare quick tunnel
+    (`cloudflared tunnel --url`) tới cổng đó. `cloudflared` có trên máy, không cần tài khoản. Người có link thấy
+    page đang dựng, page tự tải lại khi agent sửa. Người xem comment được, và comment về session đang chạy skill để sửa
+    ngay. Link chết khi lệnh nghe tắt. Mỗi lần bật ra một link mới.
+  - **Publish** (chế độ bình thường). Lệnh nghe đẩy một bản chụp thư mục design lên host file tĩnh. Link còn sau khi
+    tắt máy. Page đã publish tắt chế độ comment, vì trình duyệt người xem không có lệnh nghe nào để gửi tới. Cách thu
+    comment từ bản publish nằm ở `PQ-08`. Plan chọn host, các nơi đã xét:
+    - **Vercel** (`vercel deploy --prod`): CLI có trên máy. Lệnh nghe tự deploy, không cần session. Link production giữ
+      nguyên giữa các lần publish. Người ngoài xem được nếu tắt chế độ chặn bản preview. Đây là lựa chọn nghiêng về.
+    - **claude.ai Artifact**: riêng tư mặc định, giữ link. Chỉ session gọi được. Artifact đòi script ghi version cố
+      định, trong khi page nạp `@tailwindcss/browser@4` và `alpinejs@3`.
+    - **GitHub Pages**: `gh` đã đăng nhập. Link luôn công khai. Mỗi lần đẩy chờ build khoảng 30–60 giây.
+
+  Chỗ phải đổi ở hiện trạng, cho chia sẻ trực tiếp:
+  - Lệnh nghe chỉ có `GET /health` và `POST /comment`. Lệnh nghe cần phục vụ thêm file của thư mục design.
+  - Shell gửi comment tới `http://127.0.0.1:<cổng>`. Khi page mở qua link tunnel, shell phải gửi về chính địa chỉ
+    đang mở page.
+  - Token comment nằm trong `_listen.js`, ai mở link cũng đọc được. Vậy ai có link cũng comment được. Đó là chủ đích
+    của chế độ này, nhưng SPEC phải ghi rõ.
+  - `F7.3` ghi "không qua dịch vụ ngoài nào". Tunnel đi qua Cloudflare. Lý do ở SPEC "comment không qua claude.ai, vì
+    page có thể chứa thiết kế của khách" vẫn đúng. Vì vậy SPEC cần ghi cả hai chế độ là việc người dùng tự bật.
+
+  Chưa có probe nào. Câu cần probe: tunnel có giữ được nhịp đọc lại `.progress.js`, `comments.js` mỗi 2 giây không, và
+  khung mobile, tablet (iframe của chính page) có chạy qua tunnel không.
+
+| Mã     | Thay đổi | Tóm tắt |
+| ------ | -------- | ------- |
+| `F7.3` | update   | comment đi qua tunnel khi đang chia sẻ trực tiếp |
+| `F8.1` | new      | nút chia sẻ trực tiếp: lệnh nghe phục vụ thư mục design và mở tunnel, shell hiện link |
+| `F8.2` | new      | người xem qua link tunnel comment được, comment về session đang chạy skill |
+| `F8.3` | new      | khi lệnh nghe tắt, tunnel tắt theo |
+| `F8.4` | new      | nút Publish: lệnh nghe đẩy bản chụp thư mục design lên host, shell hiện link |
+| `F8.5` | new      | publish lại cùng thư mục thì giữ nguyên link |
+| `F8.6` | new      | bản publish không chứa `_listen.js`; chỉ chứa `brief.md` khi người dùng đồng ý |
+| `F8.7` | new      | page đã publish tắt chế độ comment |
+
+### PQ-08 · Thu comment từ bản đã publish
+
+- **Status:** new
+- **Mục tiêu:** bản publish của `PQ-07` tắt chế độ comment. Người xem bản đó chỉ góp ý được bằng tin nhắn ngoài, không
+  chọn được khối hay vùng trên page như `F7.1`. Xong thì người xem bản publish chọn chỗ và viết comment như khi xem
+  trên máy chạy skill. Lần chạy skill sau trên thư mục đó, agent nhận các comment này và sửa theo `F7.7`. Việc chờ
+  `PQ-07` xong.
+
+  Hướng đã nghĩ tới, chưa chọn:
+  - Shell chép comment kèm chỗ đã chọn ra clipboard, như nút Chép của `F7.4`. Người xem gửi lại bằng chat. Cách này
+    không cần dịch vụ nào.
+  - Host có chỗ lưu comment: claude.ai Artifact có comment, Vercel có function và chỗ lưu dữ liệu. Agent kéo comment
+    về `comments.json` khi chạy skill.
+  - Mỗi comment thành một issue trên GitHub. Người xem cần tài khoản GitHub.
+
+  Chưa có mã SPEC: plan chọn hướng rồi mới viết yêu cầu.

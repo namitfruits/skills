@@ -51,6 +51,8 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F2.5` Khi người xem mở một link đã chép, page hiện đúng các giá trị lúc chép.
   - `F2.6` Trong lúc xem thư mục luồng, người xem chuyển màn bằng dãy màn trên toolbar hay nút trong page.
   - `F2.7` Khi người xem chuyển màn trong luồng, chữ đã nhập ở các màn giữ nguyên.
+  - `F2.9` Khi người xem bấm nút ẩn shell trên view-controller, shell ẩn toolbar, panel và ghim comment, giữ page cùng
+    mọi giá trị đang xem.
 - **`F3` Page**
   - `F3.1` Page lấy màu, chữ, khoảng cách từ design system được đưa: `DESIGN.md`, file token, component của dự án.
   - `F3.5` Nếu design system thiếu giao diện sáng hay tối, thì `tokens.mjs` suy ra giao diện đó và shell ghi
@@ -63,6 +65,8 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
     tải vào thư mục design.
   - `F3.2` Khi người xem bấm tab, lọc, modal, thêm hay xoá, page đổi theo trên dữ liệu giả.
   - `F3.3` Page có đủ trạng thái: có dữ liệu, đang tải, rỗng, lỗi, và trạng thái riêng của đề.
+  - `F3.10` Khi người xem bấm nút làm mới dữ liệu hay nút gửi form, page hiện đang tải rồi hiện kết quả thành công
+    trên dữ liệu giả.
   - `F3.4` Nếu tài liệu hay component của design system làm khác một luật UI, thì page theo design system và
     `brief.md` ghi dẫn chứng.
   - `F3.9` Nếu design system làm khác một luật UI có phục vụ một luật UX, thì `brief.md` ghi cách page vẫn giữ luật UX
@@ -71,11 +75,14 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F4.1` Khi người dùng góp ý một phương án, agent sửa thẳng page của phương án đó, không tạo page mới.
   - `F4.2` Nút phương án hiện ngày sửa và góp ý cuối của page đó.
   - `F4.3` Nếu góp ý đổi dữ liệu chung, thì agent sửa mọi page theo dữ liệu mới.
-  - `F4.4` Khi người dùng góp ý một page, mỗi ý thành một bước dựng mới trong danh sách bước dựng của page đó.
+  - `F4.4` Khi người dùng góp ý một page trong chat, mỗi ý thành một mục góp ý trong danh sách của page đó, tách khỏi
+    comment.
 - **`F5` Kiểm tra trước khi giao**
   - `F5.1` Máy kiểm chạy page qua mọi tổ hợp: cấu hình × sáng tối × trạng thái, từng bộ dữ liệu có sẵn, khổ mobile và
     desktop.
   - `F5.4` Máy kiểm bấm thử từng loại thứ bấm được trên page.
+  - `F5.12` Nếu một cú bấm không làm page đổi gì, thì máy kiểm báo thứ được bấm.
+  - `F5.13` Nếu nút có nhãn gọi server bấm xong mà page không qua lúc chờ, thì máy kiểm báo nút đó.
   - `F5.8` Khi kiểm thư mục luồng, máy kiểm đi được từ màn đầu tới màn cuối bằng nút trong page.
   - `F5.2` Máy kiểm đo phần đo được của từng luật trong `references/ux-principles.md` và `references/ui-principles.md`.
   - `F5.5` Agent soát phần còn lại của từng luật trên ảnh trong `shots/`.
@@ -95,7 +102,8 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F6.5` Toolbar hiện page đang chuẩn bị, đang dựng, đang sửa theo góp ý, đang kiểm lại hay đã xong.
   - `F6.6` Nếu agent dựng page bị ngắt, thì agent được gọi lại làm tiếp từ bước dựng đầu tiên chưa xong.
   - `F6.7` Nếu một agent con bị ngắt trong lúc các agent con khác đang dựng, thì agent chính chỉ gọi lại agent bị ngắt.
-  - `F6.8` Trong lúc một bước dựng chưa xong, danh sách bước dựng trên toolbar hiện việc con agent đang làm, một dòng thụt vào ngay dưới bước đó.
+  - `F6.8` Trong lúc một bước dựng hay một mục góp ý chưa xong, danh sách trên toolbar hiện việc agent đang làm, một
+    dòng thụt vào ngay dưới bước hay mục đó.
   - `F6.9` Trong lúc page chưa có khối đầu tiên, page hiện tên màn, tên page, bố cục page hay việc của màn, và các việc page tiện cho.
   - `F6.10` Toolbar chỉ ghi page đã xong sau khi agent chính đánh dấu bước giao.
   - `F6.11` Toolbar ghi ngày sửa cuối của page ở cuối danh sách bước dựng, không ghi trên nhãn trạng thái.
@@ -105,21 +113,28 @@ SPEC chỉ tả những gì skill đang làm. Yêu cầu nào do việc nào đ�
   - `F6.14` Khi người dùng chọn mở, agent mở page đầu tiên trong một cửa sổ Chrome mới có đúng một tab, ngay sau khi in
     link.
   - `F6.15` Nếu máy không có Chrome, thì agent mở page bằng trình duyệt mặc định và báo trong chat.
+  - `F6.16` Danh sách trên toolbar xếp góp ý thành hai nhóm: "Comment" (comment gửi từ page, có số) và "Góp ý trong
+    chat"; mỗi mục có các việc agent đã làm cho nó, thụt vào dưới mục; việc kiểm đầy đủ cuối mục không có dòng.
 - **`F7` Comment trên page**
   - `F7.1` Khi người xem bật chế độ comment trên toolbar, shell cho chọn một khối bằng cú bấm hay một vùng bằng cú kéo,
     rồi mở ô viết comment ngay tại chỗ đã chọn.
   - `F7.2` Mỗi comment mang tên page, mọi giá trị đang xem trên URL, khối hay vùng đã chọn, và chữ trong khối đó.
-  - `F7.3` Khi người xem bấm gửi, shell giao comment cho lệnh nghe chạy trên máy, không qua dịch vụ ngoài nào.
-  - `F7.4` Nếu không có lệnh nghe nào chạy, thì shell báo Claude không nghe và cho chép comment kèm chỗ đã chọn để dán
-    vào chat.
-  - `F7.5` Khi lệnh nghe nhận một comment, session đang chạy skill thức dậy và sửa page theo comment đó trong một vòng
-    góp ý riêng của comment đó.
+  - `F7.3` Khi người xem bấm gửi, shell giao comment cho cầu nối comment chạy trên máy, không qua dịch vụ ngoài nào.
+  - `F7.4` Nếu không có cầu nối comment nào chạy, thì shell ghi session đã đóng hay chưa từng có session nào nhận
+    comment, chỉ cách mở lại session cũ hay mở session mới, và cho chép một prompt mang comment kèm chỗ đã chọn.
+  - `F7.5` Khi cầu nối comment nhận một comment, cầu nối gửi một tin vào hộp thư của session, session thức dậy và sửa
+    page theo comment đó trong một mục góp ý riêng của comment đó.
   - `F7.6` Shell hiện một ghim đánh số tại chỗ được comment, ghi trạng thái: đã gửi, đang sửa, đã sửa.
   - `F7.7` Khi agent chạy skill trên một thư mục design còn comment chưa sửa, agent sửa các comment đó trước việc khác.
-  - `F7.8` Nếu comment không mang token của lệnh nghe đang chạy, thì lệnh nghe bỏ comment đó.
-  - `F7.9` Khi agent giao page mà không chạy với `--auto`, agent bật lệnh nghe comment.
-  - `F7.10` Nếu một comment tới khi page đang có vòng sửa một comment khác, thì agent giao xong vòng đó và đánh dấu
-    comment đó đã sửa, rồi mới mở vòng cho comment mới.
+  - `F7.8` Nếu comment không mang token của cầu nối comment đang chạy, thì cầu nối bỏ comment đó.
+  - `F7.9` Khi agent giao page mà không chạy với `--auto`, agent bật cầu nối comment.
+  - `F7.10` Nếu một comment tới khi page đang có mục góp ý chưa xong, thì agent làm xong mục đó và đánh dấu nó đã sửa,
+    rồi mới mở mục cho comment mới.
+  - `F7.11` Khi session bật cầu nối comment đóng, cầu nối tắt theo.
+  - `F7.12` Khi người dùng dán vào chat prompt chép từ ô comment, agent ghi comment đó vào thư mục design, sửa page theo
+    comment, rồi bật lại cầu nối comment.
+  - `F7.13` Nếu session không có hộp thư, thì cầu nối comment vẫn nhận và lưu comment, và ô comment bảo người xem nhắn
+    vào session để agent sửa.
 
 Bảng dưới phân biệt phương án (`F1.2`) và màn của luồng (`F1.17`) với thứ người xem vặn được (`F2`).
 
@@ -127,7 +142,7 @@ Bảng dưới phân biệt phương án (`F1.2`) và màn của luồng (`F1.17
 | --- | --- | --- |
 | màn này phục vụ ai trước, lúc nào, để biết gì | **phương án** (`F1.2`) | nút A B trên toolbar, mỗi phương án một page |
 | người dùng đang ở chỗ nào của luồng | **màn của luồng** (`F1.17`) | dãy màn trên toolbar, nút trong page, mỗi màn một page |
-| bố cục, độ dày, role, loại biểu đồ trên cùng dữ liệu | **tweak** (`F2.2`) | config-panel của page đó |
+| bố cục, độ dày, role, loại biểu đồ trên cùng dữ liệu | **tweak** (`F2.2`) | layout-panel của page đó |
 | dữ liệu mang tới: số lượng, ngưỡng, tên dài, `state` | **variable** (`F2.1`) | data-panel, mọi page chung một bộ |
 | khổ màn, sáng tối | **cách nhìn** (`F2.3`) | view-controller, page không khai |
 
@@ -137,10 +152,10 @@ Bốn phần, mỗi phần một chủ:
 
 | Phần | Là gì | Chủ | Scope |
 | --- | --- | --- | --- |
-| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` cho agent chính, `references/build-page.md` cho agent dựng page | `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.8` `F6.10` `F7.5` `F7.7` `F7.9` `F7.10` |
+| **agent** | agent chính hỏi, chọn phương án, chuẩn bị; agent con dựng page theo danh sách bước dựng | `SKILL.md` cho agent chính, `references/build-page.md` cho agent dựng page | `F1` `F4` `F6.1` `F6.2` `F6.5` `F6.6` `F6.7` `F6.8` `F6.10` `F7.5` `F7.7` `F7.9` `F7.10` `F7.12` |
 | **bản thiết kế** | page `NN-slug.html`, `tokens.js`, danh sách bước dựng `NN-slug.progress.js` | agent dựng, script sinh token, `new-design.mjs progress` | `F3` `F6.2` `F6.9` |
-| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại, chế độ comment | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` `F6.8` `F6.10` `F6.11` `F7.1`–`F7.4` `F7.6` |
-| **lệnh nghe** | `new-design.mjs listen`: nhận comment từ page, ghi `comments.json`, in một dòng cho session | skill mang theo, agent chính bật | `F7.3` `F7.5` `F7.8` |
+| **shell** | `_shell/` bọc quanh page: toolbar, panel, khung mobile / tablet, URL, nhãn tiến độ, tự tải lại, chế độ comment | skill mang theo, page không đụng | `F2` `F4.2` `F6.3`–`F6.5` `F6.8` `F6.10` `F6.11` `F6.16` `F7.1`–`F7.4` `F7.6` `F7.13` |
+| **cầu nối comment** | tiến trình `new-design.mjs comment-bridge` chạy riêng cạnh session: nhận comment từ page, ghi `comments.json`, gửi tin vào hộp thư của session, tắt khi session đóng | skill mang theo, agent chính bật | `F7.3` `F7.5` `F7.8` `F7.9` `F7.11` `F7.13` |
 | **máy kiểm** | `check.mjs`, `principles-check.mjs` | skill mang theo | `F5` |
 
 ### 3.1 Thư mục design
@@ -157,10 +172,10 @@ Mỗi đề một thư mục `.design/NNN-slug/` ở thư mục làm việc lúc
 | `tokens.js` | `new-design.mjs init` | token của design system |
 | `pages.js` | `new-design.mjs page` · `touch` | danh sách page theo thứ tự: tên phương án, bố cục và việc page tiện cho (`option`), hay tên màn và việc của màn (`screen`); ngày sửa, góp ý cuối |
 | `NN-slug.html` | `new-design.mjs page` tạo với khối chờ; agent con dựng tiếp, mỗi agent đúng một file | một phương án, hay một màn của luồng |
-| `NN-slug.progress.js` | `new-design.mjs page` tạo; agent chính đánh dấu bước chuẩn bị và bước giao; agent dựng page đó ghi phần còn lại; mọi lần ghi qua `new-design.mjs progress` | bước chuẩn bị (`prep`); bước giao (`deliver`); danh sách bước dựng của page: sáu bước dựng, rồi các bước góp ý theo vòng; bước nào xong; việc con của bước dở (`doing`); `rev` tăng mỗi lần đánh dấu, ghi việc con thì không |
+| `NN-slug.progress.js` | `new-design.mjs page` tạo; agent chính đánh dấu bước chuẩn bị và bước giao; agent dựng page đó ghi phần còn lại; mọi lần ghi qua `new-design.mjs progress` | bước chuẩn bị (`prep`); bước giao (`deliver`); sáu bước dựng (`build`), bước nào xong, việc con của bước dở (`doing`); mục góp ý (`feedback`): comment hay ý trong chat, các việc agent đã làm cho mục, mục nào xong; `rev` tăng khi page đổi, ghi việc đang làm thì không |
 | `shots/` | `check.mjs` | ảnh từng tổ hợp, từng cú bấm |
-| `comments.json` · `comments.js` | `new-design.mjs listen` thêm comment; `new-design.mjs comment --status` đổi trạng thái | mọi comment của thư mục design; `comments.js` là bản sao để shell đọc lại trên `file://` |
-| `_listen.js` | `new-design.mjs listen` lúc bật, xoá lúc tắt | cổng và token của lệnh nghe đang chạy |
+| `comments.json` · `comments.js` | cầu nối comment, hay `new-design.mjs comment --add`, thêm comment; `new-design.mjs comment --status` đổi trạng thái | mọi comment của thư mục design; `comments.js` là bản sao để shell đọc lại trên `file://` |
+| `_comment-bridge.js` | cầu nối comment lúc bật; lúc tắt thêm giờ tắt, không xoá | cổng và token của cầu nối; mã, nơi chạy, thư mục của session đã bật nó; có hộp thư hay không |
 
 Mỗi file đúng một người ghi tại một lúc, nên các agent con chạy song song không giẫm nhau. Agent chính chỉ ghi bước
 chuẩn bị và bước giao của mọi page: bước chuẩn bị trước khi gọi agent con, bước giao sau khi mọi agent con đã trả về.
@@ -178,8 +193,14 @@ bước chuẩn bị chưa xong, lệnh `progress` không nhận đánh dấu ha
 chuẩn bị là page tạo trước khi có bước này: coi như đã chuẩn bị xong.
 
 Bước giao là việc agent chính kiểm lại rồi giao: kiểm cả thư mục, so số kiểm chéo, viết tin giao. Nó nằm riêng, sau
-mọi vòng, vì agent con không làm được việc đó. Agent chính đánh dấu bước giao ngay trước tin giao, và chỉ khi mọi bước
-dựng đã xong. Mở vòng góp ý thì bước giao mở lại. File tiến độ không có bước giao coi như đã giao.
+mọi mục góp ý, vì agent con không làm được việc đó. Agent chính đánh dấu bước giao ngay trước tin giao, và chỉ khi mọi
+bước dựng và mục góp ý đã xong. Mở mục góp ý thì bước giao mở lại. File tiến độ không có bước giao coi như đã giao.
+
+Mục góp ý (`feedback`) là một comment hay một ý trong chat. Agent mở mục bằng `progress --comment <id>` hay `--chat`,
+ghi từng việc bằng `--doing` (việc trước thành xong và ở lại), kiểm đầy đủ rồi đóng mục bằng `--checked`. Mỗi lúc
+chỉ một mục mở. File tiến độ ghi theo kiểu cũ (bước góp ý có `round` ≥ 2) được đọc thành mục: bước `Góp ý: Comment
+#<n>: …` thành mục comment, bước góp ý khác thành mục chat, bước kiểm đầy đủ của vòng thành việc cuối của các mục trong
+vòng đó.
 
 Page mới chỉ có khối chờ, `new-design.mjs page` điền từ cờ của lệnh: dòng tên màn (phần trước ` · ` của `--title`),
 tiêu đề (`--option` hay `--screen`), phụ đề (`--layout` hay `--purpose`), dòng nhỏ ("Tiện cho: `--good-for`"). Cờ
@@ -256,7 +277,7 @@ flowchart TB
 
 ### 3.3 Page chạy thế nào
 
-**Scope:** `F2` `F3.2`
+**Scope:** `F2` `F3.2` `F3.10`
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontSize':'14px','titleColor':'#1b2230','textColor':'#1b2230','nodeTextColor':'#1b2230','lineColor':'#64748b','edgeLabelBackground':'#ffffff','clusterBkg':'#F7F8FA','clusterBorder':'#8a93a5'},'flowchart':{'curve':'basis','nodeSpacing':45,'rankSpacing':60,'padding':12,'subGraphTitleMargin':{'top':6,'bottom':14}}}}%%
@@ -310,18 +331,22 @@ flowchart TB
   iframe bằng `postMessage`, vì mở bằng `file://` thì không đọc thẳng được vào iframe. Page trong iframe không vẽ shell.
 - **Tương tác của page** (tab, lọc, modal, thêm, xoá) là state Alpine riêng trong từng khối, chạy trên dữ liệu giả sinh
   từ variables. Không gọi API.
+- **Nút chờ server** (`F3.10`): nút làm mới (Tải lại, Thử lại) và nút gửi form (Lưu, Gửi) chờ 600–900 ms bằng
+  `setTimeout`. Trong lúc chờ, vùng nhận kết quả có `aria-busy="true"`, nút khoá và đổi chữ. Hết lúc chờ, page đổi dữ
+  liệu giả như khi thành công. Thao tác trên một dòng (đánh dấu, xoá) đổi ngay, không chờ.
 
 ### 3.4 Shell
 
-**Scope:** `F2` `F4.2` `F6.3` `F6.4` `F6.5` `F6.8`
+**Scope:** `F2` `F4.2` `F6.3` `F6.4` `F6.5` `F6.8` `F6.16`
 
 | Khối | Đọc từ | Làm gì |
 | --- | --- | --- |
 | option-switcher | `pages.js` | thư mục phương án: nút A B sang page khác, giữ khổ màn và sáng tối; rê vào thấy mô tả phương án, ngày sửa và góp ý cuối. Thư mục luồng: dãy màn "1 · Welcome → 2 · Đăng ký", sang page khác giữ mọi giá trị trên URL; rê vào thấy việc của màn |
-| view-controller | `DESIGN_THEME` | khổ màn, sáng tối, số khối, về mặc định |
-| data-panel | `DESIGN.variables`, `presets` | vặn dữ liệu; loại ô theo `type` của nút |
-| config-panel | `DESIGN.tweaks` | vặn cấu hình |
-| nhãn tiến độ | `NN-slug.progress.js`, `pages.js` | "Đang chuẩn bị", "Đang dựng a/b", "Đang sửa a/b", "Đang kiểm lại" hay "✓ Xong"; nhãn xong không có con số, ngày sửa cuối là dòng cuối danh sách ("Sửa lần cuối 9 thg 10"); khi page chưa xong, nhãn có vòng lan từ chấm, việc con "· <việc>" và thanh tiến độ ở đáy có vệt sáng chạy, chỉ vẽ lại khi nội dung đổi; bấm vào thấy danh sách bước dựng theo vòng; bước dở có `doing` thì thêm một dòng việc con thụt vào ngay dưới nó |
+| view-controller | `DESIGN_THEME` | comment, khổ màn, sáng tối, ẩn shell |
+| nút hiện shell | `sessionStorage` của thư mục design | lúc shell ẩn: nút nhỏ mờ ở góc trên phải, có chấm khi page chưa xong; bấm hay phím `\` thì shell hiện lại |
+| data-panel | `DESIGN.variables`, `presets` | tiêu đề "Data Config"; vặn dữ liệu; loại ô theo `type` của nút; nút về mặc định trả `variables` về `default`, xoá `form` |
+| layout-panel | `DESIGN.tweaks` | tiêu đề "Layout Config"; vặn cấu hình; nút về mặc định chỉ trả `tweaks` về `default` |
+| nhãn tiến độ | `NN-slug.progress.js`, `pages.js` | "Đang chuẩn bị", "Đang dựng a/b", "Đang sửa #id" (comment) hay "Đang sửa góp ý" (ý trong chat), "Đang kiểm lại", hay "Activity log" khi page đã xong; nhãn xong không có con số, ngày sửa cuối là dòng cuối danh sách ("Sửa lần cuối 9 thg 10"); khi page chưa xong, nhãn có vòng lan từ chấm, việc con "· <việc>" và thanh tiến độ ở đáy có vệt sáng chạy, chỉ vẽ lại khi nội dung đổi; bấm vào thấy danh sách: Chuẩn bị, Dựng, Comment, Góp ý trong chat, Giao, nhóm trống thì ẩn; bước dựng dở có `doing` thì thêm một dòng việc con thụt vào ngay dưới nó; mục góp ý có các việc agent đã làm thụt dưới mục, không có dòng kiểm đầy đủ (lúc chạy thì nhãn ghi) |
 
 - **Tự tải lại theo danh sách bước dựng.** Trang cha cứ 2 giây, khi tab đang hiện, chèn lại thẻ `<script>` trỏ tới
   `NN-slug.progress.js?t=<giờ>`; đây là cách duy nhất đọc lại một file trên `file://` mà không tải page. Khi `rev`
@@ -427,9 +452,9 @@ flowchart TB
   "Nút dữ liệu chung", đánh `data-block` theo bảng "Khối", dùng cặp màu theo "Cặp màu không đủ đọc", trả về các "Số
   kiểm chéo" để agent chính so. `new-design.mjs init` in các cặp màu dưới 4.5 : 1 để agent chính chốt bảng đó trước khi
   gọi agent con.
-- **Góp ý** (`F4`): `new-design.mjs progress --round` thêm mỗi ý thành một bước của vòng mới (`F4.4`), sửa thẳng page
-  của phương án đó theo từng bước như lúc dựng, chạy lại `check.mjs`, rồi `new-design.mjs touch` ghi ngày và góp ý
-  vào `pages.js`. Góp ý đổi dữ liệu chung thì sửa `brief.md` trước, rồi sửa mọi page cho khớp.
+- **Góp ý** (`F4`): mỗi ý trong chat thành một mục góp ý bằng `new-design.mjs progress --chat` (`F4.4`). Agent sửa
+  thẳng page của phương án đó, ghi từng việc bằng `--doing`, chạy lại `check.mjs`, đóng mục bằng `--checked`, rồi
+  `new-design.mjs touch` ghi ngày và góp ý vào `pages.js`. Góp ý đổi dữ liệu chung thì sửa `brief.md` trước, rồi sửa mọi page cho khớp.
 - **Bảng Luồng giữ các màn nối khớp** (`F1.16` `F1.17`): mỗi màn một dòng: tên, để làm gì, nhận gì từ màn trước, đưa
   gì cho màn sau (key `form.*`), trạng thái riêng, file. Agent con của màn nào cũng đọc cả bảng, nên nút "Tiếp tục" và
   ô nhập của các màn kề nhau khớp key.
@@ -469,12 +494,21 @@ flowchart TB
   - **Lượt tổ hợp** mở page bằng Playwright qua `file://`, chạy mọi tổ hợp tweak × sáng tối × `state` cộng từng preset
     ở 375 và 1280px.
   - **Lượt bấm** bấm từng loại thứ bấm được trên page, ở tổ hợp đầu tiên thứ đó hiện ra.
+- **So trước và sau cú bấm** (`F5.12`): trước khi bấm, máy kiểm ghi lại `#design`: chữ, danh sách phần tử đang hiện
+  theo thứ tự kèm class và `aria-*` chọn, giá trị ô nhập, URL, vị trí cuộn. Từ lúc bấm, máy kiểm theo dõi DOM tới khi
+  hết `aria-busy` (tối đa 3 giây). Nếu chưa lần nào khác bản ghi, thì máy kiểm báo. Thứ đang được chọn sẵn
+  (`aria-selected`, `aria-pressed`, `aria-current`) thì bỏ qua: bấm lại tab đang chọn đúng là không đổi gì. Lượt bấm
+  chỉ bấm một nút ở tổ hợp đầu tiên nó hiện ra, nên nút không đổi gì ở một tổ hợp khác chỉ bắt được bằng `--quick
+  --click` ở đúng tổ hợp đó.
+- **Nút gọi server** (`F5.13`): nhãn bắt đầu bằng Tải lại, Thử lại, Làm mới, Lưu, Gửi (và reload, retry, refresh,
+  save, send, submit). Nếu từ lúc bấm không có `aria-busy="true"` mới nào hiện, thì máy kiểm báo. Máy kiểm đo bố cục
+  sau khi hết lúc chờ.
 - Lượt tổ hợp và lượt bấm đo: lỗi console, cuộn ngang, chữ đè, khung nổi lọt màn hình, nút vặn mà UI không đổi, URL
   mở lại đúng giá trị, page vặn tại chỗ hiện khác page mở lại từ link. Ảnh lưu vào `shots/`.
 - Cả thư mục: page dùng `data-block` ngoài bảng "Khối" của `brief.md`, nút chính các page khác màu, thư mục phương án
   có quá hai page.
-- Kiểm đầy đủ báo `còn bước chưa xong` nếu danh sách bước dựng của page còn bước chưa xong ngoài bước kiểm đầy đủ của
-  vòng đang mở (`F5.7`). Page không có danh sách thì bỏ qua.
+- Kiểm đầy đủ báo `còn bước chưa xong` nếu page còn bước dựng chưa xong ngoài bước kiểm đầy đủ, hay còn mục góp ý chưa
+  xong ngoài việc kiểm đầy đủ của mục đang mở (`F5.7`). Page không có danh sách thì bỏ qua.
 - **Lượt đi luồng** (thư mục luồng): mở màn 1 ở mặc định, điền các ô `form.*` bằng chữ mẫu, bấm thứ gọi `next()` tới
   màn cuối, rồi `prev()` một lần và kiểm ô của màn trước còn chữ. Ở lượt bấm, cú bấm làm page sang một file trong
   `pages.js` là hợp lệ.
@@ -496,25 +530,67 @@ flowchart TB
 
 **Scope:** `F7`
 
-Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ chạy trên máy:
+Comment đi từ page tới session qua **cầu nối comment**: một tiến trình Node chạy song song với tiến trình `claude` của
+session. Cầu nối không phải tiến trình con của session (cha của nó là tiến trình 1), nên Claude Code không thấy nó,
+không đếm giờ nó, và `/exit` không hỏi về nó.
 
-| Chặng | Ai | Làm gì |
+```mermaid
+flowchart LR
+  P[page file:// trong Chrome] -->|POST /comment, GET /health<br/>127.0.0.1, token cầu nối| B[cầu nối comment]
+  B -->|tin vào hộp thư<br/>token hộp thư| S[session Claude]
+  B -.->|mỗi giây: CLAUDE_PID còn?| S
+  B -->|ghi| D[(thư mục design)]
+  D -->|page đọc mỗi 2 giây| P
+  S -->|agent: lệnh comment, progress| D
+```
+
+Cầu nối làm ba việc:
+
+| Việc | Kênh | Bảo vệ |
 | --- | --- | --- |
-| page → lệnh nghe | shell | đọc cổng và token trong `_listen.js`, gửi `POST http://127.0.0.1:<cổng>/comment`, body `text/plain` |
-| lệnh nghe → đĩa và stdout | `new-design.mjs listen` | kiểm token, đánh số, ghi `comments.json` và `comments.js` qua file tạm, in một dòng `comment {json}` |
-| stdout → session | công cụ theo dõi tiến trình nền của nơi chạy (Claude Code: `Monitor`) | mỗi dòng stdout thành một thông báo trong hội thoại; session đang rảnh thì harness mở một lượt mới |
+| nhận comment từ page | HTTP `127.0.0.1`, cổng trống bất kỳ; `POST /comment` body `text/plain`, `GET /health` | token của cầu nối trong `_comment-bridge.js` |
+| gửi tin vào session | Unix socket trong `CLAUDE_CODE_MESSAGING_SOCKET`: một dòng `{"type":"auth","token":…}` rồi một dòng `{"type":"user","message":{"role":"user","content":…}}` | `CLAUDE_CODE_MESSAGING_TOKEN`; chỉ tiến trình do session bật mới có; socket chỉ user mở được |
+| canh session | `process.kill(CLAUDE_PID, 0)` mỗi giây; tiến trình mất thì ghi `endedAt` vào `_comment-bridge.js` rồi thoát | — |
 
-- **Page vẫn mở bằng `file://`.** Chỉ comment đi qua `127.0.0.1`. Lệnh nghe trả `Access-Control-Allow-Origin: *`; body
+Session không gọi ngược vào cầu nối. Agent đọc và ghi comment qua file, bằng lệnh `comment` (`--pending`, `--status`,
+`--add`).
+
+- **Bật.** Lệnh `comment-bridge` bật một bản sao `--serve` tách riêng (`detached`, `stdio: "ignore"`, `unref`), chờ bản
+  sao trả lời `/health`, in `comment-bridge <cổng>` rồi thoát. Agent chạy lệnh bằng Bash thường; không cần tool theo
+  dõi nào. Cầu nối của chính session này còn chạy thì lệnh in cổng cũ. Cầu nối của session khác còn chạy thì lệnh
+  thoát 1.
+- **Đánh thức.** Hộp thư là cổng Claude Code dùng cho các session nhắn nhau. Tin vào là session nhận như một tin nhắn
+  mới, với lời dẫn "Another Claude session sent a message", và mở một lượt nếu đang rảnh. Session đang bận thì tin chờ
+  tới khi lệnh đang chạy xong (probe P1 của plan 020: 4–5 giây ở terminal và VS Code).
+- **Tắt.** Cầu nối tắt khi `CLAUDE_PID` mất (khoảng 1 giây sau khi session đóng), hay khi nhận SIGTERM, SIGINT, SIGHUP.
+  Không có `CLAUDE_PID` thì cầu nối tắt sau 8 giờ không có comment.
+- **Page vẫn mở bằng `file://`.** Chỉ comment đi qua `127.0.0.1`. Cầu nối trả `Access-Control-Allow-Origin: *`; body
   `text/plain` nên Chrome không gửi request kiểm trước. Chrome 154 cho page `file://` gọi `127.0.0.1` mà không hỏi
   quyền (probe P4 của plan 017).
 - **Chế độ comment chạy ở nơi vẽ bản thiết kế.** Khổ desktop là trang cha. Khổ tablet, mobile là iframe: trang cha
-  gửi lệnh bật tắt vào iframe bằng `postMessage`, iframe tự đọc `_listen.js` và `comments.js`, tự gửi.
+  gửi lệnh bật tắt vào iframe bằng `postMessage`, iframe tự đọc `_comment-bridge.js` và `comments.js`, tự gửi.
 - **Chọn khối, chọn vùng.** Bấm thì chọn khối dưới con trỏ. Kéo quá 6px thì chọn hình chữ nhật; khối của vùng là khối
   nhỏ nhất chứa trọn hình đó. Trong chế độ comment, cú bấm vào bản thiết kế không tới page.
-- **Comment còn sau khi session đóng.** `comments.json` là nơi lưu chính; stdout chỉ để đánh thức. Comment `sent` hay
-  `doing` là comment chưa sửa; `comment --pending` in chúng ra.
-- **Không ai nghe.** `_listen.js` không có, hay `GET /health` lỗi, thì ô comment ghi "Claude không nghe", nút Gửi tắt,
-  nút Chép còn. Lệnh nghe bị giết bằng SIGKILL thì để lại `_listen.js` cũ; `GET /health` lỗi nên shell vẫn báo đúng.
+- **Comment còn sau khi session đóng.** `comments.json` là nơi lưu chính; tin vào hộp thư chỉ để đánh thức. Comment
+  `sent` hay `doing` là comment chưa sửa; `comment --pending` in chúng ra.
+
+Ô comment có bốn trạng thái. Page phân biệt chúng bằng `_comment-bridge.js` và `GET /health`:
+
+| Trạng thái | Page thấy | Ô comment ghi | Nút |
+| --- | --- | --- | --- |
+| đang nhận | `/health` trả `wake: "inbox"` | Claude đang nhận comment, gửi xong là agent sửa | Huỷ · Chép · Gửi |
+| nhận nhưng không tự thức | `/health` trả `wake: "none"` | comment được lưu; gõ "xem comment" vào session | Huỷ · Chép · Gửi |
+| session đã đóng | có `_comment-bridge.js`, `/health` lỗi | giờ đóng, nơi chạy, mã session, cách mở lại, thư mục để mở session mới | Huỷ · Chép prompt |
+| chưa từng có cầu nối | không có `_comment-bridge.js` | chưa có session nào nhận comment của page; thư mục để mở session mới | Huỷ · Chép prompt |
+
+Cách mở lại theo nơi chạy: VS Code thì danh sách hội thoại cũ của Claude, hay `claude --resume <mã>` trong terminal;
+terminal thì `claude --resume <mã>`. Cầu nối bị giết bằng SIGKILL dù session còn mở thì page cũng báo "đã đóng"; dán
+prompt vào session cũ thì agent bật lại cầu nối.
+
+Prompt chép ra mở đầu bằng `/design-uiux Sửa page theo comment chép từ page`, kèm thư mục design, page, chỗ chọn,
+comment, và một dòng `comment-json:`. Agent ghi dòng đó bằng `comment --add`, nên comment có số và ghim như comment gửi
+thẳng.
+
 - **Ghim.** Shell đọc lại `comments.js` mỗi 2 giây cùng nhịp với `.progress.js`. Ghim đặt theo `selector` nếu khối còn,
   theo `rect` nếu không. Ghim `done` chỉ hiện trong chế độ comment.
 
@@ -528,12 +604,12 @@ Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ ch
 | hỏi bằng câu có sẵn đáp án, đáp án khuyên dùng đứng đầu | chọn nhanh hơn viết, và đáp án cho người dùng thấy các khả năng. Gõ chữ riêng vẫn được |
 | "đủ rõ" là viết được 3 tình huống dùng và biết dữ liệu có gì; tối đa 3 lượt | cần một điểm dừng đo được, không thì hỏi mãi. Ba lượt mà chưa rõ thì đoán có ghi lại vẫn tốt hơn bắt trả lời tiếp |
 | phương án đi từ tình huống dùng, không từ kiểu hiển thị | chọn theo hình dáng ra hai phương án trả lời cùng một câu và bỏ sót câu hay gặp nhất. Bảng tình huống × phương án bắt được cả hai |
-| ba phép thử: tweak · thắng · trùng | phương án chỉ khác bố cục thì một nút ở config-panel đã làm được; dựng page riêng là tốn công mà người dùng phải chọn giữa hai bản gần giống nhau |
+| ba phép thử: tweak · thắng · trùng | phương án chỉ khác bố cục thì một nút ở layout-panel đã làm được; dựng page riêng là tốn công mà người dùng phải chọn giữa hai bản gần giống nhau |
 | xếp đề vào một màn hay một luồng trước khi tìm phương án | một màn cần so hướng; một luồng cần thấy đủ các màn nối nhau. Hai việc khác nhau từ đầu, nên đi hai nhánh khác nhau |
 | gọi là "một màn" và "một luồng", không "step / flow" hay "single page / multiple pages" | "step" nghe như một bước bên trong flow; "page" đã là một file HTML, mà đề một màn ra hai page. "Màn", "luồng" là chữ người dùng tự viết trong đề |
 | đề một màn dựng hai phương án A và B, không hỏi chọn | người dùng có hai bản để so ngay, không phải đọc bảng rồi tick trước khi có gì để xem |
 | tối đa 2 phương án, kể cả khi đề xin nhiều hơn | so A/B là so từng cặp, như A/B testing. Muốn xem hướng thứ ba thì dựng nó thay A hay B |
-| ba phép thử chỉ còn một phương án thì dựng một page, nói lý do | bịa B chỉ khác bố cục là bắt người dùng so hai bản gần giống nhau; khác bố cục đã là một nút ở config-panel |
+| ba phép thử chỉ còn một phương án thì dựng một page, nói lý do | bịa B chỉ khác bố cục là bắt người dùng so hai bản gần giống nhau; khác bố cục đã là một nút ở layout-panel |
 | phương án tả bằng chữ trong chat, không dựng page để chọn | page để chọn tốn công như page thật mà chỉ xem một lần. Bản phác trong chat cho người dùng biết sắp thấy gì, sai hướng thì ngắt sớm |
 | đề một luồng chỉ một phương án | nhiều phương án × nhiều màn là quá nhiều page để so |
 | bảng các màn in vào chat rồi dựng luôn, không hỏi xác nhận | hỏi thêm một lượt là thêm một lần chờ trước khi có link; sai màn thì góp ý sau |
@@ -577,15 +653,20 @@ Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ ch
 | design system thiếu sáng hay tối thì suy ra, ghi "(suy ra)" | prototype phải xem được cả hai giao diện, mà người xem cần biết giao diện nào không đến từ design system |
 | vẽ cho trông giống component của dự án, không chép code | prototype không nối với code; cái cần là đặt cạnh màn đang có thì so được |
 | vặn nút nào UI cũng phải đổi thấy được; kết quả chỉ có sau một cú bấm thì là một giá trị của `state` | nút vặn mà không thấy gì thì người xem không biết nó có tác dụng |
+| nút gọi server luôn trả thành công; cảnh lỗi là một giá trị `state` | nút vặn "lần gọi tới lỗi" không đổi gì trên page khi vặn, nên máy kiểm báo nút vặn khai thừa |
+| tải lại ở cảnh rỗng qua lúc chờ rồi vẫn rỗng | ngày chưa ai đặt thì tải lại vẫn chưa có lịch; lúc chờ đủ cho người xem thấy app đã hỏi server |
+| page tự viết lúc chờ bằng `setTimeout`, không có hàm chung trong shell | hàm đó chỉ bọc một cờ và `setTimeout`. Thêm vào shell thì shell có thêm một chỗ phải giữ tương thích |
 | một shell chung `.design/_shell/` cho mọi thư mục design | shell chỉ bọc quanh page, không chạm vào bản thiết kế: cập nhật shell thì page cũ có toolbar mới mà hình thiết kế không đổi |
 | shell có màu trung tính riêng, không dùng token của design system | shell phải tách khỏi bản thiết kế mà không chói; dùng token thì đổi design system là đổi luôn công cụ xem |
+| hai panel tên "Data Config" và "Layout Config", tiếng Anh ở cả page tiếng Việt | hai tên cùng đuôi "Config" nên người xem thấy ngay đây là hai nhóm nút vặn, khác nhau ở thứ bị vặn: dữ liệu hay cách sắp page. "Dữ liệu", "Cấu hình" đứng riêng thì "Cấu hình" quá chung, không nói vặn cái gì. Khối bên phải tên layout-panel theo cùng lý do |
 | page tự tải lại khi có bước dựng mới xong, không có nút tải lại, không có server | người dùng muốn thấy tiến độ mà không phải nhớ bấm; server là thêm tiến trình phải bật tắt, chiếm cổng |
 | tải lại khi một bước được đánh dấu xong, không phải mỗi lần agent ghi file | bước chỉ được đánh dấu sau khi kiểm nhanh sạch, nên người xem chỉ thấy bản đã chạy được, không thấy page trắng vì lỗi JS giữa chừng |
 | đang gõ thì đợi rời ô; ở khổ tablet, mobile thì iframe báo lên bằng `postMessage` | tải lại giữa lúc gõ làm mất chữ. Trên `file://` trang cha không đọc được vào iframe, nên không tự biết người xem đang gõ |
 | page không có danh sách bước dựng coi như đã xong | page dựng trước khi có danh sách vẫn mở và kiểm như cũ, không phải sửa |
 | bước chuẩn bị nằm riêng ngoài sáu bước dựng, agent chính đánh dấu trước khi gọi agent con | nhãn phải nói đúng việc đang diễn ra: lúc agent chính viết brief, chưa ai dựng. Thêm làm bước dựng 1 thì "a/6" thành "a/7" và số bước lệch bảng sáu bước |
-| bước giao nằm riêng sau mọi vòng, agent chính đánh dấu ngay trước tin giao; vòng góp ý mở lại bước này | bước kiểm đầy đủ là của agent con; sau đó agent chính còn kiểm cả thư mục, sửa tới ba vòng. Nhãn báo xong lúc agent con xong thì sai đúng lúc người xem đang đợi. `check.mjs` không tự đánh dấu khi sạch, vì còn lỗi sau ba vòng thì agent vẫn giao |
-| nhãn xong không có con số, ngày sửa cuối ở cuối danh sách bước | "09/10" cạnh nhãn "Xong" đọc thành 9 trên 10 bước. Ngày không giúp biết page xong chưa, nên không cần nằm trên nhãn |
+| bước giao nằm riêng sau mọi mục góp ý, agent chính đánh dấu ngay trước tin giao; mục góp ý mới mở lại bước này | bước kiểm đầy đủ là của agent con; sau đó agent chính còn kiểm cả thư mục, sửa tới ba vòng. Nhãn báo xong lúc agent con xong thì sai đúng lúc người xem đang đợi. `check.mjs` không tự đánh dấu khi sạch, vì còn lỗi sau ba vòng thì agent vẫn giao |
+| nhãn xong không có con số, ngày sửa cuối ở cuối danh sách bước | "09/10" cạnh nhãn xong đọc thành 9 trên 10 bước. Ngày không giúp biết page xong chưa, nên không cần nằm trên nhãn |
+| nhãn xong ghi "Activity log", không ghi "Xong" | page xong thì nhãn chỉ còn một việc là mở danh sách việc agent đã làm. "Xong" nói trạng thái mà không nói bấm vào được gì; page xong vẫn phân biệt được với page đang chạy vì nhãn không có chấm, không có thanh tiến độ |
 | in link ngay sau khi tạo page trống, trước khi viết brief | viết brief mất vài phút; người dùng có link sớm hơn và thấy page đang chuẩn bị |
 | khối chờ chỉ có dữ liệu của page: tên màn, tên page, bố cục hay việc của màn, các việc page tiện cho | khối chờ là thứ người mở link sớm đọc đầu tiên; câu hướng dẫn kể chuyện, còn nhãn tiến độ đã nói page đang ở đâu |
 | page tả bố cục và việc tiện cho, không in câu hỏi trung tâm, đơn vị chính, cái hy sinh | người xem cần biết page bày thế nào, dùng vào việc gì. "Hy sinh", "đơn vị chính" là chữ agent dùng để so phương án; đọc trên page thì không hiểu, và một câu hỏi trung tâm thu cả page về một nhu cầu |
@@ -604,6 +685,8 @@ Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ ch
 | design system "nói khác" một luật UI chỉ khi tài liệu viết ra hay component đang làm vậy | design system nào cũng khai token bóng, màu phụ; có token không có nghĩa là dùng cho card hay cho trạng thái. Nhường phải kèm dẫn chứng |
 | luật không có phép kiểm thì `check.mjs` dừng | không có chốt này thì luật thêm sau sẽ chỉ nằm trên giấy |
 | kiểm báo nhầm thì sửa phép kiểm; page không có cách tắt kiểm | có lối tắt trong page thì agent dùng lối tắt thay vì sửa page. 28 page chạy thử cũ là bộ đo báo nhầm |
+| so page trước và sau cú bấm theo thứ tự phần tử và vị trí cuộn, không theo số đếm | bấm tab thì tab cũ bỏ chọn, tab mới được chọn: số đếm như cũ. Ô bấm để cuộn tới một nhóm không đổi DOM. Đo trên 9 page cũ, cách so này báo nhầm 0 trên 391 cú bấm |
+| nút gọi server nhận ra theo nhãn và phải có `aria-busy` | lượt bấm chỉ bấm mỗi nút ở một tổ hợp, nên nút làm mới không đổi gì ở cảnh rỗng vẫn lọt. Cả 14 nút Tải lại, Thử lại trên 9 page cũ xong trong dưới 90 ms, không nút nào có lúc chờ |
 | `check.mjs` có lượt bấm, và vẫn bắt mở ảnh `shots/` | chỉ kiểm thứ vặn ở panel thì modal, sheet, hàng mở rộng vỡ mà máy vẫn báo sạch |
 | sửa tối đa ba vòng, còn lỗi thì kể từng dòng lúc giao | đổi lấy thời gian chạy có giới hạn, nhưng không giao như thể đã sạch |
 | luật UX và luật UI ở file riêng trong `references/` | chỉ agent dựng page cần; để trong `SKILL.md` thì lượt hỏi và chọn phương án cũng phải nạp |
@@ -619,12 +702,18 @@ Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ ch
 | mỗi phương án đúng một page, góp ý sửa thẳng page đó | đẻ page `-v2`, `-final` mỗi vòng thì option-switcher thành dãy bản nháp, người dùng không biết page nào đang làm |
 | sửa xong thì ghi ngày và góp ý cuối vào nút phương án | không có bản nháp để so thì người mở page cần biết bản đang xem sửa lần cuối khi nào, theo ý nào |
 | đổi dữ liệu chung thì sửa brief trước, rồi sửa mọi page | các page chỉ so được khi cùng một bộ dữ liệu |
-| mỗi ý góp ý thành một bước trong cùng danh sách, ghi số vòng; bước vòng cũ giữ nguyên | page tự cập nhật trong lúc sửa như lúc dựng; xem lại được góp ý nào đã sửa. Xoá danh sách cũ viết lại thì mất dấu |
+| mỗi comment, mỗi ý trong chat là một mục góp ý; các việc agent làm cho mục được giữ lại dưới mục | người xem cần biết từng góp ý xong chưa và agent đã làm gì cho nó. Gom góp ý theo vòng thì "vòng" là chuyện bên trong lộ ra giao diện, người xem không hiểu |
+| comment và ý trong chat là hai nhóm riêng | comment có số, ghim và chỗ chọn trên page; ý trong chat không có. Gộp chung thì người xem không tìm được comment của mình |
+| mỗi mục kiểm đầy đủ riêng, kể cả nhiều ý trong một tin chat | mục xong là xong thật, không chờ mục khác. Đổi lại mỗi ý tốn thêm 30–100 giây kiểm |
 | comment chọn chỗ ngay trên page, mang theo mọi giá trị đang xem | tả bằng chữ "thẻ thứ hai ở hàng trên, khổ mobile, bản tối" thì agent phải đoán, đoán sai thêm một vòng |
-| comment đi qua lệnh nghe trên máy, không qua claude.ai | skill chạy độc lập; page có thể chứa thiết kế của khách |
-| lệnh nghe in một dòng stdout cho mỗi comment | công cụ theo dõi tiến trình nền của Claude Code đổi mỗi dòng thành một thông báo, đánh thức session ở terminal, VS Code và `claude -p` (probe P1–P3 của plan 017). Công cụ không có thứ đó thì vẫn còn nút Chép |
-| token mỗi lần bật lệnh nghe | mọi trang web đang mở trên máy đều gọi được `127.0.0.1` |
-| mỗi comment một vòng riêng; comment tới khi đang có vòng thì chờ | chèn comment mới vào vòng đang mở thì ghim của comment trước đứng ở "đang sửa" tới khi comment sau xong, dù đã sửa xong từ trước: người xem không tách được lần góp ý nào đã xong |
+| comment đi qua cầu nối comment trên máy, không qua claude.ai | skill chạy độc lập; page có thể chứa thiết kế của khách |
+| cầu nối là tiến trình chạy riêng, không chạy dưới `Monitor` | `Monitor` giết lệnh con sau 30 phút. Bật lại mỗi 30 phút là một lượt chạy model đọc lại cả cuộc trò chuyện, kể cả khi không ai comment |
+| cầu nối đánh thức session bằng hộp thư | hộp thư mở một lượt mới như tin nhắn của người dùng, không hạn giờ, không tốn lượt model khi không có comment (probe P1 của plan 020). Hộp thư là tính năng nội bộ của Claude Code, chưa có tài liệu; không có hộp thư thì cầu nối vẫn lưu comment |
+| cầu nối tắt theo session | page cần biết session còn mở hay không để chỉ đường. Cầu nối còn sống nghĩa là session còn mở |
+| `_comment-bridge.js` không xoá khi cầu nối tắt | page cần mã, nơi chạy, thư mục của session cũ để chỉ cách mở lại |
+| prompt chép ra dán được vào session cũ lẫn session mới | người xem có thể không nhớ session cũ nằm ở đâu |
+| token mỗi lần bật cầu nối | mọi trang web đang mở trên máy đều gọi được `127.0.0.1` |
+| mỗi comment một mục riêng; comment tới khi đang có mục mở thì chờ | chèn comment mới vào mục đang mở thì ghim của comment trước đứng ở "đang sửa" tới khi comment sau xong, dù đã sửa xong từ trước: người xem không tách được lần góp ý nào đã xong |
 
 ## 5. I/O
 
@@ -650,10 +739,10 @@ Comment đi từ page tới session qua ba chặng, mỗi chặng một thứ ch
 | `scripts/tokens.mjs` | đổi design system thành `tokens.js`, suy giao diện còn thiếu |
 | `scripts/check.mjs` · `principles-check.mjs` | máy kiểm page; phép kiểm của từng luật trong `references/ux-principles.md` và `references/ui-principles.md` |
 | `scripts/test-shell.mjs` | kiểm shell trên một thư mục design mẫu, gồm nhãn tiến độ và tự tải lại |
-| `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, vòng góp ý, chèn bước, ghi qua file tạm |
+| `scripts/test-progress.mjs` | kiểm lệnh `progress`: thứ tự đánh dấu, mục góp ý, chèn bước, đọc file kiểu cũ, ghi qua file tạm |
 | `scripts/test-new-design.mjs` | kiểm `designs` và `init --getdesign`: lọc bộ chỉ có chữ, tên lạ, `npx` hỏng (exit 2) |
 | `scripts/test-open.mjs` | kiểm lệnh `open`: page đầu của thư mục, URL có dấu cách và dấu, đổi sang trình duyệt mặc định khi thiếu Chrome |
-| `scripts/test-listen.mjs` | kiểm lệnh `listen` và `comment`: nhận comment, bỏ comment sai token, đổi trạng thái, xoá `_listen.js` khi tắt |
+| `scripts/test-comment-bridge.mjs` | kiểm lệnh `comment-bridge` và `comment`: cầu nối chạy riêng, nhận comment, bỏ comment sai token, gửi vào hộp thư, tắt khi session mất, đổi trạng thái, `--add` |
 | `samples/` | bốn đề cố định để thử nhanh sau mỗi lần sửa skill, mỗi đề thử một khía cạnh, kèm checklist ngắn về thứ người dùng thấy; agent chạy skill không đọc. Bài 04 (một page) là bài mặc định khi nghiệm thu plan; `samples/README.md` có bảng plan chạm phần nào thì dùng bài nào |
 | `samples/lint.mjs` · `prepare.mjs` | soát hình dạng checklist: danh sách ngắn, không mã yêu cầu, không chữ cảm tính; tạo thư mục chạy thử cho một bài |
 | `samples/faults/` · `history.md` | lỗi gài sẵn vào SKILL.md hay file nó khai để thử bài có trượt không; mỗi lượt chạy một dòng kết quả |

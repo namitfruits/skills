@@ -10,7 +10,7 @@
 <script src="tokens.js"></script>
 <script src="pages.js"></script>
 <script>
-  // Nút vặn: variables ở data-panel đổi dữ liệu, tweaks ở config-panel đổi cấu hình UI (DS3). Nút vặn mà UI không đổi thì đừng khai.
+  // Nút vặn: variables ở data-panel đổi dữ liệu, tweaks ở layout-panel đổi cấu hình UI (DS3). Nút vặn mà UI không đổi thì đừng khai.
   // help: chỉ khai khi nhãn chưa tự nói rõ nút làm gì; shell hiện thành icon ⓘ cạnh nhãn.
   window.DESIGN = {
     lang: "vi",
@@ -29,6 +29,7 @@
       { key: "density", label: "Độ dày", type: "select", default: "comfortable", options: [{ value: "comfortable", label: "Thoáng" }, { value: "compact", label: "Gọn" }] },
     ],
     presets: [
+      { label: "Nhóm nhỏ: 8 người", values: { count: 8, longNames: false, state: "data" } },
       { label: "Ca biên: một người, tên dài", values: { count: 1, longNames: true, state: "data" } },
       { label: "Nhiều dữ liệu", values: { count: 120, longNames: false, state: "data" } },
     ],

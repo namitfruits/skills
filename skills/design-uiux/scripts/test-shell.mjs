@@ -8,11 +8,12 @@
 // có 1 page đang dựng dở; cả bốn dùng chung .design/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
 // đánh dấu xong mọi bước dựng, như page đã giao.
 //
-// spec: F2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
+// spec: F2 F2.9 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
 
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -51,7 +52,8 @@ for (const [slug, option, layout, goodFor] of options) {
 const single = run("init", "one-page", "--root", root);
 builtPage(single, "settings", "--title", "Cài đặt");
 
-// Thư mục luồng 3 màn: thân page thay bằng khối tối giản có nút "Tiếp tục", "Quay lại" và ô email ở màn 2.
+// Thư mục luồng 3 màn: thân page thay bằng khối tối giản có nút "Tiếp tục", "Quay lại" và ô email ở màn 2. Mỗi màn khai
+// `state` như page thật, để có data-panel và nút về mặc định của nó.
 const flow = run("init", "luong", "--root", root);
 const screens = [
   ["welcome", "1 · Welcome", "Biết app làm gì, bắt đầu", '<button data-next @click="$store.design.next()">Tiếp tục</button>'],
@@ -60,7 +62,7 @@ const screens = [
 ];
 for (const [slug, screen, purpose, body] of screens) {
   const file = run("page", flow, slug, "--title", `Onboarding · ${screen.slice(4)}`, "--screen", screen, "--purpose", purpose);
-  const html = readFileSync(file, "utf8").replace(/<main id="design"[\s\S]*<\/main>/, `<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><h1>${screen}</h1>${body}</div></main>`);
+  const html = readFileSync(file, "utf8").replace("variables: [],", 'variables: [{ key: "state", label: "Trạng thái", type: "select", default: "data", options: ["data", "loading", "empty", "error"] }],').replace(/<main id="design"[\s\S]*<\/main>/, `<main id="design" class="min-h-screen bg-canvas text-body"><div class="mx-auto max-w-page p-6"><h1>${screen}</h1>${body}</div></main>`);
   writeFileSync(file, html);
   progress(flow, basename(file), "--prepared");
   for (let step = 1; step <= 6; step += 1) progress(flow, basename(file), "--done", String(step));
@@ -183,12 +185,12 @@ for (const width of [1600, 1280, 700, 375]) {
     if (bar.docked) {
       const panels = await page.$$eval("[data-ds-panel]", (items) => items.map((item) => item.getBoundingClientRect()).map((rect) => ({ left: Math.round(rect.left), right: Math.round(rect.right), shown: rect.width > 0 })));
       const [data, config] = panels;
-      expect(`${width}px: đủ chỗ, data-panel và config-panel luôn mở ở lề, không đè khối trang`, data.shown && config.shown && data.right <= bar.boxLeft && config.left >= bar.boxRight, JSON.stringify(panels));
+      expect(`${width}px: đủ chỗ, data-panel và layout-panel luôn mở ở lề, không đè khối trang`, data.shown && config.shown && data.right <= bar.boxLeft && config.left >= bar.boxRight, JSON.stringify(panels));
     } else {
       for (const name of ["variables", "tweaks"]) {
         await page.click(`[data-ds-panel-toggle="${name}"]`);
         const rect = await page.$eval(`[data-ds-panel="${name}"]`, (element) => element.getBoundingClientRect().toJSON());
-        expect(`${width}px: bấm nút mở ${name === "variables" ? "data-panel" : "config-panel"} → thẻ hiện trong màn hình`, rect.width > 0 && rect.left >= 0 && rect.right <= width, `${Math.round(rect.left)}–${Math.round(rect.right)}`);
+        expect(`${width}px: bấm nút mở ${name === "variables" ? "data-panel" : "layout-panel"} → thẻ hiện trong màn hình`, rect.width > 0 && rect.left >= 0 && rect.right <= width, `${Math.round(rect.left)}–${Math.round(rect.right)}`);
         await page.keyboard.press("Escape");
       }
     }
@@ -239,12 +241,14 @@ for (const width of [1600, 1280, 700, 375]) {
 }
 
 // data-panel: số có khoảng là thanh kéo; chọn bộ dữ liệu thì ô bộ dữ liệu giữ tên bộ đó, các ô đổi theo và nháy lên;
-// kéo lệch đi thì ô bộ dữ liệu về "Bộ dữ liệu…".
+// kéo lệch đi thì ô bộ dữ liệu để trống; chọn bộ mặc định (dòng đầu) thì dữ liệu về default.
 {
   const page = await open(pageUrl(multi, "01-forecast.html"), 1600);
   const sliders = await page.$$eval("[data-ds-panel='variables'] input[type='range']", (items) => items.map((item) => item.closest("[data-ds-key]").dataset.dsKey));
   expect("data-panel: số có min và max là thanh kéo", sliders.length > 0, sliders.join(", "));
-  await page.selectOption("[data-ds-presets]", "0");
+  const firstOption = await page.$eval("[data-ds-presets] option", (option) => ({ value: option.value, text: option.textContent, selected: option.selected }));
+  expect("ô bộ dữ liệu: dòng đầu là bộ mặc định, nhãn có \"· mặc định\", được chọn sẵn lúc mở", firstOption.value === "0" && firstOption.text === `${await page.evaluate(() => window.DESIGN.presets[0].label)} · mặc định` && firstOption.selected, JSON.stringify(firstOption));
+  await page.selectOption("[data-ds-presets]", "1");
   await page.waitForTimeout(100);
   const after = await page.evaluate(() => ({
     select: document.querySelector("[data-ds-presets]").value,
@@ -252,13 +256,41 @@ for (const width of [1600, 1280, 700, 375]) {
     sliders: Object.fromEntries([...document.querySelectorAll("[data-ds-panel='variables'] input[type='range']")].map((item) => [item.closest("[data-ds-key]").dataset.dsKey, item.value])),
     flashed: [...document.querySelectorAll("[data-ds-panel] [data-flash]")].map((item) => item.dataset.dsKey),
   }));
-  const preset = await page.evaluate(() => window.DESIGN.presets[0].values);
+  const preset = await page.evaluate(() => window.DESIGN.presets[1].values);
   const applied = Object.entries(preset).every(([key, value]) => after.store[key] === value) && Object.entries(after.sliders).every(([key, value]) => !(key in preset) || String(preset[key]) === value);
-  expect("chọn bộ dữ liệu 1 → ô bộ dữ liệu giữ bộ 1, các ô đổi theo, ô đổi nháy lên", after.select === "0" && applied && after.flashed.length > 0, `ô chọn ${after.select}, nháy ${after.flashed.join(", ")}`);
+  expect("chọn bộ dữ liệu 2 → ô bộ dữ liệu giữ bộ 2, các ô đổi theo, ô đổi nháy lên", after.select === "1" && applied && after.flashed.length > 0, `ô chọn ${after.select}, nháy ${after.flashed.join(", ")}`);
   const key = sliders[0];
   await page.$eval(`[data-ds-key="${key}"] input[type='range']`, (input) => { input.value = input.max; input.dispatchEvent(new Event("input", { bubbles: true })); });
   await page.waitForTimeout(100);
-  expect("kéo lệch khỏi bộ dữ liệu → ô bộ dữ liệu về \"Bộ dữ liệu…\"", (await page.$eval("[data-ds-presets]", (element) => element.value)) === "-1");
+  expect("kéo lệch khỏi bộ dữ liệu → ô bộ dữ liệu để trống", (await page.$eval("[data-ds-presets]", (element) => element.value)) === "");
+  await page.selectOption("[data-ds-presets]", "0");
+  await page.waitForTimeout(100);
+  const backToDefault = await page.evaluate(() => ({ select: document.querySelector("[data-ds-presets]").value, atDefault: window.DESIGN.variables.every((control) => control.default === undefined || Alpine.store("design")[control.key] === control.default) }));
+  expect("chọn bộ mặc định → dữ liệu về default, ô giữ bộ đó", backToDefault.select === "0" && backToDefault.atDefault, JSON.stringify(backToDefault));
+  // Nút về mặc định trên đầu mỗi panel chỉ trả ô của panel đó về default; panel đã ở mặc định thì nút tắt.
+  const resetState = () => page.evaluate(() => {
+    const values = Alpine.store("design");
+    const atDefault = (group) => window.DESIGN[group].every((control) => values[control.key] === (control.default ?? (control.options ? (control.options[0].value ?? control.options[0]) : control.type === "toggle" ? false : control.type === "number" ? 0 : "")));
+    return { variables: atDefault("variables"), tweaks: atDefault("tweaks"), offVariables: document.querySelector('[data-ds-reset="variables"]').disabled, offTweaks: document.querySelector('[data-ds-reset="tweaks"]').disabled };
+  });
+  await page.selectOption("[data-ds-presets]", "1");
+  const tweak = await page.evaluate(() => {
+    const control = window.DESIGN.tweaks.find((item) => item.options?.length > 1);
+    const other = control.options.map((option) => option.value ?? option).find((value) => value !== (control.default ?? control.options[0].value ?? control.options[0]));
+    Alpine.store("design")[control.key] = other;
+    return `${control.key}=${other}`;
+  });
+  await page.waitForTimeout(100);
+  const beforeReset = await resetState();
+  await page.click('[data-ds-reset="variables"]');
+  await page.waitForTimeout(100);
+  const afterVariables = await resetState();
+  expect(`nút về mặc định của data-panel: dữ liệu về mặc định, cấu hình giữ ${tweak}, nút data-panel tắt`, !beforeReset.variables && !beforeReset.offVariables && afterVariables.variables && !afterVariables.tweaks && afterVariables.offVariables && !afterVariables.offTweaks, JSON.stringify(afterVariables));
+  await page.click('[data-ds-reset="tweaks"]');
+  await page.waitForTimeout(100);
+  const afterTweaks = await resetState();
+  expect("nút về mặc định của layout-panel: cấu hình về mặc định, nút tắt", afterTweaks.tweaks && afterTweaks.offTweaks, JSON.stringify(afterTweaks));
+  await page.screenshot({ path: join(out, "panel-reset.png") });
   // Select ít lựa chọn chữ ngắn là dãy nút; nhiều lựa chọn (state) vẫn là ô chọn.
   const kinds = await page.evaluate(() => Object.fromEntries(window.DESIGN.variables.concat(window.DESIGN.tweaks).filter((control) => control.type === "select").map((control) => [control.key, document.querySelector(`[data-ds-panel] [data-ds-key="${control.key}"] .ds-choice`) ? "nút" : "ô chọn"])));
   const choiceKey = Object.keys(kinds).find((key) => kinds[key] === "nút");
@@ -311,7 +343,7 @@ for (const width of [1600, 1280, 700, 375]) {
   expect("gõ email ở màn 2, sang màn 3 thấy email, quay lại màn 2 ô vẫn còn chữ", echo === "an@vidu.vn" && kept === "an@vidu.vn", `màn 3 "${echo}", màn 2 "${kept}"`);
   const linkHasEmail = page.url().includes("vidu");
   expect("chữ đã gõ không lên URL", !linkHasEmail, page.url().split("/").pop());
-  await page.click(".ds-bar-view .ds-icon-button >> nth=-1");
+  await page.$eval('[data-ds-reset="variables"]', (button) => button.click());
   await page.waitForTimeout(100);
   const cleared = await page.evaluate(() => ({ value: document.querySelector("[data-email]").value, stored: Object.values(sessionStorage).some((item) => item.includes("vidu")) }));
   expect("nút về mặc định xoá chữ đã gõ ở mọi màn", cleared.value === "" && !cleared.stored, JSON.stringify(cleared));
@@ -468,15 +500,42 @@ for (const width of [1600, 1280, 700, 375]) {
   await narrow.click("[data-ds-status]");
   const doneRows = await narrow.$$eval("[data-ds-status-list] li", (items) => items.map((item) => item.textContent.trim()));
   await narrow.keyboard.press("Escape");
-  expect(`tiến độ: --delivered → "Xong", không có số, page không tải lại; danh sách có nhóm Giao, dòng cuối "${edited}"`, done === "Xong" && narrowLoads === 1 && doneRows.slice(-3).join(" | ") === `Giao | ✓Kiểm lại và giao | ${edited}`, `${done} · ${narrowLoads} lần tải · ${doneRows.slice(-3).join(" | ")}`);
+  expect(`tiến độ: --delivered → "Activity log", không có số, page không tải lại; danh sách có nhóm Giao, dòng cuối "${edited}"`, done === "Activity log" && narrowLoads === 1 && doneRows.slice(-3).join(" | ") === `Giao | ✓Kiểm lại và giao | ${edited}`, `${done} · ${narrowLoads} lần tải · ${doneRows.slice(-3).join(" | ")}`);
 
-  progress(building, file, "--round", "nút to hơn", "đổi chữ nút");
+  // Mục góp ý: comment #3 mở mục, mỗi --doing một việc; danh sách có nhóm Comment, việc thụt dưới mục, không chữ vòng.
+  const listText = () => narrow.$$eval("[data-ds-status-list] li", (items) => items.map((item) => item.textContent.trim()).join(" | "));
+  const labelText = () => narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").replace(/\s*·\s*/g, " · ").trim());
+  progress(building, file, "--comment", "3", "tab lọc đậm hơn");
+  progress(building, file, "--doing", "Chữ tab đậm 600");
+  progress(building, file, "--doing", "Giữ bề rộng tab");
   await narrow.waitForEvent("load", { timeout: 6000 }).catch(() => null);
-  await narrow.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
+  await narrow.waitForFunction(() => window.Alpine && document.querySelector('[data-ds-status][data-state="revising"]'), null, { timeout: 6000 }).catch(() => null);
   await narrow.click("[data-ds-status]");
-  const revising = await narrow.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
-  const rounds = await narrow.$$eval("[data-ds-status-list] .ds-status-round", (items) => items.map((item) => item.textContent).join(" | "));
-  expect('tiến độ: vòng góp ý → "Đang sửa 0/3", danh sách có nhóm "Chuẩn bị", "Dựng", "Góp ý vòng 2", "Giao"; bước giao mở lại', revising === "Đang sửa 0/3" && rounds === "Chuẩn bị | Dựng | Góp ý vòng 2 | Giao" && (await narrow.$$eval('[data-ds-status-list] li[data-step="todo"]', (items) => items.at(-1)?.textContent.trim())) === "○Kiểm lại và giao", `${revising} · ${rounds}`);
+  const revising = await labelText();
+  const groups = await narrow.$$eval("[data-ds-status-list] .ds-status-round", (items) => items.map((item) => item.textContent).join(" | "));
+  const list = await listText();
+  expect('góp ý: comment #3 → nhãn "Đang sửa #3 · Giữ bề rộng tab"; nhóm Chuẩn bị, Dựng, Comment, Giao; việc thụt dưới mục, không dòng Kiểm đầy đủ, không chữ vòng; bước giao mở lại', revising === "Đang sửa #3 · Giữ bề rộng tab" && groups === "Chuẩn bị | Dựng | Comment | Giao" && list.includes("●#3 tab lọc đậm hơn | ✓Chữ tab đậm 600 | ●Giữ bề rộng tab | Giao") && !list.includes("Kiểm đầy đủ |") && !/vòng/i.test(list) && list.includes("○Kiểm lại và giao"), `${revising} · ${groups} · ${list.split(" | ").slice(-6).join(" | ")}`);
+  // Page có thể vừa tự tải lại sau cú bấm mở danh sách: thử lại, mỗi lần mở danh sách nếu nó đã đóng.
+  let indent = 0;
+  for (let attempt = 0; attempt < 3 && indent <= 10; attempt += 1) {
+    if (!(await narrow.$eval("[data-ds-status-list]", (list) => list.getClientRects().length > 0).catch(() => false))) await narrow.click("[data-ds-status]").catch(() => null);
+    await narrow.waitForSelector("[data-ds-status-list] li.ds-status-action", { state: "visible", timeout: 3000 }).catch(() => null);
+    indent = await narrow.$$eval("[data-ds-status-list] li", (items) => {
+      const item = items.find((li) => li.classList.contains("ds-status-item"));
+      const action = items.find((li) => li.classList.contains("ds-status-action"));
+      return Math.round(action.querySelector("span").getBoundingClientRect().left - item.querySelector("span").getBoundingClientRect().left);
+    }).catch(() => 0);
+  }
+  expect("góp ý: việc của mục thụt vào so với dòng mục", indent > 10, `${indent}px`);
+  await narrow.keyboard.press("Escape");
+  progress(building, file, "--checked");
+  progress(building, file, "--chat", "đổi tiêu đề thành Hôm nay");
+  await narrow.waitForEvent("load", { timeout: 6000 }).catch(() => null);
+  await narrow.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status]")?.textContent.includes("góp ý"), null, { timeout: 6000 }).catch(() => null);
+  await narrow.click("[data-ds-status]");
+  const chatLabel = await labelText();
+  const chatGroups = await narrow.$$eval("[data-ds-status-list] .ds-status-round", (items) => items.map((item) => item.textContent).join(" | "));
+  expect('góp ý: ý trong chat → nhãn "Đang sửa góp ý · Kiểm đầy đủ"; nhóm Góp ý trong chat riêng, #3 xong', chatLabel === "Đang sửa góp ý · Kiểm đầy đủ" && chatGroups === "Chuẩn bị | Dựng | Comment | Góp ý trong chat | Giao" && (await listText()).includes("✓#3 tab lọc đậm hơn"), `${chatLabel} · ${chatGroups}`);
   await narrow.screenshot({ path: join(out, "progress-revising.png") });
   await narrow.close();
 
@@ -488,14 +547,53 @@ for (const width of [1600, 1280, 700, 375]) {
   await old.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-status-wrap]:not([hidden])"));
   await old.waitForTimeout(4500);
   const oldLabel = await old.$eval("[data-ds-status]", (element) => element.textContent.replace(/\s+/g, " ").trim());
-  expect('tiến độ: page không có danh sách → "Xong", đọc một lần rồi thôi', oldLabel === "Xong" && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
+  expect('tiến độ: page không có danh sách → "Activity log", đọc một lần rồi thôi', oldLabel === "Activity log" && reads.length === 1, `${oldLabel} · ${reads.length} lần đọc`);
   await old.close();
   renameSync(`${progressFile}.bak`, progressFile);
+
+  // File kiểu cũ xếp góp ý theo vòng: shell đọc thành mục trong nhóm Comment và Góp ý trong chat.
+  const legacy = basename(run("page", building, "vong-cu", "--title", "Vòng cũ", "--option", "B · Vòng cũ"));
+  writeFileSync(join(building, legacy), readFileSync(join(building, file), "utf8"));
+  const legacyBuild = [
+    ...["Khung", "Tải", "Riêng", "Tương tác", "Preset"].map((task) => ({ task, done: true, round: 1 })),
+    { task: "Kiểm đầy đủ và tự kiểm", done: true, round: 1, final: true },
+    { task: "Góp ý: Comment #1: bỏ dòng Bây giờ", done: true, round: 2 },
+    { task: "Comment #2: phân trang", done: true, round: 2 },
+    { task: "Kiểm đầy đủ", done: true, round: 2, final: true },
+    { task: "Góp ý: nút to hơn", done: true, round: 3 },
+    { task: "Kiểm đầy đủ", done: true, round: 3, final: true },
+  ];
+  writeFileSync(join(building, legacy.replace(/\.html$/, ".progress.js")), `(window.DESIGN_PROGRESS ||= {})[${JSON.stringify(legacy)}] = ${JSON.stringify({ rev: 9, prep: { task: "Viết brief chung", done: true }, deliver: { task: "Kiểm lại và giao", done: true }, build: legacyBuild })};\n`);
+  const legacyPage = await open(pageUrl(building, legacy), 1280);
+  await legacyPage.click("[data-ds-status]");
+  const legacyList = await legacyPage.$$eval("[data-ds-status-list] li", (items) => items.map((item) => item.textContent.trim()).join(" | "));
+  expect("file kiểu cũ: nhóm Comment có #1, #2; nhóm Góp ý trong chat có \"nút to hơn\"; không chữ vòng", legacyList.includes("Comment | ✓#1 bỏ dòng Bây giờ | ✓#2 phân trang | Góp ý trong chat | ✓nút to hơn | Giao") && !/vòng/i.test(legacyList), legacyList);
+  await legacyPage.screenshot({ path: join(out, "progress-legacy.png") });
+  await legacyPage.close();
 }
 
-// Chế độ comment: bật, chọn khối, không ai nghe thì nút Gửi tắt; bật lệnh nghe thì gửi được, ghim hiện; bấm nút của page
-// không kích hoạt nút; kéo chọn vùng; khổ mobile chạy trong iframe; ô viết nằm trong màn hình ở 375px.
+// Chế độ comment: bật, chọn khối; chưa có cầu nối thì ô ghi chưa có session nào và cho chép prompt; bật cầu nối thì gửi
+// được, ghim hiện; bấm nút của page không kích hoạt nút; kéo chọn vùng; khổ mobile chạy trong iframe; session đóng thì ô
+// chỉ cách mở lại; cầu nối không có hộp thư thì vẫn gửi được. Cầu nối test bật không mang biến của session đang chạy test
+// (không gửi vào hộp thư thật, không canh session thật) và bị tắt khi test thoát, kể cả khi test hỏng.
 {
+  const bridgeEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("CLAUDE") && key !== "CLAUDECODE"));
+  const bridgePids = new Set();
+  const sleeper = spawn("sleep", ["600"], { stdio: "ignore" });
+  process.on("exit", () => {
+    for (const pid of bridgePids) try { process.kill(pid, "SIGTERM"); } catch {}
+    try { sleeper.kill("SIGKILL"); } catch {}
+  });
+  const inboxPath = join(work, "inbox.sock");
+  const inboxLines = [];
+  const inbox = createServer((sock) => sock.on("data", (chunk) => inboxLines.push(...chunk.toString().trim().split("\n"))));
+  await new Promise((done) => inbox.listen(inboxPath, done));
+  const startBridge = (env) => {
+    execFileSync(process.execPath, [join(here, "new-design.mjs"), "comment-bridge", multi], { cwd: work, env: { ...bridgeEnv, ...env }, encoding: "utf8" });
+    const info = JSON.parse(readFileSync(join(multi, "_comment-bridge.js"), "utf8").match(/DS_COMMENT_BRIDGE = (\{.*\});/)[1]);
+    bridgePids.add(info.pid);
+    return info;
+  };
   const comments = () => (existsSync(join(multi, "comments.json")) ? JSON.parse(readFileSync(join(multi, "comments.json"), "utf8")) : []);
   const page = await open(pageUrl(multi, "01-forecast.html"), 1280);
   await page.click("[data-ds-comment-toggle]");
@@ -503,19 +601,21 @@ for (const width of [1600, 1280, 700, 375]) {
   await page.mouse.click(heading.x + 10, heading.y + 8);
   await page.waitForSelector(".ds-comment-popover");
   await page.waitForTimeout(600);
-  const idle = await page.$eval(".ds-comment-popover", (box) => ({ state: box.querySelector("[data-ds-comment-state]").dataset.listening, send: box.querySelector(".ds-comment-send").disabled, where: box.querySelector(".ds-comment-where").textContent }));
-  expect("comment: bấm một khối mở ô viết; không ai nghe thì ghi không nghe, nút Gửi tắt", idle.state === "0" && idle.send, idle.where);
+  const popoverState = () => page.$eval(".ds-comment-popover", (box) => {
+    const shown = (act) => !box.querySelector(`[data-act="${act}"]`).hidden;
+    return { bridge: box.querySelector("[data-ds-comment-state]").dataset.bridge, message: box.querySelector("[data-ds-comment-state]").textContent, send: shown("send"), copy: shown("copy"), prompt: shown("prompt"), where: box.querySelector(".ds-comment-where").textContent };
+  });
+  const idle = await popoverState();
+  expect("comment S2: chưa có cầu nối thì ô ghi chưa có session nào, chỉ thư mục dự án; chỉ có Huỷ và Chép prompt", idle.bridge === "none" && idle.message.includes("Chưa có session Claude nào") && idle.message.includes(work) && !idle.send && !idle.copy && idle.prompt, `${idle.where} · ${idle.message}`);
   await page.evaluate(() => (navigator.clipboard.writeText = (value) => ((window.copied = value), Promise.resolve())));
   await page.fill(".ds-comment-popover textarea", "tiêu đề ngắn lại");
-  await page.click('.ds-comment-popover [data-act="copy"]');
-  const copied = await page.evaluate(() => window.copied ?? "");
-  expect("comment: nút Chép đưa page, query đang xem, selector, chữ của khối, góp ý vào bộ nhớ tạm", copied.startsWith("Comment trên 01-forecast.html") && copied.includes("`#design") && copied.includes('"') && copied.endsWith(": tiêu đề ngắn lại"), copied);
+  await page.click('.ds-comment-popover [data-act="prompt"]');
+  const prompt = await page.evaluate(() => window.copied ?? "");
+  const promptJson = JSON.parse(prompt.match(/^comment-json: (.*)$/m)?.[1] ?? "null");
+  expect("comment S2: Chép prompt mở đầu bằng /design-uiux, có thư mục design, page, chỗ chọn, comment và comment-json đủ để --add", prompt.startsWith("/design-uiux Sửa page theo comment chép từ page") && prompt.includes(`Thư mục design: ${multi}`) && prompt.includes("Page: 01-forecast.html") && prompt.includes("`#design") && promptJson?.body === "tiêu đề ngắn lại" && promptJson.target.selector.startsWith("#design"), prompt.split("\n").slice(0, 3).join(" | "));
   await page.keyboard.press("Escape");
 
-  const listener = spawn(process.execPath, [join(here, "new-design.mjs"), "listen", multi], { stdio: ["ignore", "pipe", "ignore"] });
-  const lines = [];
-  listener.stdout.on("data", (chunk) => lines.push(...chunk.toString().trim().split("\n")));
-  for (let i = 0; i < 50 && !existsSync(join(multi, "_listen.js")); i += 1) await page.waitForTimeout(100);
+  const bridge = startBridge({ CLAUDE_PID: String(sleeper.pid), CLAUDE_CODE_SESSION_ID: "5e55a0d1-test", CLAUDE_CODE_ENTRYPOINT: "claude-vscode", CLAUDE_CODE_MESSAGING_SOCKET: inboxPath, CLAUDE_CODE_MESSAGING_TOKEN: "hop-thu" });
   const button = await page.$("#design button");
   const before = await page.$eval("#design", (main) => main.innerHTML);
   await button.click();
@@ -523,11 +623,15 @@ for (const width of [1600, 1280, 700, 375]) {
   await page.waitForTimeout(600);
   const same = before === (await page.$eval("#design", (main) => main.innerHTML));
   await page.fill(".ds-comment-popover textarea", "nút này to hơn");
-  const live = await page.$eval("[data-ds-comment-state]", (state) => state.dataset.listening);
-  await page.click(".ds-comment-send");
+  const live = await popoverState();
+  await page.click('.ds-comment-popover [data-act="copy"]');
+  const copied = await page.evaluate(() => window.copied ?? "");
+  expect("comment: cầu nối đang chạy thì ô ghi đang nhận comment, có Chép và Gửi; Chép đưa page, query, selector, góp ý", live.bridge === "inbox" && live.send && live.copy && !live.prompt && copied.startsWith("Comment trên 01-forecast.html") && copied.includes("`#design") && copied.endsWith(": nút này to hơn"), `${live.message} · ${copied}`);
+  await page.click('.ds-comment-popover [data-act="send"]');
   await page.waitForSelector(".ds-comment-pin");
+  await page.waitForTimeout(700);
   const sent = comments()[0];
-  expect("comment: bấm nút của page không kích hoạt nút; có lệnh nghe thì gửi được, comments.json có page, selector, chữ", same && live === "1" && sent?.page === "01-forecast.html" && sent.target.selector.startsWith("#design") && lines.some((line) => line.startsWith("comment ")), `${sent?.target.selector} · ${sent?.target.text?.slice(0, 30)}`);
+  expect("comment: bấm nút của page không kích hoạt nút; gửi được, comments.json có page, selector, chữ; hộp thư nhận comment #1", same && sent?.page === "01-forecast.html" && sent.target.selector.startsWith("#design") && inboxLines.some((line) => line.includes("comment #1")), `${sent?.target.selector} · ${sent?.target.text?.slice(0, 30)}`);
   expect("comment: ghim #1 hiện, trạng thái đã gửi", await page.$eval(".ds-comment-pin", (pin) => pin.textContent === "1" && pin.dataset.status === "sent"));
   run("comment", multi, "--status", "1", "doing");
   await page.waitForFunction(() => document.querySelector(".ds-comment-pin")?.dataset.status === "doing", null, { timeout: 4000 }).catch(() => null);
@@ -597,7 +701,7 @@ for (const width of [1600, 1280, 700, 375]) {
   });
   await frame.fill(".ds-comment-popover textarea", "tiêu đề xuống dòng");
   await narrow.waitForTimeout(600);
-  await frame.click(".ds-comment-send");
+  await frame.click('.ds-comment-popover [data-act="send"]');
   await narrow.waitForTimeout(500);
   const mobile = comments()[2];
   expect("comment: khổ mobile chạy trong khung, ô viết nằm trong khung, comment ghi viewport mobile, theme dark", inside && mobile?.viewport === "mobile" && mobile?.theme === "dark" && /viewport=mobile/.test(mobile?.url), mobile?.url);
@@ -606,7 +710,137 @@ for (const width of [1600, 1280, 700, 375]) {
   const phone = await open(pageUrl(multi, "01-forecast.html"), 375, true);
   expect("comment: màn 375px không có nút comment", !(await phone.$eval("[data-ds-comment-toggle]", (button) => button.getClientRects().length)));
   await phone.close();
-  listener.kill("SIGTERM");
+
+  // S1: session đóng thì cầu nối tắt, ô comment ghi session cũ, cách mở lại, chỉ còn Chép prompt.
+  sleeper.kill("SIGKILL");
+  const bridgeEnded = () => Boolean(JSON.parse(readFileSync(join(multi, "_comment-bridge.js"), "utf8").match(/DS_COMMENT_BRIDGE = (\{.*\});/)[1]).endedAt);
+  for (let i = 0; i < 30 && !bridgeEnded(); i += 1) await new Promise((done) => setTimeout(done, 100));
+  const closed = await open(pageUrl(multi, "01-forecast.html"), 1280);
+  await closed.click("[data-ds-comment-toggle]");
+  await closed.click("#design h1");
+  await closed.waitForSelector(".ds-comment-popover");
+  await closed.waitForFunction(() => document.querySelector("[data-ds-comment-state]")?.dataset.bridge === "closed", null, { timeout: 4000 }).catch(() => null);
+  const ended = await closed.$eval(".ds-comment-popover", (box) => ({ bridge: box.querySelector("[data-ds-comment-state]").dataset.bridge, message: box.querySelector("[data-ds-comment-state]").textContent, send: !box.querySelector('[data-act="send"]').hidden, prompt: !box.querySelector('[data-act="prompt"]').hidden }));
+  expect("comment S1: session đóng thì ô ghi đã đóng, VS Code, mã session, lệnh claude --resume, thư mục dự án; chỉ có Chép prompt", ended.bridge === "closed" && /đã đóng lúc \d\d:\d\d/.test(ended.message) && ended.message.includes("VS Code · mã 5e55a0d1") && ended.message.includes("claude --resume 5e55a0d1-test") && ended.message.includes(work) && !ended.send && ended.prompt, ended.message);
+  await closed.screenshot({ path: join(out, "comment-closed.png") });
+  await closed.close();
+
+  // S3: cầu nối không có hộp thư: ô ghi comment được lưu, vẫn gửi được.
+  const quiet = startBridge({});
+  const saved = await open(pageUrl(multi, "01-forecast.html"), 1280);
+  await saved.click("[data-ds-comment-toggle]");
+  await saved.click("#design h1");
+  await saved.waitForSelector(".ds-comment-popover");
+  await saved.waitForFunction(() => document.querySelector("[data-ds-comment-state]")?.dataset.bridge === "saved", null, { timeout: 4000 }).catch(() => null);
+  await saved.fill(".ds-comment-popover textarea", "lưu mà không đánh thức");
+  const savedState = await saved.$eval("[data-ds-comment-state]", (state) => ({ bridge: state.dataset.bridge, message: state.textContent }));
+  await saved.click('.ds-comment-popover [data-act="send"]');
+  await saved.waitForTimeout(500);
+  expect("comment S3: cầu nối không có hộp thư thì ô ghi comment được lưu, gõ xem comment; gửi vẫn ghi comments.json", savedState.bridge === "saved" && savedState.message.includes('"xem comment"') && comments().at(-1)?.body === "lưu mà không đánh thức", savedState.message);
+  await saved.close();
+  process.kill(quiet.pid, "SIGTERM");
+  inbox.close();
+}
+
+// Ẩn shell: nút cuối view-controller cất toolbar, panel, ghim; page không xê dịch; nút nhỏ ở góc hay phím \ hiện lại;
+// tải lại vẫn ẩn, tab mới thì có shell; ẩn thì tắt chế độ comment; khổ mobile giữ khung; page đang dựng thì nút có chấm.
+{
+  const shown = (page, selector) => page.evaluate((selector) => [...document.querySelectorAll(selector)].some((element) => element.getClientRects().length > 0), selector);
+  const hidden = (page) => page.evaluate(() => document.documentElement.hasAttribute("data-shell-hidden"));
+  const place = (page) => page.evaluate(() => {
+    const main = document.querySelector("#design").getBoundingClientRect();
+    const bar = document.querySelector("[data-ds-toolbar]").getBoundingClientRect();
+    return { left: Math.round(main.left), width: Math.round(main.width), barLeft: Math.round(bar.left), barRight: Math.round(bar.right) };
+  });
+  const wide = await open(pageUrl(multi, "01-forecast.html", "?theme=dark"), 1600);
+  const url = wide.url();
+  const before = await place(wide);
+  const pinsBefore = await shown(wide, ".ds-comment-pin");
+  await wide.click("[data-ds-shell-hide]");
+  await wide.waitForTimeout(150);
+  const after = await place(wide);
+  const corner = await wide.$eval("[data-ds-shell-show]", (button) => {
+    const rect = button.getBoundingClientRect();
+    return rect.width > 0 && rect.left >= 0 && rect.right <= document.documentElement.clientWidth && rect.top >= 0;
+  });
+  const gone = !(await shown(wide, ".ds-bar")) && !(await shown(wide, ".ds-panel")) && !(await shown(wide, ".ds-comment-pin"));
+  expect("ẩn shell (1600): toolbar, panel, ghim biến mất; #design không xê dịch; URL không đổi; nút hiện lại ở góc", gone && pinsBefore && corner && before.left === after.left && before.width === after.width && wide.url() === url, `ghim trước ${pinsBefore} · #design ${before.left}/${before.width} → ${after.left}/${after.width}`);
+  await wide.screenshot({ path: join(out, "shell-hidden-1600.png") });
+  await wide.keyboard.press("\\");
+  const backByKey = !(await hidden(wide)) && (await shown(wide, ".ds-bar"));
+  await wide.keyboard.press("\\");
+  const hiddenByKey = await hidden(wide);
+  await wide.reload();
+  await wide.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-bar]"));
+  await wide.waitForTimeout(250);
+  const keptOnReload = (await hidden(wide)) && !(await shown(wide, ".ds-bar"));
+  await wide.click("[data-ds-shell-show]");
+  await wide.waitForTimeout(250);
+  const back = await place(wide);
+  expect("ẩn shell: \\ hiện lại, \\ ẩn; tải lại vẫn ẩn; bấm nút góc hiện lại, toolbar đúng chỗ cũ", backByKey && hiddenByKey && keptOnReload && (await shown(wide, ".ds-bar")) && back.barLeft === before.barLeft && back.barRight === before.barRight, `\\ hiện ${backByKey} · \\ ẩn ${hiddenByKey} · tải lại ${keptOnReload} · toolbar ${before.barLeft}–${before.barRight} → ${back.barLeft}–${back.barRight}`);
+  await wide.click("[data-ds-shell-hide]");
+  const fresh = await open(url, 1600);
+  expect("ẩn shell: mở cùng link ở tab mới thì có toolbar", (await shown(fresh, ".ds-bar")) && !(await hidden(fresh)));
+  await fresh.close();
+  await wide.close();
+
+  const commenting = await open(pageUrl(multi, "01-forecast.html"), 1280);
+  await commenting.click("[data-ds-comment-toggle]");
+  const wasOn = await commenting.evaluate(() => document.documentElement.hasAttribute("data-commenting"));
+  await commenting.click("[data-ds-shell-hide]");
+  await commenting.waitForTimeout(100);
+  expect("ẩn shell khi đang bật comment thì tắt chế độ comment", wasOn && !(await commenting.evaluate(() => document.documentElement.hasAttribute("data-commenting"))));
+  await commenting.keyboard.press("\\");
+  await commenting.close();
+
+  const framed = await open(pageUrl(multi, "01-forecast.html", "?viewport=mobile"), 1280);
+  const frame = await framed.waitForSelector(".ds-frame-wrap iframe").then((element) => element.contentFrame());
+  await frame.waitForFunction(() => window.Alpine && document.querySelector("#design h1"));
+  await framed.click("[data-ds-shell-hide]");
+  await framed.waitForTimeout(150);
+  const frameBox = await framed.$eval(".ds-frame-wrap iframe", (element) => Math.round(element.getBoundingClientRect().width));
+  const frameHidden = await frame.evaluate(() => document.documentElement.hasAttribute("data-shell-hidden"));
+  await framed.screenshot({ path: join(out, "shell-hidden-mobile.png") });
+  await frame.click("#design h1");
+  await framed.keyboard.press("\\");
+  await framed.waitForTimeout(200);
+  expect("ẩn shell khổ mobile: khung máy giữ nguyên rộng 375, ghim trong khung ẩn theo; nhấn \\ trong khung thì shell hiện lại", frameBox >= 375 && frameBox <= 377 && frameHidden && (await shown(framed, ".ds-bar")), `khung ${frameBox}px · trong khung ẩn ${frameHidden}`);
+  await framed.close();
+
+  const phone = await open(pageUrl(multi, "01-forecast.html"), 375, true);
+  const fits = await phone.$eval("[data-ds-shell-hide]", (button) => {
+    const rect = button.getBoundingClientRect();
+    return rect.width > 0 && rect.right <= 375;
+  });
+  expect("375px: nút ẩn shell có và nằm trong màn hình", fits);
+  await phone.close();
+
+  const typing = await open(pageUrl(flow, "02-dang-ky.html"), 1280);
+  await typing.click("[data-email]");
+  await typing.keyboard.press("\\");
+  expect("con trỏ ở ô nhập thì \\ là chữ, shell không ẩn", (await typing.inputValue("[data-email]")).endsWith("\\") && !(await hidden(typing)));
+  await typing.close();
+
+  const walk = await open(pageUrl(flow, "01-welcome.html"), 1280);
+  await walk.click("[data-ds-shell-hide]");
+  await walk.click("[data-next]");
+  await walk.waitForURL(/02-dang-ky\.html/);
+  await walk.waitForFunction(() => window.Alpine && document.querySelector("[data-ds-bar]"));
+  expect("ẩn shell rồi bấm \"Tiếp tục\" trong page: sang màn 2, shell vẫn ẩn", (await hidden(walk)) && !(await shown(walk, ".ds-bar")));
+  await walk.keyboard.press("\\");
+  await walk.close();
+
+  const building = run("init", "an-shell-dang-dung", "--root", root);
+  const file = basename(run("page", building, "dang-dung", "--title", "Đang dựng"));
+  progress(building, file, "--prepared");
+  const busy = await open(pageUrl(building, file), 1280);
+  await busy.waitForFunction(() => document.querySelector("[data-ds-shell-show]")?.dataset.state);
+  await busy.click("[data-ds-shell-hide]");
+  await busy.waitForTimeout(150);
+  const dot = await busy.$eval("[data-ds-shell-show]", (button) => ({ state: button.dataset.state, dot: button.querySelector(".ds-shell-show-dot").getClientRects().length > 0 }));
+  expect("ẩn shell khi page đang dựng: nút góc có chấm tiến độ", dot.state === "building" && dot.dot, JSON.stringify(dot));
+  await busy.screenshot({ path: join(out, "shell-hidden-building.png") });
+  await busy.close();
 }
 
 expect("không có lỗi JS", errors.length === 0, errors.join(" · "));

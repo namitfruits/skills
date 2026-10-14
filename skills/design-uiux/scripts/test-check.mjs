@@ -6,7 +6,7 @@
 //
 // Mỗi ca in ✓ / ✗ kèm dòng mong đợi thiếu hay dòng cấm có mặt; log đủ của check.mjs nằm ở thư mục log.
 //
-// spec: F1.3 F1.13 F3.4 F3.9 F5.1 F5.2 F5.4 F5.6 F5.7 F5.8
+// spec: F1.3 F1.13 F3.4 F3.9 F5.1 F5.2 F5.4 F5.6 F5.7 F5.8 F5.12 F5.13
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -39,6 +39,19 @@ function singlePage(slug, fixture, prepared = true) {
   const file = run("page", dir, slug, "--title", slug);
   copyFileSync(join(here, "fixtures/check", fixture), file);
   builtUpTo(file, prepared ? 5 : 0, prepared);
+  return file;
+}
+
+// Page đã dựng xong và giao, rồi mở mục góp ý comment #1 với một việc đang làm. closeWork: việc đó vẫn đang làm (còn
+// việc chưa xong ngoài kiểm đầy đủ); không thì --doing "Kiểm đầy đủ" đóng việc đó, chỉ còn việc kiểm đầy đủ.
+function feedbackPage(slug, openWork) {
+  const file = singlePage(slug, "xshow-style-ok.html");
+  const progress = (...params) => run("progress", dirname(file), basename(file), ...params);
+  progress("--done", "6");
+  progress("--delivered");
+  progress("--comment", "1", "tiêu đề ngắn lại");
+  progress("--doing", "Sửa tiêu đề");
+  if (!openWork) progress("--doing", "Kiểm đầy đủ");
   return file;
 }
 
@@ -125,18 +138,25 @@ function yieldFolder(slug, rows, shadow = false) {
 }
 
 // Thư mục một page, brief điền đủ (brief hai page bỏ dòng B). edit đổi brief, extra chèn HTML vào đầu khối 1.
-function onePage(slug, { brief = (text) => text, extra = "" } = {}) {
+function onePage(slug, { brief = (text) => text, extra = "", design = (text) => text } = {}) {
   const dir = run("init", slug, "--root", root);
   const file = run("page", dir, "a", "--title", "Còn bao xa", "--option", "A · Còn bao xa", "--layout", "Trên cùng là thanh tiến độ tới mục tiêu tháng.");
   writeFileSync(join(dir, "brief.md"), brief(readFileSync(join(here, "fixtures/check/hai-page-brief.md"), "utf8").replace(/\| `02-b\.html`[^\n]*\n/, "")));
   const page = readFileSync(join(here, "fixtures/check/hai-page-a.html"), "utf8");
-  writeFileSync(file, page.replace('<section data-block="1" class="mt-lg grid gap-sm">', `<section data-block="1" class="mt-lg grid gap-sm">${extra}`));
+  writeFileSync(file, design(page).replace('<section data-block="1" class="mt-lg grid gap-sm">', `<section data-block="1" class="mt-lg grid gap-sm">${extra}`));
   builtUpTo(file);
   return file;
 }
 // Khối rộng 600px chỉ ở khổ mobile; nút mở khung nổi lệch trái ra ngoài màn hình, có hiệu ứng 300ms.
 const mobileOnlyWide = '<div class="w-[600px] sm:w-auto">Khung rộng 600px ở khổ mobile</div>';
 const offscreenPanel = '<div x-data="{ open: false }"><button type="button" class="h-9 rounded-md border border-hairline px-md text-button text-ink" @click="open = true">Mở khung</button><div x-show="open" x-transition.duration.300ms role="dialog" class="fixed top-24 -left-24 z-[1100] w-64 bg-surface p-md">Khung lệch trái <button type="button" aria-label="Đóng" @click="open = false">×</button></div></div>';
+
+// F5.12 · F5.13: nút gán lại đúng dữ liệu cũ; nút tải lại có lúc chờ 700ms, khung chờ rộng 2000px chỉ hiện lúc chờ;
+// tab đang chọn; nút "Thử lại" đổi ngay không lúc chờ.
+const deadButton = '<div x-data="{ items: [1, 2] }"><button type="button" class="h-9 rounded-md border border-hairline px-md text-button text-ink" @click="items = [1, 2]">Làm lại danh sách</button><p class="text-body" x-text="`${items.length} mục`"></p></div>';
+const fakeReload = '<div x-data="{ busy: false, items: [1, 2] }" :aria-busy="busy"><button type="button" class="h-9 rounded-md border border-hairline px-md text-button text-ink" :disabled="busy" @click="busy = true; setTimeout(() => { items = [1, 2]; busy = false }, 700)" x-text="busy ? \'Đang tải…\' : \'Tải lại\'">Tải lại</button><div x-show="busy" class="w-[2000px] text-body">Khung chờ</div><p x-show="!busy" class="text-body" x-text="`${items.length} mục`"></p></div>';
+const selectedTab = '<div x-data="{ tab: \'a\' }" class="flex gap-sm"><button type="button" class="h-9 rounded-md px-md text-button text-ink" :aria-pressed="String(tab === \'a\')" @click="tab = \'a\'">Tab A</button><button type="button" class="h-9 rounded-md px-md text-button text-ink" :aria-pressed="String(tab === \'b\')" @click="tab = \'b\'">Tab B</button></div>';
+const instantRetry = '<div x-data="{ ok: false }"><button type="button" class="h-9 rounded-md border border-hairline px-md text-button text-ink" @click="ok = true">Thử lại</button><p x-show="ok" class="text-body">Đã có dữ liệu</p></div>';
 
 const cases = [
   {
@@ -223,6 +243,19 @@ const cases = [
     expect: [/chua-chuan-bi\.progress\.js\]: còn bước chưa xong: Viết brief chung · Khung các khối/],
   },
   {
+    id: "C26",
+    what: "mục góp ý đang mở còn việc chưa xong: kiểm đầy đủ báo còn bước chưa xong, kể việc đó",
+    target: () => feedbackPage("gop-y-do", true),
+    status: 1,
+    expect: [/gop-y-do\.progress\.js\]: còn bước chưa xong: Sửa tiêu đề/],
+  },
+  {
+    id: "C27",
+    what: "mục góp ý đang mở chỉ còn việc kiểm đầy đủ: không báo còn bước chưa xong",
+    target: () => feedbackPage("gop-y-kiem", false),
+    forbid: [/còn bước chưa xong/],
+  },
+  {
     id: "C13",
     what: "--quick đưa thư mục: exit 2 kèm câu hướng dẫn",
     target: () => buildingFolder().dir,
@@ -300,12 +333,58 @@ const cases = [
     expect: [/không có nút đang hiện tên "Không có nút này" \(có [^\n]*"Mở khung"/],
   },
   {
+    id: "C30",
+    what: "--quick --click nút gán lại đúng dữ liệu cũ: báo page không đổi gì",
+    target: () => onePage("bam-khong-doi", { extra: deadButton }),
+    args: ["--quick", "--click", "Làm lại danh sách"],
+    status: 1,
+    expect: [/bấm "Làm lại danh sách" mà page không đổi gì/],
+  },
+  {
+    id: "C31",
+    what: "--quick --click nút tải lại có lúc chờ 700ms: không báo, khung chờ rộng 2000px không bị đo",
+    target: () => onePage("bam-co-cho", { extra: fakeReload }),
+    args: ["--quick", "--click", "Tải lại"],
+    forbid: [/mà page không đổi gì/, /không có lúc chờ/, /chờ quá 3 giây/, /bấm "Tải lại"[^\n]*cuộn ngang/],
+  },
+  {
+    id: "C32",
+    what: "--quick --click tab đang được chọn: không báo page không đổi gì",
+    target: () => onePage("bam-tab-dang-chon", { extra: selectedTab }),
+    args: ["--quick", "--click", "Tab A"],
+    forbid: [/mà page không đổi gì/],
+  },
+  {
+    id: "C33",
+    what: "--quick --click nút Thử lại đổi ngay: báo gọi server mà không có lúc chờ",
+    target: () => onePage("thu-lai-khong-cho", { extra: instantRetry }),
+    args: ["--quick", "--click", "Thử lại"],
+    status: 1,
+    expect: [/nút "Thử lại" gọi server mà không có lúc chờ/],
+    forbid: [/mà page không đổi gì/],
+  },
+  {
     id: "C25",
     what: "--brief trên brief còn khuôn trống: exit 1, báo chỗ trống, không mở trình duyệt",
     target: () => { const dir = run("init", "brief-trong", "--root", root); run("page", dir, "a", "--title", "A"); return dir; },
     args: ["--brief"],
     status: 1,
     expect: [/còn chỗ trống chưa điền/, /✗ brief · 0\d\d-brief-trong · \d+ lỗi/],
+  },
+  {
+    id: "C28",
+    what: "presets không có bộ nào trùng default của variables: báo thiếu bộ mặc định",
+    target: () => onePage("preset-thieu-mac-dinh", { design: (text) => text.replace("tweaks: [],", 'tweaks: [],\n    presets: [{ label: "Mục tiêu cao", values: { target: 4000, state: "data" } }],') }),
+    args: ["--quick"],
+    status: 1,
+    expect: [/presets không có bộ nào tả dữ liệu mặc định \(values trùng default của variables: target=2000, state="data"\)/],
+  },
+  {
+    id: "C29",
+    what: "presets có một bộ trùng default: không báo thiếu bộ mặc định",
+    target: () => onePage("preset-co-mac-dinh", { design: (text) => text.replace("tweaks: [],", 'tweaks: [],\n    presets: [{ label: "Tháng thường: mục tiêu 2 tỷ", values: { target: 2000, state: "data" } }, { label: "Mục tiêu cao", values: { target: 4000, state: "data" } }],') }),
+    args: ["--quick"],
+    forbid: [/presets không có bộ nào|cùng trùng dữ liệu mặc định/],
   },
 ];
 

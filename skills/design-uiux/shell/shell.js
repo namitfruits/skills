@@ -1,15 +1,16 @@
 // Khung chung của mọi page design: toolbar (option-switcher, view-controller), panel (data-panel vặn variables,
-// config-panel vặn tweaks), đọc ghi URL, khung mobile / tablet. Tên các khối: SKILL.md, mục "Các khối điều khiển".
+// layout-panel vặn tweaks), đọc ghi URL, khung mobile / tablet. Tên các khối: SKILL.md, mục "Các khối điều khiển".
 // Page khai window.DESIGN rồi nạp file này; tokens.js và pages.js nạp trước, Alpine nạp sau bằng defer. toolbar và
 // panel ghi giá trị vào Alpine.store("design"); page đọc $store.design.<key>.
 // Thư mục luồng (pages.js có `screen`): option-switcher thành dãy màn; page gọi $store.design.next() · prev() để sang
 // màn kề, chữ người xem gõ nằm ở $store.design.form, lưu trong sessionStorage của thư mục design.
 // Tiến độ dựng: nhãn trạng thái ở cột trái toolbar đọc danh sách bước dựng `<file>.progress.js`; có bước mới xong thì
 // tự tải lại, giữ vị trí cuộn, đợi người xem gõ xong. Việc con agent đang làm hiện thành một dòng dưới bước dở.
-// Chế độ comment: nút trên view-controller; người xem bấm một khối hay kéo một vùng, viết, gửi tới lệnh nghe trên máy
-// (new-design.mjs listen) hay chép để dán vào chat; ghim đánh số hiện trạng thái từng comment.
+// Chế độ comment: nút trên view-controller; người xem bấm một khối hay kéo một vùng, viết, gửi tới cầu nối comment trên
+// máy (new-design.mjs comment-bridge) hay chép prompt để dán vào chat; ghim đánh số hiện trạng thái từng comment.
+// Ẩn shell: nút cuối view-controller cất toolbar, panel, ghim; nút nhỏ ở góc hay phím \ hiện lại.
 //
-// spec: F2 F4.2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
+// spec: F2 F2.9 F4.2 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
 (() => {
   const design = window.DESIGN ?? {};
   const theme = window.DESIGN_THEME ?? { base: "light", derived: null, fonts: [] };
@@ -18,28 +19,40 @@
   const isFrame = params.get("frame") === "1";
   const lang = design.lang === "en" ? "en" : "vi";
   const text = {
-    vi: { variables: "Dữ liệu", tweaks: "Cấu hình", presets: "Bộ dữ liệu…", reset: "Về mặc định", light: "Sáng", dark: "Tối",
-      derived: "suy ra", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Số khối",
+    vi: { variables: "Data Config", tweaks: "Layout Config", toggle: { variables: "Data", tweaks: "Layout" }, presets: "Bộ dữ liệu", defaultPreset: "Mặc định", defaultMark: "mặc định", reset: "Về mặc định", light: "Sáng", dark: "Tối",
+      derived: "suy ra", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile",
       options: "Phương án", screens: "Các màn", goodFor: "Tiện cho", updated: "sửa",
-      status: "Tiến độ dựng page", preparing: "Đang chuẩn bị", building: "Đang dựng", revising: "Đang sửa", checking: "Đang kiểm lại", done: "Xong",
-      roundPrep: "Chuẩn bị", roundBuild: "Dựng", roundFeedback: "Góp ý vòng", roundDeliver: "Giao", noBuild: "Page dựng trước khi có danh sách bước",
+      status: "Tiến độ dựng page", preparing: "Đang chuẩn bị", building: "Đang dựng", revising: "Đang sửa", checking: "Đang kiểm lại", done: "Activity log",
+      roundPrep: "Chuẩn bị", roundBuild: "Dựng", groupComments: "Comment", groupChat: "Góp ý trong chat", revisingChat: "Đang sửa góp ý", roundDeliver: "Giao", noBuild: "Page dựng trước khi có danh sách bước",
       lastEdited: (day, month) => `Sửa lần cuối ${day} thg ${month}`,
       presetsHelp: "Một bộ giá trị dựng sẵn cho ca hay gặp hay ca biên. Chọn là đổi cả bộ; ô nào đổi sẽ nháy lên.",
       comment: "Comment", commentHint: "Bấm một khối hay kéo chọn một vùng · C hay Esc để thoát", commentPlaceholder: "Cần sửa gì ở đây?", commentKeyTip: "Comment (phím C)",
-      send: "Gửi", copy: "Chép", cancel: "Huỷ", copied: "Đã chép", sending: "Đang gửi…", sendFailed: "Gửi không được",
-      listening: "Claude đang nghe: gửi xong là agent sửa", notListening: "Claude không nghe: chép rồi dán vào chat",
-      area: "vùng", block: "khối", commentStatus: { sent: "đã gửi", doing: "đang sửa", done: "đã sửa" } },
-    en: { variables: "Data", tweaks: "Config", presets: "Presets…", reset: "Reset", light: "Light", dark: "Dark",
-      derived: "derived", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile", blocks: "Section numbers",
+      send: "Gửi", copy: "Chép", copyPrompt: "Chép prompt", cancel: "Huỷ", copied: "Đã chép", sending: "Đang gửi…", sendFailed: "Gửi không được",
+      bridgeInbox: "Claude đang nhận comment: gửi xong là agent sửa",
+      bridgeSaved: 'Comment được lưu. Gõ "xem comment" vào session Claude đang chạy page này để agent sửa.',
+      bridgeClosed: "Session Claude chạy page này đã đóng", bridgeAt: "lúc", bridgeCode: "mã",
+      bridgeReopen: "Mở lại", bridgeVscode: "danh sách hội thoại cũ của Claude trong VS Code, hay", bridgeTerminal: "trong terminal",
+      bridgeNew: "Hoặc mở session Claude Code mới ở", bridgePaste: "Bấm Chép prompt rồi dán vào chat.",
+      bridgeNone: "Chưa có session Claude nào nhận comment của page này.", bridgeOpen: "Mở session Claude Code ở", bridgeOpenPaste: "bấm Chép prompt rồi dán vào chat.",
+      area: "vùng", block: "khối", commentStatus: { sent: "đã gửi", doing: "đang sửa", done: "đã sửa" },
+      hideShell: "Xem trọn page (phím \\)", showShell: "Hiện toolbar và panel (phím \\)" },
+    en: { variables: "Data Config", tweaks: "Layout Config", toggle: { variables: "Data", tweaks: "Layout" }, presets: "Presets", defaultPreset: "Default", defaultMark: "default", reset: "Reset", light: "Light", dark: "Dark",
+      derived: "derived", desktop: "Desktop", tablet: "Tablet", mobile: "Mobile",
       options: "Options", screens: "Screens", goodFor: "Good for", updated: "edited",
-      status: "Page build progress", preparing: "Preparing", building: "Building", revising: "Revising", checking: "Checking", done: "Done",
-      roundPrep: "Prepare", roundBuild: "Build", roundFeedback: "Feedback round", roundDeliver: "Deliver", noBuild: "Built before step lists existed",
+      status: "Page build progress", preparing: "Preparing", building: "Building", revising: "Revising", checking: "Checking", done: "Activity log",
+      roundPrep: "Prepare", roundBuild: "Build", groupComments: "Comments", groupChat: "Chat feedback", revisingChat: "Revising feedback", roundDeliver: "Deliver", noBuild: "Built before step lists existed",
       lastEdited: (day, month) => `Last edited ${new Date(2000, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
       presetsHelp: "A ready-made set of values for a common or edge case. Picking one changes them all; changed fields flash.",
       comment: "Comment", commentHint: "Click a block or drag an area · C or Esc to exit", commentPlaceholder: "What should change here?", commentKeyTip: "Comment (C)",
-      send: "Send", copy: "Copy", cancel: "Cancel", copied: "Copied", sending: "Sending…", sendFailed: "Could not send",
-      listening: "Claude is listening: the agent fixes it after you send", notListening: "Claude is not listening: copy and paste into the chat",
-      area: "area", block: "block", commentStatus: { sent: "sent", doing: "fixing", done: "fixed" } },
+      send: "Send", copy: "Copy", copyPrompt: "Copy prompt", cancel: "Cancel", copied: "Copied", sending: "Sending…", sendFailed: "Could not send",
+      bridgeInbox: "Claude is taking comments: the agent fixes it after you send",
+      bridgeSaved: 'Comment saved. Type "check comments" in the Claude session running this page so the agent fixes it.',
+      bridgeClosed: "The Claude session running this page has closed", bridgeAt: "at", bridgeCode: "id",
+      bridgeReopen: "Reopen it", bridgeVscode: "Claude's past conversations in VS Code, or", bridgeTerminal: "in a terminal",
+      bridgeNew: "Or start a new Claude Code session in", bridgePaste: "Click Copy prompt and paste it into the chat.",
+      bridgeNone: "No Claude session takes comments for this page yet.", bridgeOpen: "Start a Claude Code session in", bridgeOpenPaste: "click Copy prompt and paste it into the chat.",
+      area: "area", block: "block", commentStatus: { sent: "sent", doing: "fixing", done: "fixed" },
+      hideShell: "Full page view (\\)", showShell: "Show toolbar and panels (\\)" },
   }[lang];
 
   const controls = [
@@ -49,7 +62,6 @@
   const fixedControls = [
     { key: "viewport", type: "select", options: ["desktop", "tablet", "mobile"], default: "desktop" },
     { key: "theme", type: "select", options: ["light", "dark"], default: theme.base },
-    { key: "sections", type: "toggle", default: false },
   ];
   const allControls = [...controls, ...fixedControls];
   const optionValue = (option) => (typeof option === "object" ? option.value : option);
@@ -65,14 +77,13 @@
   }
   const serialize = (value) => (value === true ? "1" : value === false ? "0" : String(value));
 
-  // Link cũ còn ghi khổ màn là `kho`, số khối là `so`.
-  const oldKeys = { viewport: "kho", sections: "so" };
+  // Link cũ còn ghi khổ màn là `kho`.
+  const oldKeys = { viewport: "kho" };
   const state = Object.fromEntries(allControls.map((control) => [control.key, parseValue(control, params.get(control.key) ?? params.get(oldKeys[control.key]))]));
   const root = document.documentElement;
   const applyRootAttributes = (values) => {
     root.dataset.theme = values.theme;
     root.dataset.viewport = values.viewport;
-    root.dataset.sections = values.sections ? "1" : "0";
   };
   applyRootAttributes(state);
   if (isFrame) root.dataset.frame = "1";
@@ -83,6 +94,14 @@
   const currentFile = decodeURIComponent(location.pathname.split("/").pop());
   const isFlow = pages.some((page) => page.screen);
   const formKey = `ds-form:${decodeURIComponent(location.pathname.split("/").slice(0, -1).join("/"))}`;
+  // Ẩn shell: nhớ theo tab và thư mục design, không lên URL, để link chép gửi đi luôn mở có shell. Đặt thuộc tính ngay
+  // khi nạp, trước khi Alpine vẽ, để page tự tải lại không loé toolbar.
+  const shellKey = `ds-shell:${decodeURIComponent(location.pathname.split("/").slice(0, -1).join("/"))}`;
+  let shellWasHidden = false;
+  try {
+    shellWasHidden = !isFrame && sessionStorage.getItem(shellKey) === "1";
+  } catch {}
+  root.toggleAttribute("data-shell-hidden", shellWasHidden);
   const readForm = () => {
     try {
       return JSON.parse(sessionStorage.getItem(formKey) ?? "{}") ?? {};
@@ -122,9 +141,10 @@
     light: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-17.07 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
     dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
     info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
-    hash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>',
-    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    history: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>',
     comment: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
+    expand: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+    shrink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
   };
 
   // Icon ⓘ cạnh nhãn, mang lời giải thích ô vặn (help). Khung giải thích là một phần tử chung, vẽ bằng helpTip().
@@ -163,25 +183,50 @@
     return `<label class="ds-field" ${attrs}>${label}<input type="text" ${control.maxLength ? `maxlength="${control.maxLength}"` : ""} x-model="${store(control.key)}" size="14"></label>`;
   }
 
-  // Chọn bộ dữ liệu: gán cả bộ giá trị, ô nào đổi thì nháy lên một lúc để thấy bộ đó đổi gì.
-  const presetValues = (design.presets ?? []).map((preset) => preset.values);
-  window.dsPresets = {
-    match: (values) => presetValues.findIndex((preset) => Object.entries(preset).every(([key, value]) => values[key] === value)),
-    apply(values, index) {
-      const preset = presetValues[index];
-      if (!preset) return;
-      const changed = Object.keys(preset).filter((key) => values[key] !== preset[key]);
-      Object.assign(values, preset);
-      requestAnimationFrame(() => {
-        for (const key of changed) {
-          for (const field of document.querySelectorAll(`[data-ds-panel] [data-ds-key="${key}"]`)) {
-            field.removeAttribute("data-flash");
-            void field.offsetWidth;
-            field.setAttribute("data-flash", "");
-            setTimeout(() => field.removeAttribute("data-flash"), 1200);
-          }
+  // Gán một bộ giá trị vào store, ô nào đổi thì nháy lên một lúc để thấy bộ đó đổi gì.
+  function assignAndFlash(values, next) {
+    const changed = Object.keys(next).filter((key) => values[key] !== next[key]);
+    Object.assign(values, next);
+    requestAnimationFrame(() => {
+      for (const key of changed) {
+        for (const field of document.querySelectorAll(`[data-ds-panel] [data-ds-key="${key}"]`)) {
+          field.removeAttribute("data-flash");
+          void field.offsetWidth;
+          field.setAttribute("data-flash", "");
+          setTimeout(() => field.removeAttribute("data-flash"), 1200);
         }
-      });
+      }
+    });
+  }
+
+  const panelDefaults = Object.fromEntries(["variables", "tweaks"].map((name) => [name, Object.fromEntries(controls.filter((control) => control.group === name).map((control) => [control.key, defaultOf(control)]))]));
+
+  // Chọn bộ dữ liệu: gán cả bộ giá trị. Bộ có values trùng default của variables là bộ mặc định: đứng đầu ô chọn, nhãn
+  // thêm "· mặc định". Page không khai bộ đó thì đầu ô chọn là một dòng "Mặc định" mang default của mọi variables. Ô
+  // chọn hiện bộ đang khớp với giá trị hiện tại, xét bộ mặc định trước; không khớp bộ nào thì ô để trống. Ô gán
+  // select.value thẳng, không qua :value: :value bỏ chọn từng dòng, select một dòng không có dòng nào chọn thì trình
+  // duyệt tự chọn dòng đầu.
+  const presetMatches = (values, preset) => Object.entries(preset).every(([key, value]) => values[key] === value);
+  const presetList = (design.presets ?? []).map((preset, index) => ({ id: String(index), label: preset.label, values: preset.values }));
+  const defaultPreset = presetList.find((preset) => presetMatches(panelDefaults.variables, preset.values));
+  const presetOptions = defaultPreset
+    ? [{ ...defaultPreset, label: `${defaultPreset.label} · ${text.defaultMark}` }, ...presetList.filter((preset) => preset !== defaultPreset)]
+    : [{ id: "default", label: text.defaultPreset, values: panelDefaults.variables }, ...presetList];
+  window.dsPresets = {
+    match: (values) => presetOptions.find((preset) => presetMatches(values, preset.values))?.id ?? "",
+    apply(values, id) {
+      const preset = presetOptions.find((item) => item.id === id);
+      if (preset) assignAndFlash(values, preset.values);
+    },
+  };
+
+  // Nút về mặc định của từng panel: chỉ trả ô của panel đó về default. Nút của data-panel xoá luôn chữ người xem đã gõ
+  // (form), vì chữ đó là dữ liệu page đang hiện. Panel đã ở mặc định thì nút tắt.
+  window.dsReset = {
+    isDefault: (values, name) => Object.entries(panelDefaults[name]).every(([key, value]) => values[key] === value) && (name !== "variables" || !Object.keys(values.form ?? {}).length),
+    apply(values, name) {
+      assignAndFlash(values, panelDefaults[name]);
+      if (name === "variables") values.form = {};
     },
   };
 
@@ -270,7 +315,7 @@
       const entry = slot[currentFile];
       if (!entry || typeof entry.rev !== "number" || !Array.isArray(entry.build)) return;
       if (progress && entry.rev !== progress.rev) return reloadWhenIdle();
-      progress = entry;
+      progress = normalizeProgress(entry);
       renderStatus();
     };
     tag.onerror = () => {
@@ -291,20 +336,47 @@
     document.addEventListener("focusout", reloadIfDoneTyping);
   }
 
-  // Nhãn trạng thái: bước chuẩn bị (agent chính viết brief) chưa xong là đang chuẩn bị, còn bước vòng 1 chưa xong là đang dựng, còn bước vòng góp ý (round ≥ 2) chưa xong là đang sửa,
-  // hết bước dựng mà bước giao (agent chính kiểm lại cả thư mục rồi giao) chưa xong là đang kiểm lại, không còn gì (hay
-  // page không có danh sách) là xong. Nhãn xong không có con số: ngày dạng "09/10" đọc thành 9 trên 10 bước, nên ngày sửa
-  // cuối trong pages.js nằm ở dòng cuối danh sách. Bấm mở danh sách bước theo vòng; bước dở có `doing` thì thêm một dòng
-  // việc con thụt vào ngay dưới nó.
+  // File kiểu cũ xếp góp ý theo vòng (bước round ≥ 2 trong build): đọc thành mục góp ý, cùng phép chuyển với
+  // normalizeProgress của new-design.mjs. "Góp ý: Comment #<n>: …" hay "Comment #<n>: …" là mục comment, bước khác là mục
+  // chat; bước kiểm đầy đủ của vòng thành việc cuối của mọi mục trong vòng đó.
+  function normalizeProgress(data) {
+    const feedback = [...(data.feedback ?? [])];
+    const later = data.build.filter((item) => Number(item.round) > 1);
+    for (const round of [...new Set(later.map((item) => Number(item.round)))]) {
+      const steps = later.filter((item) => Number(item.round) === round);
+      const check = steps.find((item) => item.final);
+      for (const step of steps.filter((item) => !item.final)) {
+        const [, id, rest] = step.task.match(/^(?:Góp ý: )?Comment #(\d+): (.*)$/) ?? [];
+        const actions = [...(step.doing ? [{ task: step.doing, done: false }] : []), { task: check?.task ?? "Kiểm đầy đủ", done: Boolean(check?.done), final: true }];
+        feedback.push({ source: id ? "comment" : "chat", ...(id ? { id: Number(id) } : {}), task: id ? rest : step.task.replace(/^Góp ý: /, ""), done: Boolean(step.done && check?.done), actions });
+      }
+    }
+    return { ...data, build: data.build.filter((item) => !(Number(item.round) > 1)), feedback };
+  }
+  const currentAction = (item) => item.actions.find((action) => !action.done) ?? null;
+
+  // Nhãn trạng thái: bước chuẩn bị (agent chính viết brief) chưa xong là đang chuẩn bị, còn bước dựng chưa xong là đang
+  // dựng, còn mục góp ý chưa xong là đang sửa ("Đang sửa #3" với comment, "Đang sửa góp ý" với ý trong chat), hết bước
+  // và mục mà bước giao (agent chính kiểm lại cả thư mục rồi giao) chưa xong là đang kiểm lại, không còn gì (hay page
+  // không có danh sách) là xong. Nhãn xong không có con số: ngày dạng "09/10" đọc thành 9 trên 10 bước, nên ngày sửa
+  // cuối trong pages.js nằm ở dòng cuối danh sách. Bấm mở danh sách theo nhóm: Chuẩn bị, Dựng, Comment, Góp ý trong
+  // chat, Giao; nhóm trống thì ẩn. Bước dựng dở có `doing` thì thêm một dòng việc con thụt vào ngay dưới nó; mục góp ý
+  // có các việc agent đã làm thụt dưới mục.
   function progressStatus() {
-    const steps = progress ? progress.build.map((item) => ({ ...item, round: Number(item.round) || 1 })) : null;
+    const steps = progress ? progress.build : null;
     if (progress?.prep && !progress.prep.done) return { state: "preparing", label: text.preparing, count: "", share: 0, doing: progress.prep.task, steps, open: null };
     const open = steps?.find((item) => !item.done);
-    if (!open && progress?.deliver && !progress.deliver.done) return { state: "checking", label: text.checking, count: "", share: 1, doing: progress.deliver.task, steps, open: null };
-    if (!open) return { state: "done", label: text.done, count: "", steps, open: null };
-    const round = steps.filter((item) => item.round === open.round);
-    const done = round.filter((item) => item.done).length;
-    return { state: open.round === 1 ? "building" : "revising", label: open.round === 1 ? text.building : text.revising, count: `${done}/${round.length}`, share: done / round.length, steps, open };
+    if (open) {
+      const done = steps.filter((item) => item.done).length;
+      return { state: "building", label: text.building, count: `${done}/${steps.length}`, share: done / steps.length, steps, open };
+    }
+    const item = progress?.feedback?.find((entry) => !entry.done);
+    if (item) {
+      const done = item.actions.filter((action) => action.done).length;
+      return { state: "revising", label: item.source === "comment" ? text.revising : text.revisingChat, count: item.source === "comment" ? `#${item.id}` : "", share: done / item.actions.length, doing: currentAction(item)?.task ?? "", steps, open: null, item };
+    }
+    if (progress?.deliver && !progress.deliver.done) return { state: "checking", label: text.checking, count: "", share: 1, doing: progress.deliver.task, steps, open: null };
+    return { state: "done", label: text.done, count: "", steps, open: null };
   }
   const statusHtml = () => `<div class="ds-status-wrap" data-ds-status-wrap hidden x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
       <button type="button" class="ds-status" data-ds-status title="${text.status}" :aria-expanded="String(open)" aria-controls="ds-status-list" @click="open = !open"></button>
@@ -314,14 +386,13 @@
     const wrap = document.querySelector("[data-ds-status-wrap]");
     if (!wrap) return;
     const status = progressStatus();
-    const rounds = [...new Set((status.steps ?? []).map((item) => item.round))];
     const button = wrap.querySelector("[data-ds-status]");
     // Nhãn lúc page chưa xong: chấm có vòng lan, việc con ngay trên nhãn, thanh tiến độ ở đáy (phần đã xong tô đặc, vệt
     // sáng chạy trên phần còn lại). Shell đọc tiến độ mỗi 2 giây: chỉ vẽ lại nhãn khi nội dung đổi, để chuyển động không
     // bị giật về đầu; việc con mới thì trượt lên.
     const working = status.state !== "done";
     const doing = status.doing ?? status.open?.doing ?? "";
-    const html = `${working ? '<i class="ds-status-dot"></i>' : icons.check}<span class="ds-status-label">${status.label}</span>${status.count ? ` <span class="ds-status-count">${status.count}</span>` : ""}${doing ? `<span class="ds-status-doing" data-ds-status-doing>· ${escapeHtml(doing)}</span>` : ""}${working ? `<span class="ds-status-track" style="--ds-done:${(status.share * 100).toFixed(1)}%" aria-hidden="true"><span></span></span>` : ""}`;
+    const html = `${working ? '<i class="ds-status-dot"></i>' : icons.history}<span class="ds-status-label">${status.label}</span>${status.count ? ` <span class="ds-status-count">${status.count}</span>` : ""}${doing ? `<span class="ds-status-doing" data-ds-status-doing>· ${escapeHtml(doing)}</span>` : ""}${working ? `<span class="ds-status-track" style="--ds-done:${(status.share * 100).toFixed(1)}%" aria-hidden="true"><span></span></span>` : ""}`;
     if (button.dataset.html !== html) {
       const freshDoing = Boolean(doing) && button.dataset.doing !== undefined && button.dataset.doing !== doing;
       button.dataset.state = status.state;
@@ -332,6 +403,7 @@
       else button.title = text.status;
       if (freshDoing) button.querySelector("[data-ds-status-doing]").dataset.fresh = "";
     }
+    document.querySelector("[data-ds-shell-show]")?.setAttribute("data-state", status.state);
     const prep = progress?.prep;
     const prepHtml = prep ? `<li class="ds-status-round">${text.roundPrep}</li><li data-step="${prep.done ? "done" : "current"}"><span aria-hidden="true">${prep.done ? "✓" : "●"}</span>${escapeHtml(prep.task)}</li>` : "";
     const deliver = progress?.deliver;
@@ -339,11 +411,28 @@
     const deliverHtml = deliver ? `<li class="ds-status-round">${text.roundDeliver}</li><li data-step="${deliverStep}"><span aria-hidden="true">${{ done: "✓", current: "●", todo: "○" }[deliverStep]}</span>${escapeHtml(deliver.task)}</li>` : "";
     const [, month, day] = String(pages.find((page) => page.file === currentFile)?.updated ?? "").match(/^\d{4}-(\d{2})-(\d{2})/) ?? [];
     const editedHtml = status.state === "done" && day ? `<li class="ds-status-edited">${text.lastEdited(Number(day), Number(month))}</li>` : "";
+    const mark = { done: "✓", current: "●", todo: "○" };
+    const row = (step, label, extra = "") => `<li data-step="${step}"${extra}><span aria-hidden="true">${mark[step]}</span>${escapeHtml(label)}</li>`;
+    const buildHtml = status.steps?.length
+      ? `<li class="ds-status-round">${text.roundBuild}</li>${status.steps
+          .map((item) => `${row(item.done ? "done" : item === status.open ? "current" : "todo", item.task)}${item === status.open && item.doing ? `<li data-step="doing">${escapeHtml(item.doing)}</li>` : ""}`)
+          .join("")}`
+      : "";
+    // Mục góp ý: dòng mục (✓ xong, ● đang sửa), rồi các việc agent đã làm thụt dưới, việc đang làm có chấm. Việc kiểm
+    // đầy đủ ở cuối mọi mục không hiện trong danh sách: dòng nào cũng giống nhau, chỉ lặp. Lúc nó đang chạy thì nhãn ghi.
+    const feedbackHtml = (source, title) => {
+      const items = (progress?.feedback ?? []).filter((item) => item.source === source);
+      if (!items.length) return "";
+      return `<li class="ds-status-round">${title}</li>${items
+        .map((item) => {
+          const current = item.done ? null : currentAction(item);
+          const actions = item.actions.filter((action) => !action.final).map((action) => row(action.done ? "done" : action === current ? "current" : "todo", action.task, ' class="ds-status-action"')).join("");
+          return row(item.done ? "done" : "current", source === "comment" ? `#${item.id} ${item.task}` : item.task, ' class="ds-status-item"') + actions;
+        })
+        .join("")}`;
+    };
     wrap.querySelector("[data-ds-status-list]").innerHTML = (status.steps
-      ? prepHtml + rounds.map((round) => `<li class="ds-status-round">${round === 1 ? text.roundBuild : `${text.roundFeedback} ${round}`}</li>${status.steps
-          .filter((item) => item.round === round)
-          .map((item) => `<li data-step="${item.done ? "done" : item === status.open ? "current" : "todo"}"><span aria-hidden="true">${item.done ? "✓" : item === status.open ? "●" : "○"}</span>${escapeHtml(item.task)}</li>${item === status.open && item.doing ? `<li data-step="doing">${escapeHtml(item.doing)}</li>` : ""}`)
-          .join("")}`).join("") + deliverHtml
+      ? prepHtml + buildHtml + feedbackHtml("comment", text.groupComments) + feedbackHtml("chat", text.groupChat) + deliverHtml
       : `<li>${text.noBuild}</li>`) + editedHtml;
     wrap.hidden = false;
     alignBar(Alpine.store("design").viewport);
@@ -375,13 +464,14 @@
     step();
   }
 
-  // Nút vặn nằm ở panel: data-panel bên trái, config-panel bên phải, đè lên lề trống hai bên bản thiết kế. toolbar
+  // Nút vặn nằm ở panel: data-panel bên trái, layout-panel bên phải, đè lên lề trống hai bên bản thiết kế. toolbar
   // xếp theo đúng phía đó: trái là nút mở data-panel và nhãn tiến độ, giữa là option-switcher, phải là view-controller
-  // (khổ, sáng tối, số khối, về mặc định) và nút mở config-panel. Màn đủ rộng thì panel luôn mở, hai nút mở panel ẩn đi.
+  // (comment, khổ, sáng tối) và nút mở layout-panel. Nút về mặc định nằm trên đầu mỗi panel. Màn đủ rộng thì panel luôn mở, hai nút mở panel ẩn đi.
+  // Nút mở panel ghi tên ngắn (Data, Layout), tên đủ ở tiêu đề panel: ghi "Layout Config" thì cột phải rộng tới mức
+  // option-switcher lệch khỏi giữa trang ở 1280px.
   function toolbarHtml() {
-    // Ô bộ dữ liệu hiện bộ đang khớp với giá trị hiện tại; vặn lệch đi thì về "Bộ dữ liệu…".
     const presets = design.presets?.length
-      ? `<label class="ds-field ds-field-presets"><span class="ds-field-label">${text.presets.replace("…", "")}${helpHtml(text.presetsHelp)}</span><select class="ds-presets" data-ds-presets :value="String(dsPresets.match($store.design))" @change="dsPresets.apply($store.design, Number($event.target.value))"><option value="-1">${text.presets}</option>${design.presets.map((preset, index) => `<option value="${index}">${escapeHtml(preset.label)}</option>`).join("")}</select></label>`
+      ? `<label class="ds-field ds-field-presets"><span class="ds-field-label">${text.presets}${helpHtml(text.presetsHelp)}</span><select class="ds-presets" data-ds-presets x-effect="$el.value = dsPresets.match($store.design)" @change="dsPresets.apply($store.design, $event.target.value)">${presetOptions.map((preset) => `<option value="${preset.id}">${escapeHtml(preset.label)}</option>`).join("")}</select></label>`
       : "";
     const panels = ["variables", "tweaks"].map((name) => {
       const items = controls.filter((control) => control.group === name).map(controlHtml);
@@ -389,8 +479,8 @@
       return { name, count: controls.filter((control) => control.group === name).length, items };
     }).filter((panel) => panel.items.length);
     const panelHtml = ({ name, items }) => `<aside class="ds-panel" data-ds-panel="${name}" :data-open="panel === '${name}' ? '' : null" @click.outside="if (!$event.target.closest('[data-ds-panel-toggle]')) panel = null">
-        <h2 class="ds-panel-title">${text[name]}</h2>${items.join("")}</aside>`;
-    const toggleHtml = ({ name, count }) => `<button type="button" class="ds-panel-toggle" data-ds-panel-toggle="${name}" :aria-expanded="String(panel === '${name}')" @click="panel = panel === '${name}' ? null : '${name}'">${text[name]} <small>${count}</small></button>`;
+        <div class="ds-panel-head"><h2 class="ds-panel-title">${text[name]}</h2><button type="button" class="ds-panel-reset" data-ds-reset="${name}" title="${text.reset}" aria-label="${text.reset}: ${text[name]}" :disabled="dsReset.isDefault($store.design, '${name}')" @click="dsReset.apply($store.design, '${name}')">${icons.reset}</button></div>${items.join("")}</aside>`;
+    const toggleHtml = ({ name, count }) => `<button type="button" class="ds-panel-toggle" data-ds-panel-toggle="${name}" :aria-expanded="String(panel === '${name}')" title="${text[name]}" @click="panel = panel === '${name}' ? null : '${name}'">${text.toggle[name]} <small>${count}</small></button>`;
     const left = panels.find((panel) => panel.name === "variables");
     const right = panels.find((panel) => panel.name === "tweaks");
     // Icon thay chữ. Giao diện suy ra mang chấm nhỏ, chữ "(suy ra)" để ẩn trong nút cho trình đọc màn hình và check.mjs.
@@ -404,14 +494,14 @@
           <button type="button" class="ds-comment-toggle" data-ds-comment-toggle title="${text.commentKeyTip}" :aria-pressed="String($store.comment.on)" @click="$store.comment.on = !$store.comment.on">${icons.comment}<span class="ds-comment-toggle-label">${text.comment}</span></button>
           ${segmentedHtml("viewport", ["desktop", "tablet", "mobile"].map((value) => [value, icons[value], text[value]]))}
           ${segmentedHtml("theme", ["light", "dark"].map((value) => [value, themeLabel(value), theme.derived === value ? `${text[value]} — ${text.derived}` : text[value]]))}
-          <button type="button" class="ds-icon-button" title="${text.blocks}" :aria-pressed="String($store.design.sections)" @click="$store.design.sections = !$store.design.sections">${icons.hash}</button>
-          <button type="button" class="ds-icon-button" title="${text.reset}" @click="Object.assign($store.design, ${escapeHtml(JSON.stringify({ ...Object.fromEntries(controls.map((control) => [control.key, defaultOf(control)])), form: {} }))})">${icons.reset}</button>
+          <button type="button" class="ds-shell-hide" data-ds-shell-hide title="${text.hideShell}" aria-label="${text.hideShell}" @click="$store.shell.hidden = true">${icons.expand}</button>
         </div>
       </div>
       ${right ? toggleHtml(right) : ""}
       ${panels.map(panelHtml).join("")}
     </header>
-    <div class="ds-frame-wrap" x-show="$store.design.viewport !== 'desktop'"></div>`;
+    <div class="ds-frame-wrap" x-show="$store.design.viewport !== 'desktop'"></div>
+    <button type="button" class="ds-shell-show" data-ds-shell-show title="${text.showShell}" aria-label="${text.showShell}" @click="$store.shell.hidden = false">${icons.shrink}<i class="ds-shell-show-dot"></i></button>`;
   }
 
   // panel luôn mở khi lề hai bên phần giữa đủ chỗ: phần giữa là bề rộng trang (DESIGN.pageWidth của page,
@@ -483,6 +573,7 @@
       frame.addEventListener("load", () => {
         frame.contentWindow.postMessage({ type: "design:set", values: JSON.parse(JSON.stringify(Alpine.store("design"))) }, "*");
         syncComment();
+        syncShell();
       });
       wrap.append(frame);
     }
@@ -501,6 +592,7 @@
     }
     if (event.data?.type === "design:comment-off") Alpine.store("comment").on = false;
     if (event.data?.type === "design:comment-toggle") Alpine.store("comment").on = !Alpine.store("comment").on;
+    if (event.data?.type === "design:shell-toggle") Alpine.store("shell").hidden = !Alpine.store("shell").hidden;
   });
   // Trang cha không đọc được vào iframe trên file://, nên khung mobile / tablet tự báo khi con trỏ vào hay rời ô gõ.
   const reportTyping = () => isFrame && setTimeout(() => parent.postMessage({ type: "design:typing", typing: typingHere() }, "*"), 0);
@@ -537,10 +629,11 @@
   // Chế độ comment. Chạy ở nơi vẽ bản thiết kế: khổ desktop là trang cha, khổ tablet / mobile là iframe (trang cha gửi
   // lệnh bật tắt bằng postMessage kèm khổ thật). Bật thì cú bấm vào #design không tới page: bấm chọn khối dưới con trỏ,
   // kéo quá 6px chọn hình chữ nhật (khối của vùng là khối nhỏ nhất chứa trọn nó), rồi mở ô viết ngay dưới chỗ chọn.
-  // Gửi: đọc cổng và token trong _listen.js (new-design.mjs listen ghi), hỏi GET /health, POST /comment body text/plain
-  // (Chrome không gửi request kiểm trước). Không ai nghe thì nút Gửi tắt, nút Chép đưa comment kèm chỗ chọn vào bộ nhớ
-  // tạm. Ghim: đọc comments.js mỗi 2 giây như .progress.js; ghim đã sửa chỉ hiện khi đang bật chế độ comment.
-  const comments = { active: false, viewport: "desktop", listen: null, list: [], timer: null, polling: false };
+  // Gửi: đọc _comment-bridge.js (new-design.mjs comment-bridge ghi), hỏi GET /health, POST /comment body text/plain
+  // (Chrome không gửi request kiểm trước). Cầu nối tắt theo session, nên /health lỗi nghĩa là session đã đóng: ô comment
+  // chỉ cách mở lại session cũ hay mở session mới, nút Chép prompt đưa vào bộ nhớ tạm một prompt mang comment kèm chỗ
+  // chọn. Ghim: đọc comments.js mỗi 2 giây như .progress.js; ghim đã sửa chỉ hiện khi đang bật chế độ comment.
+  const comments = { active: false, viewport: "desktop", bridge: { state: "none", info: null }, list: [], timer: null, polling: false };
   const commentKey = `ds-comment:${currentFile}`;
   const commentUi = (className, html = "") => {
     const element = document.createElement("div");
@@ -561,12 +654,31 @@
       tag.onerror = () => (tag.remove(), resolve(false));
       document.head.append(tag);
     });
-  async function checkListen() {
-    window.DS_LISTEN = null;
-    const listen = (await loadScript("_listen.js")) ? window.DS_LISTEN : null;
-    if (!listen?.port) return (comments.listen = null);
-    const ok = await fetch(`http://127.0.0.1:${listen.port}/health`, { signal: AbortSignal.timeout(1500) }).then((res) => res.ok, () => false);
-    return (comments.listen = ok ? listen : null);
+  // Bốn trạng thái: inbox (cầu nối sống, đánh thức được session), saved (cầu nối sống, không có hộp thư), closed (có file
+  // mà cầu nối không trả lời: session đã đóng), none (chưa từng có cầu nối).
+  async function checkBridge() {
+    window.DS_COMMENT_BRIDGE = null;
+    const info = (await loadScript("_comment-bridge.js")) ? window.DS_COMMENT_BRIDGE : null;
+    if (!info?.port) return (comments.bridge = { state: "none", info: null });
+    const health = await fetch(`http://127.0.0.1:${info.port}/health`, { signal: AbortSignal.timeout(1500) }).then((res) => (res.ok ? res.json() : null), () => null);
+    return (comments.bridge = { state: health ? (health.wake === "inbox" ? "inbox" : "saved") : "closed", info });
+  }
+  // Thư mục design là thư mục của page; thư mục dự án là chỗ session đã chạy, hay chỗ chứa .design/ khi chưa có session.
+  const designDir = () => decodeURIComponent(location.pathname).replace(/\/[^/]*$/, "");
+  const projectDir = () => comments.bridge.info?.session?.cwd ?? designDir().replace(/\/\.design\/.*$/, "");
+  function bridgeMessage() {
+    const { state, info } = comments.bridge;
+    if (state === "inbox") return escapeHtml(text.bridgeInbox);
+    if (state === "saved") return escapeHtml(text.bridgeSaved);
+    const code = (value) => `<code>${escapeHtml(value)}</code>`;
+    const lines = (...items) => items.filter(Boolean).map((item) => `<div>${item}</div>`).join("");
+    if (state === "none") return lines(`<b>${escapeHtml(text.bridgeNone)}</b>`, `${escapeHtml(text.bridgeOpen)} ${code(projectDir())}, ${escapeHtml(text.bridgeOpenPaste)}`);
+    const session = info.session ?? {};
+    const at = info.endedAt ? ` ${text.bridgeAt} ${new Date(info.endedAt).toLocaleTimeString(lang === "en" ? "en-GB" : "vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "";
+    const where = [session.entry === "claude-vscode" ? "VS Code" : session.entry === "cli" ? "terminal" : session.entry, session.id && `${text.bridgeCode} ${session.id.slice(0, 8)}`].filter(Boolean).join(" · ");
+    const resume = session.id ? `${code(`claude --resume ${session.id}`)} ${text.bridgeTerminal}` : "";
+    const reopen = session.id ? `${text.bridgeReopen}: ${session.entry === "claude-vscode" ? `${text.bridgeVscode} ` : ""}${resume}.` : "";
+    return lines(`<b>${escapeHtml(text.bridgeClosed + at)}${where ? ` (${escapeHtml(where)})` : ""}.</b>`, reopen, `${escapeHtml(text.bridgeNew)} ${code(projectDir())}.`, escapeHtml(text.bridgePaste));
   }
 
   function cssPath(element) {
@@ -636,33 +748,48 @@
     popover = commentUi("ds-comment-popover", `<div class="ds-comment-where">${text.comment} · ${escapeHtml(where)}</div>
       <textarea rows="3" placeholder="${text.commentPlaceholder}"></textarea>
       <div class="ds-comment-state" data-ds-comment-state></div>
-      <div class="ds-comment-actions"><button type="button" data-act="cancel">${text.cancel}</button><button type="button" data-act="copy">${text.copy}</button><button type="button" data-act="send" class="ds-comment-send" disabled>${text.send}</button></div>`);
-    const width = Math.min(320, root.clientWidth - 16);
-    popover.style.width = `${width}px`;
-    popover.style.left = `${Math.max(8, Math.min(rect.left, root.clientWidth - width - 8)) + scrollX}px`;
-    const below = rect.bottom + 8;
-    popover.style.top = `${(below + 170 > innerHeight ? Math.max(8, rect.top - 178) : below) + scrollY}px`;
+      <div class="ds-comment-actions"><button type="button" data-act="cancel">${text.cancel}</button><button type="button" data-act="copy">${text.copy}</button><button type="button" data-act="send" class="ds-comment-send" disabled>${text.send}</button><button type="button" data-act="prompt" class="ds-comment-send" disabled>${text.copyPrompt}</button></div>`);
+    // Ô rộng 320px khi gửi được; không có cầu nối thì rộng 400px cho phần chỉ đường. Đặt dưới chỗ chọn, thiếu chỗ thì lên trên.
+    // Toạ độ trang lấy lúc mở: lần đặt lại sau khi hỏi cầu nối không lệch dù page đã cuộn trong lúc chờ.
+    const at = { left: rect.left + scrollX, top: rect.top + scrollY, bottom: rect.bottom + scrollY, viewTop: rect.top, viewBottom: rect.bottom, scrollY };
+    const place = (wide) => {
+      const width = Math.min(wide ? 400 : 320, root.clientWidth - 16);
+      popover.style.width = `${width}px`;
+      popover.style.left = `${Math.max(8, Math.min(at.left - scrollX, root.clientWidth - width - 8)) + scrollX}px`;
+      const height = popover.offsetHeight;
+      const above = at.viewBottom + 8 + height > innerHeight;
+      popover.style.top = `${above ? Math.max(at.scrollY + 8, at.top - height - 8) : at.bottom + 8}px`;
+    };
     const area = popover.querySelector("textarea");
     const state = popover.querySelector("[data-ds-comment-state]");
     const sendButton = popover.querySelector('[data-act="send"]');
-    area.focus();
+    const promptButton = popover.querySelector('[data-act="prompt"]');
+    const copyButton = popover.querySelector('[data-act="copy"]');
+    place(!["inbox", "saved"].includes(comments.bridge.state));
+    area.focus({ preventScroll: true });
     const payload = () => ({ page: currentFile, url: queryFor(currentValues()), viewport: currentValues().viewport, theme: currentValues().theme, target, body: area.value.trim() });
+    // Cầu nối sống: Huỷ · Chép · Gửi. Không có cầu nối: Huỷ · Chép prompt.
     const showListen = () => {
-      state.textContent = comments.listen ? text.listening : text.notListening;
-      state.dataset.listening = comments.listen ? "1" : "0";
-      sendButton.disabled = !comments.listen || !area.value.trim();
+      const live = ["inbox", "saved"].includes(comments.bridge.state);
+      state.innerHTML = bridgeMessage();
+      state.dataset.bridge = comments.bridge.state;
+      sendButton.hidden = copyButton.hidden = !live;
+      promptButton.hidden = live;
+      sendButton.disabled = promptButton.disabled = !area.value.trim();
+      place(!live);
     };
     area.addEventListener("input", showListen);
     showListen();
-    checkListen().then(() => popover && showListen());
+    checkBridge().then(() => popover && showListen());
     const send = async () => {
-      if (sendButton.disabled) return;
+      if (sendButton.disabled || sendButton.hidden) return;
       sendButton.disabled = true;
       state.textContent = text.sending;
       const body = payload();
-      const res = await fetch(`http://127.0.0.1:${comments.listen.port}/comment`, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ ...body, token: comments.listen.token }) }).catch(() => null);
+      const { info } = comments.bridge;
+      const res = await fetch(`http://127.0.0.1:${info.port}/comment`, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ ...body, token: info.token }) }).catch(() => null);
       if (res?.status !== 201) {
-        await checkListen();
+        await checkBridge();
         showListen();
         state.textContent = `${text.sendFailed}${res ? ` (${res.status})` : ""} · ${state.textContent}`;
         return;
@@ -677,9 +804,21 @@
       const act = event.target.closest("[data-act]")?.dataset.act;
       if (act === "cancel") closePopover();
       if (act === "send") send();
-      if (act === "copy") {
+      if (act === "copy" || (act === "prompt" && !promptButton.disabled)) {
         const body = payload();
-        const line = `Comment trên ${body.page}${body.url} · ${where} \`${target.selector}\`${target.text ? ` "${target.text}"` : ""}: ${body.body}`;
+        const place = `${where} \`${target.selector}\`${target.text ? ` "${target.text}"` : ""}`;
+        // Prompt dán được vào session cũ lẫn session mới: dòng đầu gọi skill, dòng comment-json để agent ghi bằng comment --add.
+        const line =
+          act === "copy"
+            ? `Comment trên ${body.page}${body.url} · ${place}: ${body.body}`
+            : [
+                "/design-uiux Sửa page theo comment chép từ page, rồi bật lại cầu nối comment.",
+                `Thư mục design: ${designDir()}`,
+                `Page: ${body.page}${body.url}`,
+                `Chỗ chọn: ${place}`,
+                `Comment: ${body.body}`,
+                `comment-json: ${JSON.stringify(body)}`,
+              ].join("\n");
         try {
           await navigator.clipboard.writeText(line);
         } catch {
@@ -793,6 +932,33 @@
   });
   window.addEventListener("resize", () => pinLayer && renderPins());
 
+  // Ẩn shell: phím \ bật tắt, như Cmd+\ của Figma; nhận cả khi có Ctrl, Cmd, Alt vì vài bàn phím gõ \ bằng Alt. Esc
+  // không hiện lại shell: người xem ẩn shell để xem modal của page, Esc đóng modal thì shell bật lại ngoài ý muốn. Đang
+  // gõ hay đang viết comment thì \ là chữ. Trong khung mobile / tablet, phím nhấn trong iframe nhờ trang cha bật tắt.
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "\\" || event.repeat || event.defaultPrevented) return;
+    if (popover || document.activeElement?.matches?.(typingSelector)) return;
+    event.preventDefault();
+    if (isFrame) parent.postMessage({ type: "design:shell-toggle" }, "*");
+    else Alpine.store("shell").hidden = !Alpine.store("shell").hidden;
+  });
+  // Trang cha: ẩn shell thì tắt chế độ comment (nó chặn cú bấm vào page), báo khung mobile / tablet để ẩn ghim trong
+  // khung, hiện lại thì đo lại mép thanh vì lúc ẩn thanh không có bề rộng.
+  function syncShell() {
+    if (isFrame || !window.Alpine) return;
+    const hidden = Alpine.store("shell").hidden;
+    root.toggleAttribute("data-shell-hidden", hidden);
+    try {
+      sessionStorage.setItem(shellKey, hidden ? "1" : "0");
+    } catch {}
+    if (hidden) Alpine.store("comment").on = false;
+    else requestAnimationFrame(() => alignBar(Alpine.store("design").viewport));
+    frame?.contentWindow?.postMessage({ type: "design:shell", hidden }, "*");
+  }
+  window.addEventListener("message", (event) => {
+    if (isFrame && event.data?.type === "design:shell") root.toggleAttribute("data-shell-hidden", Boolean(event.data.hidden));
+  });
+
   // Trang cha: chế độ comment chạy ở đây khi khổ desktop, trong iframe khi khổ tablet / mobile; nhắc cách dùng ở đáy màn.
   function syncComment() {
     if (isFrame || !window.Alpine) return;
@@ -864,6 +1030,7 @@
       commentWasOn = !isFrame && sessionStorage.getItem(commentKey) === "1";
     } catch {}
     Alpine.store("comment", { on: commentWasOn });
+    Alpine.store("shell", { hidden: shellWasHidden });
     if (!document.body.hasAttribute("x-data")) document.body.setAttribute("x-data", "");
     if (!isFrame) {
       document.body.insertAdjacentHTML("afterbegin", toolbarHtml());
@@ -896,6 +1063,10 @@
         Alpine.store("comment").on;
         Alpine.store("design").viewport;
         syncComment();
+      });
+      Alpine.effect(() => {
+        Alpine.store("shell").hidden;
+        syncShell();
       });
     }
   });

@@ -1,4 +1,4 @@
-/* shell: toolbar (option-switcher, view-controller), panel (data-panel, config-panel), khung mobile / tablet, số
+/* shell: toolbar (option-switcher, view-controller), panel (data-panel, layout-panel), khung mobile / tablet, số
    khối. Tên các khối: SKILL.md, mục "Các khối điều khiển". toolbar và panel nằm ngoài bản thiết kế nên dùng màu trung tính
    riêng, không dùng token của design system: đổi design system không đổi chúng.
    shell theo sáng tối của page nhưng khác tông: page sáng thì shell nền xám, page tối thì shell xám sáng hơn nền
@@ -35,7 +35,7 @@
   --ds-frame-line: #2c2e33;
 }
 
-/* Thanh trên cùng: nút mở data-panel · toolbar (option-switcher giữa, view-controller phải) · nút mở config-panel. Hai
+/* Thanh trên cùng: nút mở data-panel · toolbar (option-switcher giữa, view-controller phải) · nút mở layout-panel. Hai
    mép thẳng mép chữ của trang (shell.js đo, ghi vào --ds-edge-left / --ds-edge-right), không sát mép màn hình.
    Không vừa một dòng thì shell.js đặt data-stack: hai nút mở panel ở dòng trên, toolbar nguyên khối ở dòng dưới. */
 .ds-bar {
@@ -83,7 +83,7 @@
   .ds-bar .ds-comment-toggle { width: 32px; padding: 0; justify-content: center; }
 }
 
-/* panel: data-panel ở mép trái, config-panel ở mép phải. Gập thì bấm nút trên toolbar mới mở, thẻ trồi ngay dưới
+/* panel: data-panel ở mép trái, layout-panel ở mép phải. Gập thì bấm nút trên toolbar mới mở, thẻ trồi ngay dưới
    toolbar dù toolbar cao bao nhiêu. */
 .ds-panel {
   position: absolute;
@@ -105,6 +105,11 @@
 .ds-panel[data-ds-panel="variables"] { left: 12px; }
 .ds-panel[data-ds-panel="tweaks"] { right: 12px; }
 .ds-panel[data-open] { display: flex; }
+.ds-panel-head { display: flex; align-items: center; justify-content: space-between; min-height: 24px; }
+/* Nút về mặc định của panel: nhỏ, nằm cùng dòng tiêu đề. Panel đã ở mặc định thì nút mờ đi, không bấm được. */
+.ds-panel-reset { display: inline-grid; place-items: center; width: 24px; height: 24px; margin: -4px -4px -4px 0; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--ds-bar-muted); cursor: pointer; }
+.ds-panel-reset:hover:not(:disabled) { background: var(--ds-bar-field); color: var(--ds-bar-fg); }
+.ds-panel-reset:disabled { opacity: 0.35; cursor: default; }
 .ds-panel-title { margin: 0; color: var(--ds-bar-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 /* Hai nút mở panel rộng bằng nhau để toolbar ở giữa cân hai bên, A B C nằm đúng giữa trang. */
 .ds-panel-toggle { display: inline-flex; justify-content: center; min-width: 108px; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-bg); cursor: pointer; }
@@ -281,6 +286,10 @@
 .ds-status-list li[data-step="current"] { color: var(--ds-bar-accent); font-weight: 600; }
 /* Việc con của bước dở: thẳng mép chữ của bước ở trên (bỏ qua cột dấu ● 1em + gap 8px), chữ nhỏ và nhạt hơn. */
 .ds-status-list li[data-step="doing"] { margin-top: -2px; padding-left: calc(1em + 8px); color: var(--ds-bar-muted); font-size: 12px; }
+/* Mục góp ý và các việc agent đã làm cho nó: việc thụt dưới mục, chữ nhỏ hơn; việc đang làm màu accent. Việc kiểm đầy
+   đủ cuối mục không có dòng (shell.js bỏ đi), chỉ hiện trên nhãn lúc đang chạy. */
+.ds-status-list li.ds-status-action { padding-left: calc(1em + 8px); font-size: 12px; }
+.ds-status-list li.ds-status-action[data-step="current"] { font-weight: 400; }
 .ds-status-list .ds-status-round { margin-top: 4px; color: var(--ds-bar-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .ds-status-list .ds-status-round:first-child { margin-top: 0; }
 .ds-status-list .ds-status-edited { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--ds-bar-line); color: var(--ds-bar-muted); font-size: 12px; }
@@ -350,32 +359,9 @@
 /* content-box: preflight của Tailwind đặt border-box cho mọi phần tử, viền 1px ăn vào bề rộng, khung 375 còn 373. */
 .ds-frame-wrap iframe { box-sizing: content-box; max-width: none; border: 1px solid var(--ds-frame-line); border-radius: 20px; background: transparent; box-shadow: 0 8px 32px rgb(0 0 0 / 0.16); }
 
-/* Số khối để góp ý ("bỏ khối 3"). Nằm ngay trên mép trên của khối nên không đè chữ. position trong layer base: rule ngoài layer
-   thắng mọi utility Tailwind, sticky / absolute của khối sẽ thành relative. */
-@layer base {
-  :root[data-sections="1"] [data-block] { position: relative; }
-}
-
 /* Tailwind v4 không còn đặt cursor: pointer cho nút. Để trong layer base nên class cursor-* của page vẫn đè được (UX9). */
 @layer base {
   #design button:not(:disabled), #design [role="button"]:not([aria-disabled="true"]), #design summary { cursor: pointer; }
-}
-:root[data-sections="1"] [data-block]::before {
-  content: attr(data-block);
-  position: absolute;
-  top: -20px;
-  left: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: #1f2328;
-  color: #fff;
-  font: 600 11px/1 ui-sans-serif, system-ui, sans-serif;
-  pointer-events: none;
 }
 
 [data-copied] [data-icon="copy"], [data-copy]:not([data-copied]) [data-icon="copied"] { display: none; }
@@ -430,8 +416,11 @@
 .ds-comment-popover textarea { width: 100%; padding: 8px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-field); color: inherit; font: inherit; resize: vertical; }
 .ds-comment-popover textarea:focus-visible { outline: 2px solid var(--ds-bar-accent); outline-offset: 0; }
 .ds-comment-state { color: var(--ds-bar-muted); font-size: 12px; }
-.ds-comment-state[data-listening="1"] { color: #15803d; }
-:root[data-theme="dark"] .ds-comment-state[data-listening="1"] { color: #4ade80; }
+.ds-comment-state[data-bridge="inbox"] { color: #15803d; }
+.ds-comment-state code { padding: 0 3px; border-radius: 4px; background: var(--ds-bar-field); font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.ds-comment-state div + div { margin-top: 4px; }
+.ds-comment-state b { color: var(--ds-bar-fg); font-weight: 600; }
+:root[data-theme="dark"] .ds-comment-state[data-bridge="inbox"] { color: #4ade80; }
 .ds-comment-actions { display: flex; justify-content: flex-end; gap: 6px; }
 .ds-comment-actions button { height: 30px; padding: 0 12px; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-field); color: inherit; font: inherit; cursor: pointer; }
 .ds-comment-actions .ds-comment-send { border-color: var(--ds-bar-accent); background: var(--ds-bar-accent); color: #fff; font-weight: 600; }
@@ -453,3 +442,22 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+
+/* Ẩn shell (shell.js đặt data-shell-hidden trên <html>, cả trong khung mobile / tablet): toolbar, panel, ghim, dòng nhắc
+   comment, khung giải thích biến mất; page và khung máy giữ nguyên. Nút ẩn đứng cuối view-controller, chỉ có icon.
+   Lúc ẩn chỉ còn nút hiện lại ở góc trên phải: mờ để không đè bản thiết kế, rê hay Tab tới thì rõ. Page chưa xong thì
+   nút có chấm accent và vòng lan như chấm của nhãn tiến độ. */
+:root[data-shell-hidden] :is(.ds-bar, .ds-comment-pins, .ds-comment-hint, .ds-help-tip) { display: none !important; }
+:root[data-shell-hidden] .ds-frame-wrap { min-height: 100vh; }
+.ds-shell-hide { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--ds-bar-line); border-radius: 8px; background: var(--ds-bar-bg); color: var(--ds-bar-fg); cursor: pointer; }
+.ds-shell-hide:hover { background: var(--ds-bar-field); }
+.ds-shell-show { position: fixed; top: 12px; right: 12px; z-index: 1000; display: none; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--ds-bar-edge); border-radius: 8px; background: var(--ds-bar-bg); color: var(--ds-bar-fg); color-scheme: var(--ds-bar-scheme); box-shadow: 0 2px 8px rgb(0 0 0 / 0.16); opacity: 0.45; cursor: pointer; transition: opacity 0.15s; }
+:root[data-shell-hidden]:not([data-frame]) .ds-shell-show { display: grid; }
+.ds-shell-show:hover, .ds-shell-show:focus-visible { opacity: 1; }
+.ds-shell-show:focus-visible { outline: 2px solid var(--ds-bar-accent); outline-offset: 1px; }
+.ds-shell-show svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ds-shell-show-dot { position: absolute; top: -3px; right: -3px; display: none; width: 9px; height: 9px; border: 2px solid var(--ds-bar-bg); border-radius: 50%; background: var(--ds-bar-accent); }
+.ds-shell-show[data-state]:not([data-state="done"]) { opacity: 0.8; }
+.ds-shell-show[data-state]:not([data-state="done"]) .ds-shell-show-dot { display: block; }
+.ds-shell-show-dot::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; background: var(--ds-bar-accent); animation: ds-ripple 1.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ds-shell-show-dot::after { animation: none; } }
