@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/references/build-page.md, skills/design-uiux/scripts/check.mjs, .plan/013-design-uiux-bai-mau-mac-dinh.md, .plan/014-design-uiux-rut-gon-skill-md.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/references/build-page.md, skills/design-uiux/scripts/check.mjs, .plans/013-design-uiux-bai-mau-mac-dinh.md, .plans/014-design-uiux-rut-gon-skill-md.md]
 supersedes: []
 ---
 
@@ -80,19 +80,19 @@ flowchart LR
 ### P1 — Một lần kiểm đầy đủ tốn thời gian ở lượt nào?
 
 **Biết để làm gì:** lượt tổ hợp chiếm phần lớn thì chia tổ hợp ra nhiều tab; lượt bấm chiếm phần lớn thì sửa cách bấm.
-**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probe/015-design-uiux-tang-toc/P1-luot-ton-thoi-gian/probe.mjs` (chép `check.mjs` của `before-skill/`, chèn mốc giờ trước mỗi lượt, chạy trên `corpus/c2-mot-page-063`)
+**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probes/015-design-uiux-tang-toc/P1-luot-ton-thoi-gian/probe.mjs` (chép `check.mjs` của `before-skill/`, chèn mốc giờ trước mỗi lượt, chạy trên `corpus/c2-mot-page-063`)
 **Kết quả:** 105 giây: khởi động, lượt tĩnh, đo 1920px 21,6s · vặn từng nút 13,8s · 122 tổ hợp hai khổ ~11s · lượt bấm 33 nút × 2 khổ ~55s — 2026-10-09, Node 24.14.1, Chrome 141. Bản `check.mjs` của `670ae63` (chưa có lượt bấm, lượt vặn) kiểm cùng page trong 30,3s; shell cũ hay mới đều 84s.
 
 ### P2 — Lỗi của lần kiểm đầy đủ đầu tiên nằm ở khổ nào?
 
 **Biết để làm gì:** lỗi phần lớn ở khổ mobile thì kiểm nhanh đo thêm khổ mobile là đáng; ít thì giữ kiểm nhanh một khổ.
-**Cách chạy lại:** `node .probe/015-design-uiux-tang-toc/P2-loi-kho-375/probe.mjs` (đọc transcript trong `~/.claude/projects`)
+**Cách chạy lại:** `node .probes/015-design-uiux-tang-toc/P2-loi-kho-375/probe.mjs` (đọc transcript trong `~/.claude/projects`)
 **Kết quả:** 20 agent dựng page, 13 agent có lỗi ở lần đầu, 127 dòng lỗi: 102 dòng có chỗ ở 375px, 84 dòng chỉ ở 375px; 12/13 agent có ít nhất một lỗi chỉ ở 375px — 2026-10-09, `P2-loi-kho-375/probe.log`
 
 ### P3 — Chia lượt bấm ra mấy tab thì nhanh nhất mà vẫn ra đúng lỗi?
 
 **Biết để làm gì:** thêm tab không nhanh hơn (máy nghẽn) thì giữ một tab mỗi khổ; nhanh hơn thì chọn số tab nhỏ nhất đạt gần hết mức nhanh.
-**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probe/015-design-uiux-tang-toc/P3-so-tab/probe.mjs 1,2,3` (chạy `corpus/run.mjs` với `CHECK_CLICK_LANES` = 1, 2, 3, so với `results/before`)
+**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probes/015-design-uiux-tang-toc/P3-so-tab/probe.mjs 1,2,3` (chạy `corpus/run.mjs` với `CHECK_CLICK_LANES` = 1, 2, 3, so với `results/before`)
 **Kết quả:** tổng 5 ca, bản trước 684,1s: 1 tab 295,3s (43%) · 2 tab 231,4s (34%) · 3 tab 203,3s (30%); cả ba khớp từng dòng lỗi — 2026-10-09, Node 24.14.1, `P3-so-tab/probe.log`
 
 ## 5. Decisions
@@ -138,7 +138,7 @@ flowchart LR
 
 ### DS1 — Test Strategy
 
-Bộ kiểm ở `.probe/015-design-uiux-tang-toc/corpus/`: thư mục design chép từ các lượt chạy cũ trong `.test/`, kèm shell.
+Bộ kiểm ở `.probes/015-design-uiux-tang-toc/corpus/`: thư mục design chép từ các lượt chạy cũ trong `.tests/`, kèm shell.
 
 | Ca | Từ lượt | Thử gì |
 | -- | ------- | ------ |
@@ -149,9 +149,9 @@ Bộ kiểm ở `.probe/015-design-uiux-tang-toc/corpus/`: thư mục design ch�
 | `c5-gai-loi` | `068` + `inject-faults.mjs` | 4 lỗi chỉ lượt bấm, lượt rê, khổ 375 bắt được |
 
 ```bash
-PW_DIR=$TMPDIR/design-uiux-pw node .probe/015-design-uiux-tang-toc/corpus/run.mjs .probe/015-design-uiux-tang-toc/before-skill/scripts before
-PW_DIR=$TMPDIR/design-uiux-pw node .probe/015-design-uiux-tang-toc/corpus/run.mjs skills/design-uiux/scripts after --args --fresh
-node .probe/015-design-uiux-tang-toc/corpus/run.mjs --compare before after
+PW_DIR=$TMPDIR/design-uiux-pw node .probes/015-design-uiux-tang-toc/corpus/run.mjs .probes/015-design-uiux-tang-toc/before-skill/scripts before
+PW_DIR=$TMPDIR/design-uiux-pw node .probes/015-design-uiux-tang-toc/corpus/run.mjs skills/design-uiux/scripts after --args --fresh
+node .probes/015-design-uiux-tang-toc/corpus/run.mjs --compare before after
 ```
 
 `before-skill/` là bản chụp `scripts/`, `references/`, `shell/` lúc bắt đầu plan. Đáp án là danh sách dòng lỗi đã sắp
@@ -269,4 +269,4 @@ Khoá nhớ: sha256 của page, `tokens.js`, `pages.js`, bảng nút dữ liệu
 - [x] 🤖 §2 bullet 6: `run-log.mjs` trên thư mục design của lượt nghiệm thu ra bảng sáu bước, khớp timeline gom từ transcript trong vòng vài giây — BH6 — 2026-10-09: bảng ra chuẩn bị + 6 bước; bước 1 xong 17:08:26 theo `run.log`, 17:08:27 theo `progress.log` của `watch-progress.mjs`
 - [ ] 🤖 bài 04 xong trong 12 phút, `result.md` cùng kết quả với `065` — D0
   Chưa đạt vế sau — 2026-10-09: 11'39" (đạt vế thời gian), nhưng `result.md` 4/5, `065` 5/5. C2 "chat in danh sách design" trượt; lượt `068` trước plan cũng trượt mục này khi chạy bằng `claude -p`, nên không do plan này. Ghi thành `PQ-05`.
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/015-design-uiux-tang-toc.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/015-design-uiux-tang-toc.md` — 0 ERROR

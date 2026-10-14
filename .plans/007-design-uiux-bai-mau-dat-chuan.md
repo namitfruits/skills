@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.2
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/samples/README.md, .plan/005-design-uiux-spec-skill-dong-bo.md, .plan/006-design-uiux-sua-loi-nghiem-thu-005.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/samples/README.md, .plans/005-design-uiux-spec-skill-dong-bo.md, .plans/006-design-uiux-sua-loi-nghiem-thu-005.md]
 supersedes: []
 ---
 
@@ -105,7 +105,7 @@ flowchart LR
 
 ### D7 🤖 — Lịch sử chạy ở `samples/history.md`, commit cùng repo
 
-**Lý do:** `.test/` bị gitignore. → DS4
+**Lý do:** `.tests/` bị gitignore. → DS4
 
 ### D8 🤖 — Mọi lượt chạy của plan này dùng một bản chụp cố định của skill
 
@@ -144,7 +144,7 @@ cuối `✓ N sub-scope · M dòng quan sát` hay danh sách lỗi.
 | Cột | Ghi |
 | --- | --- |
 | `Mã` | một hay vài sub-scope, hay `—` |
-| `Mở file` | đường dẫn trong thư mục chạy thử: `chat.md`, `.design/*/brief.md`, `check.log`, `subagent-*.md`, `shots/` |
+| `Mở file` | đường dẫn trong thư mục chạy thử: `chat.md`, `.design-uiux/*/brief.md`, `check.log`, `subagent-*.md`, `shots/` |
 | `Đạt khi` | điều đếm được ("≥ 2 page"), có hay không có một chuỗi ("có dòng `G6`"), hay so hai chỗ ("`pages.js` khớp `## Pages`") |
 
 Người chạy phải để lại trong thư mục chạy thử: `chat.md` (mọi chữ in ra chat, đánh số dòng được), `check.log` (lần
@@ -162,7 +162,7 @@ Ngày: 2026-10-08 · Bản skill: <commit> + SKILL.md <8 ký tự sha256> · Ng�
 | # | Mã | Kết quả | Bằng chứng |
 | - | -- | ------- | ---------- |
 | Q1 | `F1.7` `F3.1` | đạt | `chat.md` dòng 3: "Đọc: design system từ `src/styles/tokens.css`…" |
-| G1 | `F4.1` | trượt | `.design/001-don-hang/` có thêm `04-gom-hoa-toc.html` |
+| G1 | `F4.1` | trượt | `.design-uiux/001-don-hang/` có thêm `04-gom-hoa-toc.html` |
 ```
 
 `#` là `Q<n>` theo thứ tự dòng ở `## Quan sát`, `G<n>` ở `## Vòng góp ý`. `Kết quả` ∈ `đạt` · `trượt` · `không chạm`.
@@ -188,7 +188,7 @@ node skills/design-uiux/samples/prepare.mjs <bài> [--skills <thư mục chứa 
 
 | Việc | Kết quả |
 | ---- | ------- |
-| tạo thư mục | `.test/design-uiux/NNN-sample-<bài>[-<slug>]/`, `NNN` = số lớn nhất đang có + 1 |
+| tạo thư mục | `.tests/design-uiux/NNN-sample-<bài>[-<slug>]/`, `NNN` = số lớn nhất đang có + 1 |
 | chép đầu vào | nội dung `project/` của bài nếu có; không chép `sample.md` |
 | trỏ skill | `.claude/skills` → `--skills` (mặc định `skills/` của repo) |
 | in ra stdout | JSON `{ dir, prompt, feedback: [...] }`: khối ```` ```text ```` dưới `## Đề` và dưới `## Vòng góp ý` |
@@ -228,7 +228,7 @@ Patch không áp được vì SKILL.md đã đổi thì viết lại patch, gi�
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` exit 0, PLANS.md đếm thêm một việc `approved` — 28 sub-scope · 5 approved (trước 4)
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR — 2026-10-08, sạch
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR — 2026-10-08, sạch
 
 ### Phase 1 — phủ đủ yêu cầu
 
@@ -273,7 +273,7 @@ Patch không áp được vì SKILL.md đã đổi thì viết lại patch, gi�
 
 Thư mục chạy thử của plan này tạo trước khi `samples/` đổi tên tiếng Anh, nên vẫn dùng tên cũ: `NNN-mau-<bài>-<slug>/`,
 `ket-qua.md`, `agent-con-*.md`, `check-truoc-gop-y.log`. Chấm bằng bảng cố định cho bản skill `a07e3f8a` ở
-`.test/design-uiux/mau-a07e3f8a/` (bài 01, 03) và bảng lúc chấm (bài 02): plan 008 viết lại bảng trong repo theo hành vi
+`.tests/design-uiux/mau-a07e3f8a/` (bài 01, 03) và bảng lúc chấm (bài 02): plan 008 viết lại bảng trong repo theo hành vi
 skill mới, chấm bản cũ bằng bảng mới thì trượt oan.
 
 **Actions:**
@@ -332,4 +332,4 @@ skill mới, chấm bản cũ bằng bảng mới thì trượt oan.
 - [ ] 🤖 §2 bullet 4: ba cặp `lan-1` / `lan-2` cùng kết luận
   Hai trên ba cặp; bài 02 lệch Q4 do skill (PQ-03).
 - [x] 🤖 §2 bullet 5: `history.md` có 10 dòng, mỗi dòng đủ cột · BH4 — 2026-10-08, 13 dòng (6 lượt gốc, 7 lượt gài lỗi)
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/007-design-uiux-bai-mau-dat-chuan.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN

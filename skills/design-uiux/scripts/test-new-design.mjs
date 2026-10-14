@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Kiểm hai lệnh lấy design của getdesign trong new-design.mjs: designs và init --getdesign. Mỗi ca chạy lệnh trong một
-// thư mục tạm là git repo, rồi so mã thoát, stdout, stderr và thư mục .design/ với mong đợi. Cần mạng để npx tải gói
+// thư mục tạm là git repo, rồi so mã thoát, stdout, stderr và thư mục .design-uiux/ với mong đợi. Cần mạng để npx tải gói
 // getdesign; ca npx hỏng (exit 2) trỏ npm vào một cổng không có gì nghe. Chạy sau mỗi lần sửa phần getdesign của new-design.mjs.
 //
 //   node test-new-design.mjs
@@ -27,7 +27,7 @@ function run(cwd, params, env = {}) {
   return { code: result.status, out: result.stdout, err: result.stderr };
 }
 
-const designDirs = (cwd) => (existsSync(join(cwd, ".design")) ? readdirSync(join(cwd, ".design")).filter((name) => /^\d{3}-/.test(name)) : []);
+const designDirs = (cwd) => (existsSync(join(cwd, ".design-uiux")) ? readdirSync(join(cwd, ".design-uiux")).filter((name) => /^\d{3}-/.test(name)) : []);
 
 const cases = [
   ["G1 designs in các bộ có token, bỏ bộ chỉ có chữ", () => {
@@ -42,7 +42,7 @@ const cases = [
       [/bỏ \(chỉ có chữ, không có token\): .*kraken/.test(err), "stderr không kể kraken bị bỏ"],
     ];
   }],
-  ["G2 init --getdesign claude chép DESIGN.md vào thư mục design, không ghi ra ngoài .design/", () => {
+  ["G2 init --getdesign claude chép DESIGN.md vào thư mục design, không ghi ra ngoài .design-uiux/", () => {
     const cwd = workDir();
     const { code, out } = run(cwd, ["init", "thu", "--getdesign", "claude"]);
     const dir = out.trim();
@@ -52,7 +52,7 @@ const cases = [
       [code === 0, `exit ${code}, mong 0`],
       [existsSync(join(dir, "DESIGN.md")), "thư mục design thiếu DESIGN.md"],
       [tokens.includes('"source":"getdesign claude"'), 'tokens.js thiếu "source":"getdesign claude"'],
-      [status === "?? .design/", `git status ngoài .design/: ${JSON.stringify(status)}`],
+      [status === "?? .design-uiux/", `git status ngoài .design-uiux/: ${JSON.stringify(status)}`],
     ];
   }],
   ["G3 init --getdesign tên lạ: exit 1, không tạo thư mục", () => {

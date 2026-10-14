@@ -83,8 +83,8 @@ khác của máy kiểm.
 
 **Biết để làm gì:** nếu báo nhầm ít, máy kiểm chỉ cần bỏ qua thứ đang được chọn sẵn. Nếu báo nhầm nhiều (nút bật
 tắt, nút mở thứ nằm ngoài page, nút chép), thì cần thêm luật bỏ qua, hoặc lỗi này chỉ là cảnh báo cho agent soát tay.
-**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probe/019-design-uiux-bam-nhu-that/P1-bam-khong-doi/probe3.mjs`.
-Thư mục `input/` chứa page chép từ `.test/design-uiux/058`, `064`, `071`, `076`, `077`. Ở mỗi page, script bấm từng thứ bấm được
+**Cách chạy lại:** `PW_DIR=$TMPDIR/design-uiux-pw node .probes/019-design-uiux-bam-nhu-that/P1-bam-khong-doi/probe3.mjs`.
+Thư mục `input/` chứa page chép từ `.tests/design-uiux/058`, `064`, `071`, `076`, `077`. Ở mỗi page, script bấm từng thứ bấm được
 theo cách lượt bấm của `check.mjs` chọn, so page trước và sau, rồi in các nút bị báo.
 **Kết quả:** 0 báo nhầm trên 391 cú bấm ở 9 page; 24 cú bấm bỏ qua vì thứ được bấm đang được chọn sẵn
 (`probe3.log`, 2026-10-14, Chrome 155, Playwright 1.64). Hai lần đo trước báo nhầm 16 nút vì cách chụp ảnh của probe.
@@ -213,7 +213,7 @@ node skills/design-uiux/scripts/test-check.mjs
 **Gate:**
 
 - [x] 🤖 `grep -n "F3.10\|F5.12\|F5.13" skills/design-uiux/SPEC.md` ra cả ở Feature requirement và Technical design — 2026-10-14: dòng 66, 82, 83, 273, 327, 489, 495
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/019-design-uiux-bam-nhu-that.md` — 0 ERROR — 2026-10-14
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/019-design-uiux-bam-nhu-that.md` — 0 ERROR — 2026-10-14
 
 ### Phase 1 — máy kiểm bắt cú bấm không đổi gì
 
@@ -229,7 +229,7 @@ node skills/design-uiux/scripts/test-check.mjs
 **Gate:**
 
 - [x] 🤖 `node skills/design-uiux/scripts/test-check.mjs` exit 0, C30 và C33 báo, C31 và C32 không báo — DS2 · DS3 · BH4 · BH5 · BH6 · BH7 — 2026-10-14: 33 ca, 0 trượt, 213 giây. Log 21 ca cũ có "không có lúc chờ" ở nút Thử lại, Tải lại, Gửi báo cáo của page mẫu: đúng luật mới; "không đổi gì" chỉ ở C30
-- [x] 🤖 bản chép page 076: `--quick --preset "Không có lịch hẹn nào" --click "Tải lại lịch"` báo "không đổi gì"; kiểm đầy đủ báo "Tải lại lịch" và "Thử lại" không có lúc chờ — DS2 · BH4 · BH7 — 2026-10-14, `.test/design-uiux/078-check-076-bam-nhu-that/`: kiểm nhanh 2 lỗi, 3,6 giây; kiểm đầy đủ 3 lỗi, 158 tổ hợp, 26,7 giây, cả "không đổi gì" ở `count=0`
+- [x] 🤖 bản chép page 076: `--quick --preset "Không có lịch hẹn nào" --click "Tải lại lịch"` báo "không đổi gì"; kiểm đầy đủ báo "Tải lại lịch" và "Thử lại" không có lúc chờ — DS2 · BH4 · BH7 — 2026-10-14, `.tests/design-uiux/078-check-076-bam-nhu-that/`: kiểm nhanh 2 lỗi, 3,6 giây; kiểm đầy đủ 3 lỗi, 158 tổ hợp, 26,7 giây, cả "không đổi gì" ở `count=0`
 
 ### Phase 2 — luật dựng page
 
@@ -254,7 +254,7 @@ node skills/design-uiux/scripts/test-check.mjs
 
 **Actions:**
 
-- [x] 🤖 chạy bài `samples/04-quick-screen` ở `--auto`, kết quả ở `.test/design-uiux/079-sample-04-quick-screen-nghiem-thu-019/` — 2026-10-14: 957 giây, 55 lượt, giao một page; `run.log`: `--click "Làm mới danh sách"` ở `state=empty` 1 lỗi rồi 0 lỗi
+- [x] 🤖 chạy bài `samples/04-quick-screen` ở `--auto`, kết quả ở `.tests/design-uiux/079-sample-04-quick-screen-nghiem-thu-019/` — 2026-10-14: 957 giây, 55 lượt, giao một page; `run.log`: `--click "Làm mới danh sách"` ở `state=empty` 1 lỗi rồi 0 lỗi
 - [ ] 👤 Andy mở page của lượt đó, bấm Tải lại ở cảnh rỗng và Thử lại ở cảnh lỗi
 
 **Gate** — một dòng ứng một bullet §2:
@@ -266,4 +266,4 @@ node skills/design-uiux/scripts/test-check.mjs
 - [x] 🤖 §2 bullet 4: kiểm đầy đủ lượt 079 không có lỗi "không có lúc chờ"; bản 076 gốc có — BH7 — 2026-10-14: 079 0 lỗi; 078 báo "Tải lại lịch" và "Thử lại" ở 4 chỗ
 - [x] 🤖 §2 bullet 5: kiểm đầy đủ lượt 079 không báo tab đang chọn — BH5 — 2026-10-14: tab "Tất cả 30" đang chọn, kiểm đầy đủ 0 lỗi
 - [x] 🤖 §2 bullet 6: `shots/` của lượt 079 không có ảnh khung chờ sau cú bấm — BH6 — 2026-10-14: `--quick --click "Tải lại lịch"` ra `01-bang-lich-hen--quick-click.png` là bảng 30 ca, không khung chờ
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/019-design-uiux-bam-nhu-that.md` — 0 ERROR — 2026-10-14
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/019-design-uiux-bam-nhu-that.md` — 0 ERROR — 2026-10-14

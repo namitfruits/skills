@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .probe/010-design-uiux-chon-design-getdesign/]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .probes/010-design-uiux-chon-design-getdesign/]
 supersedes: []
 ---
 
@@ -16,7 +16,7 @@ Khi đề không nói dùng design system nào và thư mục làm việc không
 định của nó: nền trung tính, một màu nhấn xanh, chữ Inter. Mọi prototype dựng kiểu đó trông giống hệt nhau, dù đề là
 app tài chính hay app nghe nhạc. Người dùng không được hỏi, cũng không biết có lựa chọn khác. getdesign.md có sẵn 76
 bộ design tải về được bằng một lệnh, nhưng skill chỉ dùng tới khi đề tự ghi lệnh đó. Khi đề ghi lệnh, skill tải file
-ra thẳng thư mục làm việc, ngoài thư mục `.design/` mà skill hứa chỉ ghi vào đó.
+ra thẳng thư mục làm việc, ngoài thư mục `.design-uiux/` mà skill hứa chỉ ghi vào đó.
 
 ## 2. Goal
 
@@ -25,7 +25,7 @@ ra thẳng thư mục làm việc, ngoài thư mục `.design/` mà skill hứa 
   design hợp đề nhất, đáp án khuyên dùng đứng đầu. Người dùng gõ được tên khác trong danh sách.
 - Page dựng bằng màu và chữ của design được chọn. File design nằm trong thư mục design của lần chạy đó. Bản tóm tắt
   của thư mục design ghi tên design và ai chọn.
-- Skill không ghi file nào ra ngoài `.design/`, kể cả khi đề tự ghi lệnh `npx getdesign@latest add <tên>`.
+- Skill không ghi file nào ra ngoài `.design-uiux/`, kể cả khi đề tự ghi lệnh `npx getdesign@latest add <tên>`.
 - Chạy với `--auto` thì skill vẫn in danh sách và câu hỏi, tự lấy đáp án khuyên dùng, và lúc giao kể lại đã chọn gì.
 
 **Ngoài scope:** dựng page khi máy không có mạng · đọc design chỉ có phần chữ mà không có bảng màu đầu file (8 trên 76 bộ) · các design trả phí trên
@@ -84,7 +84,7 @@ flowchart TB
 | `BH2` | như trên, chạy `--auto` | page nền xám nút xanh | chat vẫn in danh sách và câu hỏi; skill tự lấy đáp án khuyên dùng; tin giao kể lại design đã chọn |
 | `BH3` | người dùng gõ tên design không có trong bốn đáp án | — | tên có trong danh sách thì dùng bộ đó; không có thì skill hỏi lại câu đó |
 | `BH4` | getdesign báo lỗi | — | skill dừng trước khi dựng page; chat có dòng lỗi của getdesign |
-| `BH5` | đề ghi sẵn lệnh `npx getdesign@latest add claude` | file design nằm ở thư mục làm việc, ngoài `.design/` | file design nằm trong thư mục design; ngoài `.design/` không có file mới |
+| `BH5` | đề ghi sẵn lệnh `npx getdesign@latest add claude` | file design nằm ở thư mục làm việc, ngoài `.design-uiux/` | file design nằm trong thư mục design; ngoài `.design-uiux/` không có file mới |
 | `BH6` | dự án có file màu hay file design ở gốc | dùng design system của dự án, không hỏi | như bây giờ: không in danh sách, không hỏi chọn design |
 
 **Không đụng:** toolbar và panel bọc quanh page · máy kiểm page · cách tìm phương án, tách luồng, dựng song song.
@@ -100,7 +100,7 @@ Số liệu: getdesign 0.6.25, Node 24.14.1, ngày 2026-10-08. Mỗi probe ghi l
 **Biết để làm gì:** site ghi "550+" mà CLI chỉ có một phần; bộ nào `tokens.mjs` không đọc được thì chọn xong vẫn
 không dựng được page. Đọc được hết thì chỉ cần chuyển `getdesign list`; không hết thì phải lọc hay phải dạy
 `tokens.mjs` đọc thêm dạng khác.
-**Cách chạy lại:** `node .probe/010-design-uiux-chon-design-getdesign/P1-danh-sach-doc-duoc/probe.mjs` — đếm dòng
+**Cách chạy lại:** `node .probes/010-design-uiux-chon-design-getdesign/P1-danh-sach-doc-duoc/probe.mjs` — đếm dòng
 `getdesign list`, chạy `buildTokens` của bản chép `tokens.mjs` trên từng file `templates/*.md` của gói, thử tải từ site.
 **Kết quả:** (`P1-danh-sach-doc-duoc/probe.log`) `getdesign list` ra 76 dòng, lấy từ `templates/manifest.json` trong gói; khớp 76 mục ở
 `getdesign.md/.well-known/agent-skills/index.json`. Design ngoài 76 bộ trả 404 (`aerotime`). `tokens.mjs` đọc được
@@ -111,14 +111,14 @@ không dựng được page. Đọc được hết thì chỉ cần chuyển `ge
 
 **Biết để làm gì:** không có `--out` thì lệnh ghi vào gốc git repo gần nhất. Nếu `--out` cũng không đáng tin, thì
 skill phải tự chép file thay vì gọi `add`.
-**Cách chạy lại:** `node .probe/010-design-uiux-chon-design-getdesign/P2-add-out/probe.mjs` — chạy trong một git repo tạm.
-**Kết quả:** (`P2-add-out/probe.log`) `--out .design/x/DESIGN.md` ghi đúng chỗ, tự tạo thư mục cha, exit 0; đích đã có file mà thiếu `--force`
+**Cách chạy lại:** `node .probes/010-design-uiux-chon-design-getdesign/P2-add-out/probe.mjs` — chạy trong một git repo tạm.
+**Kết quả:** (`P2-add-out/probe.log`) `--out .design-uiux/x/DESIGN.md` ghi đúng chỗ, tự tạo thư mục cha, exit 0; đích đã có file mà thiếu `--force`
 thì exit 1. Tên không có trong danh sách: exit 1, stderr `Error: Unknown brand: <tên>` kèm danh sách tên.
 
 ### P3 — Không vào được registry npm thì `npx getdesign@latest` làm gì?
 
 **Biết để làm gì:** treo lâu thì skill phải đặt giới hạn thời gian; thoát nhanh thì chỉ cần đọc mã thoát.
-**Cách chạy lại:** `node .probe/010-design-uiux-chon-design-getdesign/P3-registry-loi/probe.mjs` — trỏ `npm_config_registry` vào `http://127.0.0.1:9`.
+**Cách chạy lại:** `node .probes/010-design-uiux-chon-design-getdesign/P3-registry-loi/probe.mjs` — trỏ `npm_config_registry` vào `http://127.0.0.1:9`.
 **Kết quả:** (`P3-registry-loi/probe.log`) exit 1 trong dưới 1 giây, stdout rỗng, kể cả khi gói đã có trong cache `npx`.
 
 ## 5. Decisions
@@ -184,7 +184,7 @@ vào `P3`: `npx` lỗi thì thoát ngay, agent không phải chờ. Mã 1 (tên 
 
 ```bash
 node $SKILL/scripts/new-design.mjs designs
-node $SKILL/scripts/new-design.mjs init <slug> [--root .design] [--tokens <DESIGN.md | file CSS có @theme> | --getdesign <tên>] [--page-width <…>]
+node $SKILL/scripts/new-design.mjs init <slug> [--root .design-uiux] [--tokens <DESIGN.md | file CSS có @theme> | --getdesign <tên>] [--page-width <…>]
 ```
 
 | Lệnh | stdout | stderr | Exit |
@@ -291,11 +291,11 @@ Nghiệm thu từng yêu cầu — mỗi dòng chấm trên thư mục của lư
 | `F3.6` | bài 01, bài 04 | `chat.md` không có dòng `Design của getdesign dùng được` |
 | `F3.7` | bài 02 | `chat.md` có câu hỏi đã soạn tiêu đề `Design`, đúng 4 đáp án; tên ở cả 4 đáp án có trong khối danh sách; đáp án 1 có `Khuyên dùng`; câu này nằm trong lượt hỏi đầu tiên. `## Quyết định` của `brief.md` có dòng `Design system` · `<tên đáp án 1>` · `--auto` |
 | `F3.7` | lượt 👤 | gõ tên không có trong danh sách qua "Other" thì skill nói tên đó không có và hỏi lại đúng câu đó |
-| `F3.8` | bài 02 | `.design/*/DESIGN.md` có; `tokens.js` có `"source":"getdesign <tên>"`, `<tên>` trùng dòng `Design system` của `## Quyết định`; dòng cuối `check.log` có `0 lỗi` |
+| `F3.8` | bài 02 | `.design-uiux/*/DESIGN.md` có; `tokens.js` có `"source":"getdesign <tên>"`, `<tên>` trùng dòng `Design system` của `## Quyết định`; dòng cuối `check.log` có `0 lỗi` |
 | `F3.8` | lượt 👤 | chọn `wise` thì page mở ra nút chính màu xanh lá của wise |
-| `F3.1` | bài 04 | `tokens.js` có `"source":"getdesign linear.app"`; `.design/*/DESIGN.md` có; `find . -name DESIGN.md -not -path './.design/*'` trong thư mục chạy thử ra rỗng |
+| `F3.1` | bài 04 | `tokens.js` có `"source":"getdesign linear.app"`; `.design-uiux/*/DESIGN.md` có; `find . -name DESIGN.md -not -path './.design-uiux/*'` trong thư mục chạy thử ra rỗng |
 
-**Baseline:** bốn lần chạy bài 02 trước plan (`035`, `036`, `040`, `047` trong `.test/design-uiux/`): `tokens.js` đều có
+**Baseline:** bốn lần chạy bài 02 trước plan (`035`, `036`, `040`, `047` trong `.tests/design-uiux/`): `tokens.js` đều có
 `"source":"default-design.md"`, `chat.md` không có chữ `getdesign`.
 
 ## 7. Phases
@@ -318,7 +318,7 @@ Nghiệm thu từng yêu cầu — mỗi dòng chấm trên thư mục của lư
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` chỉ báo `F3.6`–`F3.9` chưa có mục SKILL.md, không lỗi nào khác — 4 lỗi, đúng bốn mã đó
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/010-design-uiux-chon-design-getdesign.md` — 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/010-design-uiux-chon-design-getdesign.md` — 0 ERROR · 0 WARN
 
 ### Phase 1 — lấy danh sách và tải design bằng một lệnh
 
@@ -334,7 +334,7 @@ Nghiệm thu từng yêu cầu — mỗi dòng chấm trên thư mục của lư
 **Gate:**
 
 - [x] 🤖 `node skills/design-uiux/scripts/test-new-design.mjs` — mọi ca ✓ — DS1 · BH4 — 6/6 ca ✓, 2026-10-08
-- [x] 🤖 trong thư mục tạm là một git repo: `init x --getdesign claude` xong, `git status --porcelain` chỉ có `.design/` — DS1 · BH5 — ca G2 của `test-new-design.mjs`: `?? .design/`
+- [x] 🤖 trong thư mục tạm là một git repo: `init x --getdesign claude` xong, `git status --porcelain` chỉ có `.design-uiux/` — DS1 · BH5 — ca G2 của `test-new-design.mjs`: `?? .design-uiux/`
 - [x] 🤖 `node skills/design-uiux/scripts/test-check.mjs` và `test-shell.mjs` vẫn exit 0 — 2026-10-08: `test-check.mjs` 0 ca trượt; `test-shell.mjs` exit 0, 70 phép ✓ (lần chạy đầu lỗi do `shell.js` của plan 009 đang sửa dở; chạy lại sau khi 009 sửa xong shell)
 
 ### Phase 2 — skill hỏi chọn design
@@ -366,9 +366,9 @@ Nghiệm thu từng yêu cầu — mỗi dòng chấm trên thư mục của lư
 
 **Actions:**
 
-- [x] 🤖 chạy bài 02 `--auto` theo `samples/README.md` vào `.test/design-uiux/<NNN>-nghiem-thu-010-bai-02/` — 2026-10-08, `058-sample-02-onboarding-flow-nghiem-thu-010`, bản chụp skill
-- [x] 🤖 chạy bài 01 `--auto` vào `.test/design-uiux/<NNN>-nghiem-thu-010-bai-01/` — 2026-10-08, `059-sample-01-orders-screen-nghiem-thu-010`, không chạy vòng góp ý
-- [x] 🤖 chạy bài 04 `--auto` (đề có `npx getdesign@latest add linear.app`) vào `.test/design-uiux/<NNN>-nghiem-thu-010-bai-04/` — 2026-10-08, `060-sample-04-quick-screen-nghiem-thu-010`
+- [x] 🤖 chạy bài 02 `--auto` theo `samples/README.md` vào `.tests/design-uiux/<NNN>-nghiem-thu-010-bai-02/` — 2026-10-08, `058-sample-02-onboarding-flow-nghiem-thu-010`, bản chụp skill
+- [x] 🤖 chạy bài 01 `--auto` vào `.tests/design-uiux/<NNN>-nghiem-thu-010-bai-01/` — 2026-10-08, `059-sample-01-orders-screen-nghiem-thu-010`, không chạy vòng góp ý
+- [x] 🤖 chạy bài 04 `--auto` (đề có `npx getdesign@latest add linear.app`) vào `.tests/design-uiux/<NNN>-nghiem-thu-010-bai-04/` — 2026-10-08, `060-sample-04-quick-screen-nghiem-thu-010`
 - [x] 🤖 chấm từng dòng của bảng nghiệm thu ở DS4, ghi `result.md` trong thư mục của từng lượt — 2026-10-08, ba `result.md`, mọi dòng đạt
 - [ ] 👤 gọi `/design-uiux` thường (không `--auto`) trong thư mục trống với một đề app tài chính; lượt đầu gõ một tên không có trong danh sách qua "Other", lượt sau gõ `wise`
 
@@ -376,7 +376,7 @@ Nghiệm thu từng yêu cầu — mỗi dòng chấm trên thư mục của lư
 
 - [x] 🤖 §2 bullet 1: bài 02 đạt dòng `F3.6`, `F3.7`; bài 01, bài 04 đạt dòng `F3.6` — 2026-10-08: bài 02 khối 68 dòng, không `kraken`, câu `Design` 4 đáp án `wise (Khuyên dùng)` · `revolut` · `stripe` · `coinbase`; bài 01, 04 không có dòng danh sách · BH2 · BH6
 - [x] 🤖 §2 bullet 2: bài 02 đạt dòng `F3.8` — 2026-10-08: `DESIGN.md` trong thư mục design, `"source":"getdesign wise"` trùng `Design system \| wise \| --auto`, `check.log` `✓ 3 page · 328 tổ hợp · 0 lỗi` · BH2
-- [x] 🤖 §2 bullet 3: bài 04 đạt dòng `F3.1` — 2026-10-08: `"source":"getdesign linear.app"`, `DESIGN.md` chỉ nằm trong `.design/001-lich-hen-hom-nay/`, `check.log` `✓ 2 page · 336 tổ hợp · 0 lỗi` · BH5
+- [x] 🤖 §2 bullet 3: bài 04 đạt dòng `F3.1` — 2026-10-08: `"source":"getdesign linear.app"`, `DESIGN.md` chỉ nằm trong `.design-uiux/001-lich-hen-hom-nay/`, `check.log` `✓ 2 page · 336 tổ hợp · 0 lỗi` · BH5
 - [x] 🤖 §2 bullet 4: bài 02 — không lượt nào dừng chờ trả lời; tin giao có dòng `Design system` đã tự chọn — 2026-10-08: `chat.md` dòng 75 không gọi AskUserQuestion, dòng 123–124 `Design system: wise (--auto)` · BH2
 - [ ] 👤 §2 bullet 1, 2 khi chạy thường: lượt 👤 đạt dòng `F3.7`, `F3.8` — <ngày + ai xác nhận> · BH1 · BH3
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/010-design-uiux-chon-design-getdesign.md` — 0 ERROR · 0 WARN, 2026-10-08
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/010-design-uiux-chon-design-getdesign.md` — 0 ERROR · 0 WARN, 2026-10-08

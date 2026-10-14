@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plan/001-design-uiux.md, .plan/004-design-uiux-dung-theo-buoc.md, .plan/008-design-uiux-mot-man-luong.md, .test/design-uiux/027-huy-004/phase1.patch, .test/design-uiux/032-probe-poll-file/probe.log, .test/design-uiux/053-probe-009/ket-qua.log]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plans/001-design-uiux.md, .plans/004-design-uiux-dung-theo-buoc.md, .plans/008-design-uiux-mot-man-luong.md, .tests/design-uiux/027-huy-004/phase1.patch, .tests/design-uiux/032-probe-poll-file/probe.log, .tests/design-uiux/053-probe-009/ket-qua.log]
 supersedes: [001, 004]
 ---
 
@@ -130,16 +130,16 @@ flowchart LR
 ### P1 — Kiểm nhanh một tổ hợp (mở Chrome, mở page ở 1280px giá trị mặc định, chụp một ảnh) tốn bao nhiêu giây?
 
 **Biết để làm gì:** dưới ~5 giây thì kiểm được sau từng bước dựng; vài chục giây thì chỉ nên kiểm ở cuối
-**Cách chạy lại:** `node .test/design-uiux/021-probe-quick-check/probe-quick.mjs <page.html>`, ba lần liền
+**Cách chạy lại:** `node .tests/design-uiux/021-probe-quick-check/probe-quick.mjs <page.html>`, ba lần liền
 **Kết quả:** 1,89s lần đầu (Chrome nguội), 1,08s và 1,11s các lần sau — 2026-10-07, chạy trong plan 004, Playwright
 ở `$TMPDIR/design-uiux-pw`, Chrome hệ thống, page `020-login-pilot-app/01-vao-thang.html`. Chạy lại trên page của 008
-(`046-…/01-hang-doi-theo-han.html`): 2,15s · 1,98s · 1,63s — 2026-10-08, `.test/design-uiux/053-probe-009/ket-qua.log`
+(`046-…/01-hang-doi-theo-han.html`): 2,15s · 1,98s · 1,63s — 2026-10-08, `.tests/design-uiux/053-probe-009/ket-qua.log`
 
 ### P2 — Page mở bằng `file://` trong Chrome có đọc lại được một file `.js` vừa đổi nội dung mà không tải lại page không?
 
 **Biết để làm gì:** được thì page tự biết có bản mới mà không cần server; không được thì chỉ còn nút tải lại tay hay
 server cục bộ
-**Cách chạy lại:** `node .test/design-uiux/032-probe-poll-file/probe.mjs` — page chèn `<script src="prog.js?t=<giờ>">`
+**Cách chạy lại:** `node .tests/design-uiux/032-probe-poll-file/probe.mjs` — page chèn `<script src="prog.js?t=<giờ>">`
 mỗi 300ms; script đổi nội dung file, rồi xoá file
 **Kết quả:** thấy nội dung mới sau 109ms (một lượt đọc); file bị xoá thì thẻ script báo lỗi nạp, không treo — 2026-10-08,
 Chrome hệ thống qua Playwright `channel: "chrome"`. Chạy lại cùng ngày: 81ms, file bị xoá vẫn báo lỗi nạp.
@@ -147,14 +147,14 @@ Chrome hệ thống qua Playwright `channel: "chrome"`. Chạy lại cùng ngày
 ### P3 — Nhiều agent con cùng chạy kiểm nhanh một lúc thì mỗi lượt còn dưới 5 giây không?
 
 **Biết để làm gì:** các page dựng song song nên các lượt `--quick` chồng nhau; chậm quá 5 giây thì không kiểm nhanh sau từng bước được
-**Cách chạy lại:** `node .test/design-uiux/053-probe-009/p3-song-song.mjs <page.html> 1 2 3 4` — N tiến trình chạy
+**Cách chạy lại:** `node .tests/design-uiux/053-probe-009/p3-song-song.mjs <page.html> 1 2 3 4` — N tiến trình chạy
 `probe-quick.mjs` của P1 cùng lúc
 **Kết quả:** N=1 1,42s · N=2 1,58s · N=3 tối đa 2,03s · N=4 tối đa 2,98s mỗi lượt — 2026-10-08, page của 008 như P1
 
 ### P4 — Page đọc checklist đúng lúc agent đang ghi thì đọc phải gì?
 
 **Biết để làm gì:** đọc phải file ghi dở mà coi là page không có checklist thì page ngừng theo dõi giữa chừng
-**Cách chạy lại:** `node .test/design-uiux/053-probe-009/p4-ghi-do.mjs ["ghi thẳng" | "tạm + rename"]` — Node ghi đè
+**Cách chạy lại:** `node .tests/design-uiux/053-probe-009/p4-ghi-do.mjs ["ghi thẳng" | "tạm + rename"]` — Node ghi đè
 file ~9KB khoảng 700 lần mỗi giây trong 8 giây; page đọc lại mỗi 5ms
 **Kết quả:** ghi thẳng: 151 trên ~1660 lượt đọc nạp được nhưng thiếu dữ liệu (59 lượt là lỗi cú pháp). Ghi ra file tạm
 rồi rename: 2, 3, 5 lượt qua ba lần chạy. Cả hai cách, thẻ script không lần nào báo `error`: file ghi dở trông như
@@ -163,7 +163,7 @@ nạp thành công mà không có dữ liệu, không bao giờ trông như file
 ### P5 — Trên `file://`, tải lại có giữ được vị trí cuộn, và trang cha có biết người xem đang gõ trong iframe không?
 
 **Biết để làm gì:** khổ tablet, mobile đặt page trong iframe `frame=1`; việc theo dõi tiến độ chỉ chạy ở trang cha
-**Cách chạy lại:** `node .test/design-uiux/053-probe-009/p5-cuon-iframe.mjs`
+**Cách chạy lại:** `node .tests/design-uiux/053-probe-009/p5-cuon-iframe.mjs`
 **Kết quả:** `location.reload()` cho navigation type `reload`, `scrollY` 1234 lấy lại được từ `sessionStorage`. Khi
 người xem gõ trong iframe, trang cha thấy `document.activeElement` là `IFRAME`, `contentDocument` là `null`. Tin
 `postMessage` từ iframe lên trang cha thì tới được — 2026-10-08
@@ -418,7 +418,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` không báo lỗi nào của 009 ngoài "chưa có trong SKILL.md" cho `F5.6` · `F5.7` · `F6.*` (Phase 3 gắn) — 2026-10-08: còn đúng 9 mã đó, cộng `F3.6`–`F3.9` của plan 010
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/009-design-uiux-tien-do-dung.md` — 0 ERROR
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/009-design-uiux-tien-do-dung.md` — 0 ERROR
 
 ### Phase 1 — checklist từng page, page tự hiện tiến độ
 
@@ -437,7 +437,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 - [x] 🤖 `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` — mọi phép ✓, gồm các phép tiến độ của DS6 — DS2 · BH2 · BH3 · BH5 · BH8 · BH11 — 2026-10-08: 70/70 ✓, gồm 11 phép tiến độ
 - [x] 🤖 `node skills/design-uiux/scripts/test-progress.mjs` — mọi ca ✓ — DS1 · BH6 · BH7 — 2026-10-08: 14/14 ✓
-- [x] 🤖 page vừa tạo bằng `new-design.mjs page` mở ra có khối "Đang dựng <tên>", nhãn "Đang dựng 0/6"; `grep -c "Thành viên"` trên page đó ra 0 — DS4 · BH1 — 2026-10-08: `.test/design-uiux/055-tien-do-shell/smoke.log` dòng 1; `test-progress.mjs` ca 2
+- [x] 🤖 page vừa tạo bằng `new-design.mjs page` mở ra có khối "Đang dựng <tên>", nhãn "Đang dựng 0/6"; `grep -c "Thành viên"` trên page đó ra 0 — DS4 · BH1 — 2026-10-08: `.tests/design-uiux/055-tien-do-shell/smoke.log` dòng 1; `test-progress.mjs` ca 2
 - [ ] 👤 mở page chờ trong Chrome, chạy `progress --done 1` rồi `--done 2` ở terminal: page tự tải lại mỗi lần, "Đang dựng 2/6", vị trí cuộn giữ nguyên; gõ dở vào ô nhập khi chạy `--done 3` thì page đợi tới khi rời ô — <ngày + ai xác nhận> · BH2 · BH3
 
 ### Phase 2 — kiểm nhanh sau từng bước dựng
@@ -453,7 +453,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 **Gate:**
 
-- [x] 🤖 `--quick` trên hai page đã dựng xong: exit 0, mỗi lần ≤ 5 giây — DS3 — 2026-10-08: 2,0s · 1,6s trên bản chép của `046-…-nghiem-thu-008` ở `.test/design-uiux/056-check-quick/design-046/`. `020-login-pilot-app` không dùng được: brief của nó thiếu `## Khối` (luật của 006/007, có trước 009) nên `--quick` ra 1 lỗi đó, 1,6–1,7s
+- [x] 🤖 `--quick` trên hai page đã dựng xong: exit 0, mỗi lần ≤ 5 giây — DS3 — 2026-10-08: 2,0s · 1,6s trên bản chép của `046-…-nghiem-thu-008` ở `.tests/design-uiux/056-check-quick/design-046/`. `020-login-pilot-app` không dùng được: brief của nó thiếu `## Khối` (luật của 006/007, có trước 009) nên `--quick` ra 1 lỗi đó, 1,6–1,7s
 - [x] 🤖 `node skills/design-uiux/scripts/test-check.mjs` — mọi ca ✓, gồm bốn ca mới — DS3 · BH4 — 2026-10-08: 13/13 ✓
 - [x] 🤖 kiểm đầy đủ một thư mục dựng trước plan (không có `progress.js`) với shell mới vẫn exit 0 — BH8 — 2026-10-08: `056-check-quick/design-046/001-don-hang` 2 page · 330 tổ hợp · 0 lỗi
 
@@ -481,7 +481,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 **Actions:**
 
-- [ ] 🤖 chạy bài 01 và bài 02 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.test/design-uiux/<NNN>-nghiem-thu-009-*/`. Lúc agent chính in khối link, người chạy ghi thêm một dòng `<giờ>  link` vào `progress.log` (`node -e 'console.log(new Date().toTimeString().slice(0,8)+"  link")' >> progress.log`)
+- [ ] 🤖 chạy bài 01 và bài 02 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.tests/design-uiux/<NNN>-nghiem-thu-009-*/`. Lúc agent chính in khối link, người chạy ghi thêm một dòng `<giờ>  link` vào `progress.log` (`node -e 'console.log(new Date().toTimeString().slice(0,8)+"  link")' >> progress.log`)
 - [ ] 🤖 chạy hai góp ý của bài 01 kèm `watch-progress.mjs`
 - [ ] 🤖 chạy thử ngắt trên bài 01: dừng agent con của page A sau khi bước dựng 2 của nó được đánh dấu, để agent của page B chạy tiếp, rồi gọi lại agent A cùng lời giao; ghi lượt sửa đầu tiên của agent A
 - [ ] 👤 gọi `/design-uiux` với một đề thật, mở link ngay khi có, để page mở suốt lúc dựng; góp ý một ý
@@ -491,15 +491,15 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 | Mã | Mở file | Đạt khi |
 | --- | --- | --- |
 | `F6.1` | `progress.log`, `chat.md` | `progress.log` có dòng `link` đứng trước dòng `rev 1` đầu tiên của mọi page; `chat.md` có dòng `Đang dựng, mở ngay được` và ngay dưới nó `file://` của mọi file `NN-*.html`, trong cùng một tin |
-| `F6.2` | `.design/*/NN-*.progress.js`, `progress.log` | mỗi file `NN-*.html` có đúng một `NN-*.progress.js`; trước góp ý, mọi bước `"round":1` có `"done":true`; mỗi page có ≥ 4 dòng `progress.log` với giờ khác nhau; tên bước trong các dòng của một page đi đúng thứ tự trong danh sách |
-| `F5.6` | `.design/*/shots/`, `progress.log` | mỗi page có ảnh `<NN-slug>--quick.png`, giờ sửa của ảnh muộn hơn dòng `rev 1` của page đó |
+| `F6.2` | `.design-uiux/*/NN-*.progress.js`, `progress.log` | mỗi file `NN-*.html` có đúng một `NN-*.progress.js`; trước góp ý, mọi bước `"round":1` có `"done":true`; mỗi page có ≥ 4 dòng `progress.log` với giờ khác nhau; tên bước trong các dòng của một page đi đúng thứ tự trong danh sách |
+| `F5.6` | `.design-uiux/*/shots/`, `progress.log` | mỗi page có ảnh `<NN-slug>--quick.png`, giờ sửa của ảnh muộn hơn dòng `rev 1` của page đó |
 | `F5.7` | `check.log`, `scripts/test-check.mjs` | `check.log` cả thư mục không có `còn bước chưa xong`; `test-check.mjs` C11 · C12 ✓ |
 | `F6.3` | `scripts/test-shell.mjs`, lượt 👤 | phép "bước mới xong → page tự tải lại …" ✓; lượt 👤 ở Gate bullet 5 đạt |
 | `F6.4` | `scripts/test-shell.mjs`, lượt 👤 | hai phép "đang gõ … không tải lại" (desktop, iframe mobile) ✓; lượt 👤 ở Gate bullet 6 đạt |
 | `F6.5` | `scripts/test-shell.mjs`, lượt 👤 | ba phép nhãn "Đang dựng", "Xong", "Đang sửa" ✓; lượt 👤 ở Gate bullet 7 đạt |
 | `F6.6` | `progress.log` của lần chạy ngắt | sau lúc agent A bị dừng, dòng kế tiếp của page A mang bước 3 và `rev` nối tiếp (không có dòng `thấy lần đầu` mới của page A, không có file `NN-*.html` mới) |
 | `F6.7` | `progress.log`, `subagent-*.md` của lần chạy ngắt | giữa lúc agent A bị dừng và lúc gọi lại, page B có ≥ 1 dòng mới; chỉ agent A được gọi lại: số file `subagent-*.md` = số page + 1 |
-| `F4.4` | `.design/*/NN-*.progress.js` sau hai góp ý của bài 01 | page A có ≥ 1 bước `"round":2` bắt đầu bằng `Góp ý:` và một bước `"round":2` có `"final":true`; góp ý 2 chạm mọi page nên mọi page có ≥ 1 bước `Góp ý:`; mọi bước `"round":1` vẫn `"done":true` |
+| `F4.4` | `.design-uiux/*/NN-*.progress.js` sau hai góp ý của bài 01 | page A có ≥ 1 bước `"round":2` bắt đầu bằng `Góp ý:` và một bước `"round":2` có `"final":true`; góp ý 2 chạm mọi page nên mọi page có ≥ 1 bước `Góp ý:`; mọi bước `"round":1` vẫn `"done":true` |
 
 **Gate** — một dòng ứng một bullet §2:
 
@@ -512,4 +512,4 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 - [ ] 👤 §2 bullet 7: nhãn đi đúng "Đang dựng a/6" → "✓ Xong · <ngày>" → "Đang sửa a/b" → "✓ Xong · <ngày mới>"; bấm vào thấy nhóm "Dựng" và "Góp ý vòng 2" — <ngày + ai xác nhận> · BH5 · BH6
 - [ ] 🤖 §2 bullet 8: bài 01 (hai page A, B) và bài 02 (mỗi màn một page) — trong `progress.log`, mốc `rev 1` của mọi page đều đến trước mốc bước dựng cuối của page xong sớm nhất, tức các page dựng chồng thời gian; link mọi page có trong `chat.md` trong cùng một tin — <giờ từng page> · BH9
 - [ ] 🤖 mọi dòng của bảng "Tiêu chí từng yêu cầu" là `đạt` — <bảng kết quả trong thư mục chạy thử> · BH1 · BH6 · BH7 · BH9 · BH10
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/009-design-uiux-tien-do-dung.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/009-design-uiux-tien-do-dung.md` — 0 ERROR

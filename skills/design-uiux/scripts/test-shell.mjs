@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Kiểm shell (toolbar, panel) trên một .design/ mẫu tự dựng trong thư mục tạm, không dính tới page nào của người dùng.
+// Kiểm shell (toolbar, panel) trên một .design-uiux/ mẫu tự dựng trong thư mục tạm, không dính tới page nào của người dùng.
 // Chạy sau mỗi lần sửa shell/: vài giây, in ✓ / ✗ từng phép, lưu ảnh để xem bằng mắt.
 //
 //   node test-shell.mjs [--pw <thư mục có node_modules/playwright>] [--out <thư mục ảnh>]
 //
-// .design/ mẫu: 001-shell-test có 3 page A B C, 002-one-page có 1 page, 003-luong là thư mục luồng 3 màn, 004-tien-do
-// có 1 page đang dựng dở; cả bốn dùng chung .design/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
+// .design-uiux/ mẫu: 001-shell-test có 3 page A B C, 002-one-page có 1 page, 003-luong là thư mục luồng 3 màn, 004-tien-do
+// có 1 page đang dựng dở; cả bốn dùng chung .design-uiux/_shell/. Page của 001, 002 lấy thân từ templates/example.html và
 // đánh dấu xong mọi bước dựng, như page đã giao.
 //
 // spec: F2 F2.9 F6.3 F6.4 F6.5 F6.8 F6.10 F6.11 F7.1 F7.2 F7.3 F7.4 F7.6
@@ -24,11 +24,11 @@ const flag = (name) => (args.includes(`--${name}`) ? args[args.indexOf(`--${name
 const pwDir = flag("pw") ?? process.env.PW_DIR;
 
 const work = mkdtempSync(join(tmpdir(), "design-uiux-shell-"));
-const root = join(work, ".design");
+const root = join(work, ".design-uiux");
 const out = resolve(flag("out") ?? join(work, "shots"));
 mkdirSync(out, { recursive: true });
 
-// ---------- .design/ mẫu ----------
+// ---------- .design-uiux/ mẫu ----------
 
 const run = (...params) => execFileSync(process.execPath, [join(here, "new-design.mjs"), ...params], { cwd: work, encoding: "utf8" }).trim();
 const options = [
@@ -846,5 +846,5 @@ for (const width of [1600, 1280, 700, 375]) {
 expect("không có lỗi JS", errors.length === 0, errors.join(" · "));
 await browser.close();
 console.log(results.join("\n"));
-console.log(`\n.design/ mẫu: ${root}\nảnh: ${out}`);
+console.log(`\n.design-uiux/ mẫu: ${root}\nảnh: ${out}`);
 process.exit(results.some((line) => line.startsWith("✗")) ? 1 : 0);

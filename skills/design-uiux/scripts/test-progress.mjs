@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Kiểm lệnh progress của new-design.mjs: danh sách bước dựng mà page mới tạo có sẵn, thứ tự đánh dấu, chèn bước, mục
-// góp ý (comment, ý trong chat), đọc file kiểu cũ xếp theo vòng, ghi qua file tạm. Mỗi ca chạy lệnh thật trên một .design/ mẫu trong thư mục tạm rồi so mã thoát, stdout và
+// góp ý (comment, ý trong chat), đọc file kiểu cũ xếp theo vòng, ghi qua file tạm. Mỗi ca chạy lệnh thật trên một .design-uiux/ mẫu trong thư mục tạm rồi so mã thoát, stdout và
 // file <page>.progress.js với mong đợi. Không cần trình duyệt; chạy sau mỗi lần sửa phần progress của new-design.mjs.
 //
 //   node test-progress.mjs
@@ -22,7 +22,7 @@ const run = (...params) => {
 const results = [];
 const expect = (name, ok, detail) => results.push(`${ok ? "✓" : "✗"} ${name}${detail ? ` — ${detail}` : ""}`);
 
-const dir = run("init", "progress-test", "--root", join(work, ".design")).out.split("\n").pop();
+const dir = run("init", "progress-test", "--root", join(work, ".design-uiux")).out.split("\n").pop();
 const file = basename(run("page", dir, "dang-nhap", "--title", "Đăng nhập · Vào thẳng", "--option", "A · Vào thẳng", "--layout", "Một ô email và nút Tiếp tục giữa trang. Đăng nhập bằng mạng xã hội nằm dưới, chữ nhỏ.", "--good-for", "vào app trong một lần gõ · đổi tài khoản").out);
 const progressFile = join(dir, file.replace(/\.html$/, ".progress.js"));
 const read = () => {
@@ -43,7 +43,7 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
   expect("page mới chỉ có khối chờ: tên màn, tên phương án, bố cục, \"Tiện cho:\"; không có màn mẫu", lines.join(" | ") === "p: Đăng nhập | h1: A · Vào thẳng | p: Một ô email và nút Tiếp tục giữa trang. Đăng nhập bằng mạng xã hội nằm dưới, chữ nhỏ. | p: Tiện cho: vào app trong một lần gõ · đổi tài khoản" && !html.includes("Thành viên") && !html.includes("{{") && !html.includes("Đang dựng"), lines.join(" | "));
   const listed = (() => { const window = {}; new Function("window", readFileSync(join(dir, "pages.js"), "utf8"))(window); return window.DESIGN_PAGES?.find((page) => page.file === file); })();
   expect("pages.js lưu layout và goodFor cho khung mô tả của nút phương án", listed?.layout?.startsWith("Một ô email") && listed?.goodFor === "vào app trong một lần gõ · đổi tài khoản", JSON.stringify(listed));
-  const flowDir = run("init", "progress-luong", "--root", join(work, ".design")).out.split("\n").pop();
+  const flowDir = run("init", "progress-luong", "--root", join(work, ".design-uiux")).out.split("\n").pop();
   const screen = readFileSync(run("page", flowDir, "dang-ky", "--title", "Mở tài khoản · Đăng ký", "--screen", "2 · Đăng ký", "--purpose", "Tạo tài khoản bằng email").out, "utf8");
   const screenLines = [...(screen.match(/<section data-ds-waiting[\s\S]*?<\/section>/)?.[0] ?? "").matchAll(/<(h1|p)[^>]*>([^<]*)</g)].map((match) => `${match[1]}: ${match[2]}`);
   expect("màn của luồng: tên luồng, tên màn, việc của màn; không có dòng nhỏ trống", screenLines.join(" | ") === "p: Mở tài khoản | h1: 2 · Đăng ký | p: Tạo tài khoản bằng email" && !screen.includes("{{"), screenLines.join(" | "));
@@ -170,7 +170,7 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
 
 {
   // --prepared --all: mọi page trong pages.js, theo thứ tự; page đã chuẩn bị thì bỏ qua.
-  const allDir = run("init", "progress-all", "--root", join(work, ".design")).out.split("\n").pop();
+  const allDir = run("init", "progress-all", "--root", join(work, ".design-uiux")).out.split("\n").pop();
   const names = ["mot", "hai"].map((slug, index) => basename(run("page", allDir, slug, "--title", `Màn · ${slug}`, "--option", `${"AB"[index]} · ${slug}`, "--layout", "Một bảng.").out));
   const readAll = (name) => { const window = {}; new Function("window", readFileSync(join(allDir, name.replace(/\.html$/, ".progress.js")), "utf8"))(window); return window.DESIGN_PROGRESS[name]; };
   run("progress", allDir, names[1], "--prepared");
@@ -200,5 +200,5 @@ const leftovers = () => readdirSync(dir).filter((name) => name.endsWith(".tmp"))
 }
 
 console.log(results.join("\n"));
-console.log(`\n.design/ mẫu: ${dir}`);
+console.log(`\n.design-uiux/ mẫu: ${dir}`);
 process.exit(results.some((line) => line.startsWith("✗")) ? 1 : 0);

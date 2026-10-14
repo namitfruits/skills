@@ -1,10 +1,10 @@
 node_modules/
 .DS_Store
 __pycache__/
-.test/
+.tests/
 skills/fetch-page/logs/
 .env
 .refer/
 .brainstorm/
-.design/
-.probe/
+.design-uiux/
+.probes/

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Kiểm bằng code đầu ra của skill design-uiux: một thư mục .design/NNN-slug (hoặc một page trong đó).
+// Kiểm bằng code đầu ra của skill design-uiux: một thư mục .design-uiux/NNN-slug (hoặc một page trong đó).
 // Skill chỉ được giao link khi lệnh này ra exit 0. Chỉ đọc, không sửa page.
 //
 //   node check.mjs <thư mục design | page.html> [--pw <thư mục có node_modules/playwright>] [--no-shots]
@@ -130,7 +130,7 @@ const shellDir = existsSync(join(designDir, "_shell")) ? "_shell" : "../_shell";
 for (const required of [`${shellDir}/shell.js`, `${shellDir}/shell.css`, "tokens.js", "pages.js", "brief.md"]) {
   if (!existsSync(join(designDir, required))) report(basename(designDir), "", `thiếu ${required}`);
 }
-// shell dùng chung ở .design/_shell/. Thư mục design kiểu cũ có _shell/ riêng, hay shell chung cũ hơn skill: nhắc lệnh
+// shell dùng chung ở .design-uiux/_shell/. Thư mục design kiểu cũ có _shell/ riêng, hay shell chung cũ hơn skill: nhắc lệnh
 // cập nhật, không tính lỗi (shell chỉ bọc quanh page, design vẫn đúng).
 const skillShell = join(dirname(fileURLToPath(import.meta.url)), "../shell");
 const updateShell = `node ${join(dirname(fileURLToPath(import.meta.url)), "new-design.mjs")} shell --root ${dirname(designDir)}`;

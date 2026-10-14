@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Tạo thư mục chạy thử cho một bài mẫu. Chạy từ gốc repo:
 //   node skills/design-uiux/samples/prepare.mjs <bài> [--skills <thư mục chứa design-uiux>] [--slug <chữ>]
-// Tạo .test/design-uiux/NNN-sample-<bài>[-<slug>]/, chép project/ của bài (không chép sample.md), trỏ .claude/skills về
+// Tạo .tests/design-uiux/NNN-sample-<bài>[-<slug>]/, chép project/ của bài (không chép sample.md), trỏ .claude/skills về
 // --skills (mặc định skills/ của repo), in JSON { dir, prompt, feedback } ra stdout.
 import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, symlinkSync } from "node:fs";
 import { join, dirname, resolve, relative } from "node:path";
@@ -37,7 +37,7 @@ const sampleText = readFileSync(join(samplesDir, sample, "sample.md"), "utf8");
 const [prompt] = textBlocks(sampleText, "Đề");
 if (!prompt) fail(`${sample}/sample.md: không có khối \`\`\`text dưới "## Đề"`);
 
-const testRoot = join(repoRoot, ".test/design-uiux");
+const testRoot = join(repoRoot, ".tests/design-uiux");
 mkdirSync(testRoot, { recursive: true });
 const last = Math.max(0, ...readdirSync(testRoot).map((name) => Number(name.match(/^(\d{3})-/)?.[1] ?? 0)));
 const dir = join(testRoot, `${String(last + 1).padStart(3, "0")}-sample-${sample}${slug ? `-${slug}` : ""}`);

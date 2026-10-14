@@ -6,7 +6,7 @@ status: done # draft → approved → done
 version: 0.3
 updated: 2026-10-12
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plan/009-design-uiux-tien-do-dung.md, .plan/016-design-uiux-mo-page-trong-chrome.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plans/009-design-uiux-tien-do-dung.md, .plans/016-design-uiux-mo-page-trong-chrome.md]
 supersedes: []
 ---
 
@@ -89,7 +89,7 @@ flowchart LR
 
 **Biết để làm gì:** được thì comment tới là agent sửa ngay, không cần người dùng gõ gì. Không được thì chỉ còn lối chép
 comment rồi dán vào chat.
-**Cách chạy lại:** `.probe/017-design-uiux-comment-tren-page/P1-wake-vscode/README.md` (các bước làm trong một session
+**Cách chạy lại:** `.probes/017-design-uiux-comment-tren-page/P1-wake-vscode/README.md` (các bước làm trong một session
 VS Code; script gửi comment là `send.mjs`)
 **Kết quả:** được — 2026-10-12, Claude Code 2.1.296 trong VS Code, `P1-wake-vscode/probe.log`. Session đã kết thúc lượt,
 không ai gõ gì. Comment gửi lúc 10:22:08, session thức dậy và chạy lệnh ghi giờ 3,7 giây sau, tính cả lúc model suy
@@ -100,7 +100,7 @@ cách lệnh nền thoát khi có comment đầu tiên: theo dõi từng dòng �
 
 **Biết để làm gì:** session chạy skill có thể là terminal. Nếu terminal không thức dậy, thì lối tự động chỉ hứa được cho
 VS Code.
-**Cách chạy lại:** `python3 .probe/017-design-uiux-comment-tren-page/P2-wake-terminal/probe.py` (chạy `claude` có
+**Cách chạy lại:** `python3 .probes/017-design-uiux-comment-tren-page/P2-wake-terminal/probe.py` (chạy `claude` có
 khung tương tác trong một pseudo-terminal, gửi comment, đọc file session ghi khi thức)
 **Kết quả:** được — 2026-10-12, Claude Code 2.1.296, khung tương tác trong pseudo-terminal 120×40, `P2-wake-terminal/probe.log`,
 màn hình cuối ở `screen.txt`. Session trả lời "đã bật", về dấu nhắc với dòng "1 monitor still running", rảnh 10 giây.
@@ -111,7 +111,7 @@ dừng ở hộp hỏi tin cậy thư mục; probe chọn tin cậy gốc repo r
 
 **Biết để làm gì:** nếu không, thì lối tự động không áp được cho cách chạy một lượt, và lượt chạy thử `--auto` phải
 kiểm phần nhận comment bằng cách khác.
-**Cách chạy lại:** `node .probe/017-design-uiux-comment-tren-page/P3-print-mode/probe.mjs`
+**Cách chạy lại:** `node .probes/017-design-uiux-comment-tren-page/P3-print-mode/probe.mjs`
 **Kết quả:** được — 2026-10-12, Claude Code 2.1.296, `P3-print-mode/probe.log`. `claude -p` in "đã bật" nhưng không thoát:
 còn Monitor chạy thì tiến trình còn sống. Sau 60 giây chờ, comment tới, session chạy lệnh ghi giờ 2,8 giây sau khi gửi.
 Hệ quả: lượt chạy một lượt nào bật nghe sẽ không thoát cho tới khi Monitor hết hạn.
@@ -120,7 +120,7 @@ Hệ quả: lượt chạy một lượt nào bật nghe sẽ không thoát cho 
 
 **Biết để làm gì:** Chrome có luật chặn trang gọi vào địa chỉ nội bộ. Bị chặn thì chương trình nghe phải phục vụ luôn
 page qua `http://127.0.0.1`, và link `file://` mọi chỗ khác của skill phải đổi.
-**Cách chạy lại:** `node .probe/017-design-uiux-comment-tren-page/P4-file-fetch/probe.mjs` (Chrome headless, profile tạm)
+**Cách chạy lại:** `node .probes/017-design-uiux-comment-tren-page/P4-file-fetch/probe.mjs` (Chrome headless, profile tạm)
 **Kết quả:** được — 2026-10-12, Chrome 154.0.8037.98, macOS 26.5.1, `P4-file-fetch/probe.log`. Cả Chrome headless profile
 tạm lẫn Chrome thật mở bằng `open -na` profile dùng gần nhất: `GET /health` 200, `POST /comment` 201, không hộp hỏi
 quyền nào. Request mang `Origin: null`.
@@ -284,7 +284,7 @@ Câu lệnh theo dõi cụ thể theo kết quả `P1` · `P2`.
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` liệt kê các `F7.x` mới là chưa có mục SKILL.md, không lỗi nào khác — 2026-10-12: 9 dòng "chưa có trong SKILL.md", 9 dòng "chưa có trong PLANS.md" trước khi PLANS.md lên `approved`
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/017-design-uiux-comment-tren-page.md` — 0 ERROR — 2026-10-12
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/017-design-uiux-comment-tren-page.md` — 0 ERROR — 2026-10-12
 
 ### Phase 1 — comment rồi chép
 
@@ -331,7 +331,7 @@ chạy mà probe đã xác nhận.
 
 **Actions:**
 
-- [x] 🤖 chạy bài `04-quick-screen` `--auto` từ `prepare.mjs`, slug `nghiem-thu-017` — 2026-10-12: `.test/design-uiux/077-sample-04-quick-screen-nghiem-thu-017/`, 736 giây, 44 tool_use, 0 `Monitor`, 0 `listen`, 0 AskUserQuestion; tin giao có hướng dẫn nút comment và nói `--auto` nên không bật lệnh nghe
+- [x] 🤖 chạy bài `04-quick-screen` `--auto` từ `prepare.mjs`, slug `nghiem-thu-017` — 2026-10-12: `.tests/design-uiux/077-sample-04-quick-screen-nghiem-thu-017/`, 736 giây, 44 tool_use, 0 `Monitor`, 0 `listen`, 0 AskUserQuestion; tin giao có hướng dẫn nút comment và nói `--auto` nên không bật lệnh nghe
 - [x] 🤖 trên thư mục design đó: bật `listen`, gửi comment bằng request như page gửi, rồi `claude -p --resume` để agent xử lý — 2026-10-12: `pending.mjs`, POST 201, tắt lệnh nghe, resume với câu "Mở lại thư mục design vừa giao để sửa tiếp, vẫn chạy --auto."
 - [x] 👤 trong một session có người: mở page, comment một khối, xem session tự sửa — 2026-10-12, Andy trên 076, session VS Code này: #1 tới 10:50:26, session thức và sửa; #2 tới giữa vòng của #1
 
@@ -343,4 +343,4 @@ chạy mà probe đã xác nhận.
 - [x] 🤖 §2 bullet 4: tắt `listen`, page báo "Claude không nghe", nút Chép còn — BH3 — 2026-10-12, `test-shell.mjs`: nút Gửi tắt, nút Chép đưa `Comment trên 01-forecast.html · khối 1 …: tiêu đề ngắn lại`
 - [x] 🤖 §2 bullet 5: ghim hiện "đã gửi" khi comment vừa tới — BH2 — 2026-10-12, `test-shell.mjs`: ghim #1 `sent`, đổi `doing` trong 2 giây sau `--status`
 - [x] 🤖 §2 bullet 6: comment ở `sent` khi session đóng; lượt `--resume` sau sửa nó trước, ghim "đã sửa" — BH4 — 2026-10-12, 077 `resume.stream.jsonl`: tool_use đầu là `comment --pending`, rồi `--status 1 doing`, vòng 2 "Comment #1: …", `comments.json` #1 `done`, 96 giây
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/017-design-uiux-comment-tren-page.md` — 0 ERROR — 2026-10-12
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/017-design-uiux-comment-tren-page.md` — 0 ERROR — 2026-10-12

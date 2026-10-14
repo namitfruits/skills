@@ -8,7 +8,7 @@
 // Người chạy bật lệnh này (chạy nền) trước khi gọi skill, tắt sau tin giao cuối. Người chấm đọc log để biết page có
 // dựng theo bước không, các page có dựng cùng lúc không, link có trước bước đầu tiên không.
 //
-//   node watch-progress.mjs <thư mục chứa .design> [--out progress.log] [--idle <giây, mặc định 1800>]
+//   node watch-progress.mjs <thư mục chứa .design-uiux> [--out progress.log] [--idle <giây, mặc định 1800>]
 //
 // Lệnh tự thoát khi không có gì đổi trong --idle giây.
 //

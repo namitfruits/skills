@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.2
 updated: 2026-10-06
 implements: []
-sources: [.plan/002-design-uiux-improve.md, .refer/ui-ux/SKILL.md, .refer/ui-ux/references/principles.md, .refer/ui-ux/references/budgets.md, .refer/ui-ux/references/styles.md, .refer/ui-ux/scripts/probe.mjs]
+sources: [.plans/002-design-uiux-improve.md, .refer/ui-ux/SKILL.md, .refer/ui-ux/references/principles.md, .refer/ui-ux/references/budgets.md, .refer/ui-ux/references/styles.md, .refer/ui-ux/scripts/probe.mjs]
 supersedes: []
 ---
 
@@ -93,7 +93,7 @@ flowchart LR
 ### P1 — Các page chạy thử cũ có bao nhiêu chỗ phạm kiểm tĩnh sắp thêm, và có chỗ nào không sửa được không?
 
 **Biết để làm gì:** gần như page nào cũng phạm mà mỗi chỗ đều sửa được thì kiểm làm lỗi chặn giao được; có loại không sửa được trong thang thì phải làm cảnh báo hay thêm ngoại lệ
-**Cách chạy lại:** danh sách page: `find .test/design-uiux -name '[0-9][0-9]-*.html' -not -path '*/_shell/*' -not -path '*check-planted*' -not -name '*options*'`; đếm bằng `grep -ohE '(^|[ "'"'"'])(text|p[trblxy]?|m[trblxy]?|gap(-[xy])?|space-[xy]|rounded(-[a-z]+)?|shadow|leading|tracking)-\[[^]]+\]'` và `grep -ohE '(^|[ "'"'"'])-(m[trblxy]?|space-[xy]|translate-[xy]|inset(-[xy])?|top|left|right|bottom)-[0-9a-z./]+'` trên danh sách đó; bóng thì `grep -n shadow` rồi đọc từng chỗ
+**Cách chạy lại:** danh sách page: `find .tests/design-uiux -name '[0-9][0-9]-*.html' -not -path '*/_shell/*' -not -path '*check-planted*' -not -name '*options*'`; đếm bằng `grep -ohE '(^|[ "'"'"'])(text|p[trblxy]?|m[trblxy]?|gap(-[xy])?|space-[xy]|rounded(-[a-z]+)?|shadow|leading|tracking)-\[[^]]+\]'` và `grep -ohE '(^|[ "'"'"'])-(m[trblxy]?|space-[xy]|translate-[xy]|inset(-[xy])?|top|left|right|bottom)-[0-9a-z./]+'` trên danh sách đó; bóng thì `grep -n shadow` rồi đọc từng chỗ
 **Kết quả:** 28 page của 13 lần chạy, 2026-10-06. Giá trị tự đặt: 28/28 page, nhiều nhất `mt-[2px]` 36 chỗ, `py-[2px]` 33, `mt-[3px]` 23, `gap-[2px]` 13; chỗ nào cũng có class trong thang thay được (`py-0.5`, `gap-0.5`) hay là nhích để căn, đổi sang `items-*`/`leading` được. Số âm: 22/28 page, `-translate-x-1/2` 31, `-translate-y-1/2` 24, `-inset-y-1` 12, `-mx-xs` 4; 8 chỗ nằm trong thuộc tính `x-transition` (điểm bắt đầu trượt vào). Bóng trong trang: `shadow-sm` trên núm công tắc (page notify) và tab đang chọn của nhóm nút (page members); còn lại nằm trên modal, panel, toast
 
 ## 5. Decisions
@@ -174,7 +174,7 @@ flowchart LR
 
 ### D17 🤖 — Kiểm được tinh chỉnh theo bộ đo báo nhầm: 12 chỗ báo nhầm, sửa kiểm chứ không thêm lối bỏ qua
 
-**Lý do:** ba vòng chạy trên 19 page cũ lộ báo nhầm ở `N6`, `N13`, `N9`, `N4`, `G1`, `N7`, `G8`, `G7`; mỗi chỗ thu hẹp đúng kiểm đó, ghi ở `.test/design-uiux/017-taste-planted/old-pages.md` → DS5
+**Lý do:** ba vòng chạy trên 19 page cũ lộ báo nhầm ở `N6`, `N13`, `N9`, `N4`, `G1`, `N7`, `G8`, `G7`; mỗi chỗ thu hẹp đúng kiểm đó, ghi ở `.tests/design-uiux/017-taste-planted/old-pages.md` → DS5
 **Đổi (2026-10-06):** thêm khi chạy Phase 2–4
 
 ### D13 🤖 — Kiểm báo nhầm thì sửa kiểm, không thêm lối bỏ qua trong page; 28 page cũ là bộ đo báo nhầm
@@ -299,12 +299,12 @@ Mỗi lỗi một dòng, đầu dòng là ID luật để agent con mở đúng 
 
 | Fixture | Thư mục chạy thử | Kiểm cái gì |
 | ------- | ---------------- | ----------- |
-| Bản gài lỗi | `.test/design-uiux/017-taste-planted/` | mỗi dòng của DS5 có một page phạm và một page gần giống mà không phạm, liệt kê ở `cases.md`; cộng ca brief có dòng `G6` (card bóng không báo) và brief có `G12` (báo ID lạ) |
-| Khuôn trống | `.test/design-uiux/017-taste-planted/blank/` | page vừa tạo từ `templates/details.html` không dính kiểm nào của DS5 |
-| Skill lệch | `.test/design-uiux/017-taste-planted/skew/` | bản sao skill có thêm `N14` trong `principles.md` → `check.mjs` exit 2 |
-| 28 page cũ (bộ đo báo nhầm, D13) | `.test/design-uiux/017-taste-planted/old-pages.md` | mỗi lỗi báo ra ghi `đúng` hay `nhầm` kèm lý do; số `nhầm` = 0 |
-| Đề 01 `.refer/design-requirement-01.md` (quota, design system `npx getdesign@latest add claude`), chạy `--auto` | `.test/design-uiux/018-quota-taste/` | `check.mjs` exit 0; trạng thái "sắp hết quota" dùng token trạng thái, không dùng màu phụ; agent con trả danh sách tự kiểm; tin giao có giới hạn nhường |
-| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu", design system là `default-design.md` cộng một câu "Cards sit on a soft shadow (`shadow-md`)" | `.test/design-uiux/019-card-shadow-ds/` | brief có dòng `G6` kèm câu trích; card có bóng; `check.mjs` exit 0 |
+| Bản gài lỗi | `.tests/design-uiux/017-taste-planted/` | mỗi dòng của DS5 có một page phạm và một page gần giống mà không phạm, liệt kê ở `cases.md`; cộng ca brief có dòng `G6` (card bóng không báo) và brief có `G12` (báo ID lạ) |
+| Khuôn trống | `.tests/design-uiux/017-taste-planted/blank/` | page vừa tạo từ `templates/details.html` không dính kiểm nào của DS5 |
+| Skill lệch | `.tests/design-uiux/017-taste-planted/skew/` | bản sao skill có thêm `N14` trong `principles.md` → `check.mjs` exit 2 |
+| 28 page cũ (bộ đo báo nhầm, D13) | `.tests/design-uiux/017-taste-planted/old-pages.md` | mỗi lỗi báo ra ghi `đúng` hay `nhầm` kèm lý do; số `nhầm` = 0 |
+| Đề 01 `.refer/design-requirement-01.md` (quota, design system `npx getdesign@latest add claude`), chạy `--auto` | `.tests/design-uiux/018-quota-taste/` | `check.mjs` exit 0; trạng thái "sắp hết quota" dùng token trạng thái, không dùng màu phụ; agent con trả danh sách tự kiểm; tin giao có giới hạn nhường |
+| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu", design system là `default-design.md` cộng một câu "Cards sit on a soft shadow (`shadow-md`)" | `.tests/design-uiux/019-card-shadow-ds/` | brief có dòng `G6` kèm câu trích; card có bóng; `check.mjs` exit 0 |
 
 ```bash
 node skills/design-uiux/scripts/check.mjs <thư mục design> --pw "$TMPDIR/design-uiux-pw"
@@ -391,7 +391,7 @@ Agent chính chép các dòng `[ ]` vào tin giao (Bước 6).
 - [x] 🤖 `grep -n 'principles.md' skills/design-uiux/SKILL.md` có ở Bước 1, lời giao agent con, "Viết một page", Bước 5 · `SKILL.md` không chép thân luật nào — 2026-10-06, 7 chỗ; `grep '^\*\*[NG][0-9]'` trong SKILL.md rỗng
 - [x] 🤖 `grep -n 'Đã dính\|vòng focus' skills/design-uiux/principles.md` rỗng (D4) — 2026-10-06, rỗng
 - [x] 👤 đọc `principles.md` một lượt: luật nào gắn với gu riêng của ui-ux mà lọt vào — 2026-10-06, Andy mở file rồi bảo "làm hết đi", không nêu luật nào; câu "nút nguy hiểm nền nhạt" (gu ui-ux) đã bỏ khi viết (D14)
-- [x] 🤖 page dựng từ khuôn mới qua `check.mjs` hiện có: 146 tổ hợp, chỉ còn lỗi `brief.md` chưa điền (đúng, bản trống) — 2026-10-06, `.test/design-uiux/016-template-principles/members.check.log`
+- [x] 🤖 page dựng từ khuôn mới qua `check.mjs` hiện có: 146 tổ hợp, chỉ còn lỗi `brief.md` chưa điền (đúng, bản trống) — 2026-10-06, `.tests/design-uiux/016-template-principles/members.check.log`
 
 ### Phase 2 — khung kiểm, kiểm tĩnh, bảng giới hạn nhường
 
@@ -457,8 +457,8 @@ Agent chính chép các dòng `[ ]` vào tin giao (Bước 6).
 
 **Actions:**
 
-- [x] 🤖 chạy Đề 01 (`--auto`) vào `.test/design-uiux/018-quota-taste/`, lưu chat và log — 2026-10-06, 3 agent con song song, `giao.md`
-- [x] 🤖 chạy Đề 03 với design system có câu về bóng card vào `.test/design-uiux/019-card-shadow-ds/` — 2026-10-06, agent chính tự dựng (một phương án)
+- [x] 🤖 chạy Đề 01 (`--auto`) vào `.tests/design-uiux/018-quota-taste/`, lưu chat và log — 2026-10-06, 3 agent con song song, `giao.md`
+- [x] 🤖 chạy Đề 03 với design system có câu về bóng card vào `.tests/design-uiux/019-card-shadow-ds/` — 2026-10-06, agent chính tự dựng (một phương án)
 
 **Gate:**
 
@@ -483,4 +483,4 @@ Agent chính chép các dòng `[ ]` vào tin giao (Bước 6).
 - [ ] 👤 §2 bullet 3: khối tự kiểm của 018 có đủ dòng DS9, dòng trượt có trong tin giao — <ngày + ai xác nhận> · BH10
 - [x] 🤖 §2 bullet 4: brief 019 có dòng `G6` kèm dẫn chứng, kiểm `G6` không chạy, page theo design system — BH4 — 2026-10-06
 - [ ] 👤 §2 bullet 5: tin giao 018 và 019 có dòng giới hạn đã nhường — <ngày + ai xác nhận> · BH12
-- [x] 🤖 `python3 .claude/skills/write-plan/verify.py .plan/003-design-uiux-principles.md` — 0 ERROR — 2026-10-06, 0 ERROR · 0 WARN
+- [x] 🤖 `python3 .claude/skills/write-plan/verify.py .plans/003-design-uiux-principles.md` — 0 ERROR — 2026-10-06, 0 ERROR · 0 WARN

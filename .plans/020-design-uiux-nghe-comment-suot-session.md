@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.5
 updated: 2026-10-14
 implements: [F7.3, F7.4, F7.5, F7.8, F7.9, F7.11, F7.12, F7.13]
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plan/017-design-uiux-comment-tren-page.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plans/017-design-uiux-comment-tren-page.md]
 supersedes: []
 ---
 
@@ -109,7 +109,7 @@ nối comment.
 
 **Biết để làm gì:** được thì cầu nối comment tự đánh thức session mỗi khi có comment, không cần công cụ theo dõi nào,
 không có hạn 30 phút. Không được thì phải dùng lệnh chờ chạy nền ở P2, hay giữ cách bật lại 30 phút một lần.
-**Cách chạy lại:** `python3 .probe/020-design-uiux-nghe-comment-suot-session/P1-inbox/probe.py` (terminal, chạy `claude`
+**Cách chạy lại:** `python3 .probes/020-design-uiux-nghe-comment-suot-session/P1-inbox/probe.py` (terminal, chạy `claude`
 có khung tương tác trong một pseudo-terminal); bước VS Code ở `P1-inbox/README.md`
 **Kết quả:** được — 2026-10-14.
 - Terminal, Claude Code 2.1.299, `P1-inbox/probe.log`: session nghỉ 10 giây, tin tới thì session chạy lệnh ghi giờ
@@ -143,7 +143,7 @@ chương trình tách rời thấy `CLAUDE_PID` mất khoảng 1 giây sau và t
 
 **Biết để làm gì:** được thì ô comment ghi thẳng lệnh mở lại cho người xem. Không được thì ô chỉ ghi "mở lại session cũ
 trong VS Code hay terminal".
-**Cách chạy lại:** `node .probe/020-design-uiux-nghe-comment-suot-session/P4-resume/probe.mjs` (mở lại bằng
+**Cách chạy lại:** `node .probes/020-design-uiux-nghe-comment-suot-session/P4-resume/probe.mjs` (mở lại bằng
 `--fork-session` để session gốc không bị ghi thêm)
 **Kết quả:** được — 2026-10-14, Claude Code 2.1.299, `P4-resume/probe.log`. Session tạo bằng `claude -p` mở lại theo mã
 và nhớ từ khoá đã dặn. Session tạo trong VS Code mở lại từ terminal theo mã, model trích được câu đầu của cuộc trò
@@ -392,7 +392,7 @@ Lệnh mới `comment <thư mục design> --add '<json>'` ghi một mục `sent`
 - [x] 🤖 `spec-check` chỉ báo `F7.11` · `F7.12` · `F7.13` chưa có mục SKILL.md — 2026-10-14
   - thêm một lỗi không thuộc plan này: `F2.9` (nút ẩn shell, session khác thêm) chưa có plan
 - [x] 🤖 `grep -n "lệnh nghe" skills/design-uiux/SPEC.md` không ra dòng nào — 2026-10-14
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/020-design-uiux-nghe-comment-suot-session.md` — 0 ERROR — 2026-10-14
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/020-design-uiux-nghe-comment-suot-session.md` — 0 ERROR — 2026-10-14
 
 ### Phase 1 — cầu nối comment
 
@@ -455,4 +455,4 @@ khi session đóng.
 - [ ] 👤 §2 bullet 4: dán prompt vào session mới, comment có số và ghim, page được sửa, ô comment lại ghi "đang nhận comment" — BH4
 - [ ] 👤 P3 phần VS Code: đóng một tab Claude trong VS Code, cầu nối của tab đó tắt — DS6
 - [ ] 🤖 §2 bullet 5: sau khi đóng session thử và chạy hết test, `pgrep -f comment-bridge` không ra gì — BH6
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/020-design-uiux-nghe-comment-suot-session.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/020-design-uiux-nghe-comment-suot-session.md` — 0 ERROR

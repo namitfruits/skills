@@ -52,7 +52,7 @@ Thử nhanh sau một lần sửa thì chạy bài 04 trên `skills/` của repo
 Nếu cần xem tiến độ dựng của từng page, ví dụ khi nghiệm thu plan 009, thì người chạy bật `watch-progress.mjs` chạy nền
 trước khi gọi skill: `node skills/design-uiux/samples/watch-progress.mjs <dir> --out <dir>/progress.log`.
 
-`prepare.mjs` chạy từ gốc repo. Lệnh tạo `.test/design-uiux/NNN-sample-<bài>-<slug>/`, chép `project/` của bài vào đó (không
+`prepare.mjs` chạy từ gốc repo. Lệnh tạo `.tests/design-uiux/NNN-sample-<bài>-<slug>/`, chép `project/` của bài vào đó (không
 chép `sample.md`: agent chạy mà đọc được checklist thì kết quả không còn khách quan), trỏ `.claude/skills` về
 `--skills` (mặc định `skills/` của repo), rồi in JSON `{ dir, prompt, feedback }`. Chạy trên bản chụp thì skill không đổi
 giữa các lượt, kể cả khi có người đang sửa repo.
@@ -80,7 +80,7 @@ Ngày: 2026-10-08 · Bản skill: 3d95ecd + SKILL.md 1a2b3c4d · Lỗi gài: —
 | # | Mục | Kết quả | Bằng chứng |
 | - | --- | ------- | ---------- |
 | C1 | Dòng `Đọc:` đầu chat nhắc `tokens.css`… | đạt | `chat.md` dòng 3: "Đọc: design system từ `src/styles/tokens.css`…" |
-| G1 | Sau góp ý 1, vẫn có 2 page… | trượt | `.design/001-don-hang/pages.js` có 3 mục |
+| G1 | Sau góp ý 1, vẫn có 2 page… | trượt | `.design-uiux/001-don-hang/pages.js` có 3 mục |
 ```
 
 `#` là `C<n>` theo thứ tự mục của Checklist, `G<n>` của Vòng góp ý. `Kết quả` là `đạt` hay `trượt`. Bằng chứng trỏ

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Kiểm lệnh open của new-design.mjs: mở đúng page đầu của thư mục design, một URL, đường dẫn có dấu cách và dấu được mã
-// hoá, thiếu Chrome thì đổi sang trình duyệt mặc định. Mỗi ca dựng .design/ mẫu trong thư mục tạm bằng init, page rồi
+// hoá, thiếu Chrome thì đổi sang trình duyệt mặc định. Mỗi ca dựng .design-uiux/ mẫu trong thư mục tạm bằng init, page rồi
 // chạy open --dry-run, nên không cửa sổ nào hiện ra.
 //
 //   node test-open.mjs           # mọi ca trừ C4
@@ -26,7 +26,7 @@ const run = (params, env = {}) => {
 };
 const results = [];
 const expect = (name, ok, detail) => results.push(`${ok ? "✓" : "✗"} ${name}${detail ? ` — ${detail}` : ""}`);
-const root = join(work, ".design");
+const root = join(work, ".design-uiux");
 const urlOf = (dir, file) => pathToFileURL(join(dir, file)).href;
 const command = (url) =>
   process.platform === "darwin" ? `$ open -na "Google Chrome" --args --new-window ${url}`

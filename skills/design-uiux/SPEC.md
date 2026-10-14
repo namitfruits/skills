@@ -162,8 +162,8 @@ Bốn phần, mỗi phần một chủ:
 
 **Scope:** `F1.2` `F1.3` `F1.8` `F1.16` `F1.17` `F4` `F6.2` `F6.5` `F6.8` `F6.9` `F6.10`
 
-Mỗi đề một thư mục `.design/NNN-slug/` ở thư mục làm việc lúc gọi skill. Mọi thư mục design dùng chung
-`.design/_shell/`. Một thư mục là **thư mục phương án** (đề một màn, mỗi page một phương án) hay **thư mục luồng**
+Mỗi đề một thư mục `.design-uiux/NNN-slug/` ở thư mục làm việc lúc gọi skill. Mọi thư mục design dùng chung
+`.design-uiux/_shell/`. Một thư mục là **thư mục phương án** (đề một màn, mỗi page một phương án) hay **thư mục luồng**
 (đề một luồng, mỗi page một màn), không trộn.
 
 | File | Ai ghi | Vai |
@@ -262,7 +262,7 @@ flowchart TB
   - `new-design.mjs init --getdesign <tên>` tải bằng `getdesign add --out` vào thư mục tạm, sinh token, rồi mới tạo
     thư mục design và chép `DESIGN.md` vào đó. `tokens.js` ghi nguồn `getdesign <tên>`.
   - Đề tự ghi lệnh `npx getdesign@latest add <tên>` cũng đi qua `init --getdesign`, để không file nào nằm ngoài
-    `.design/`.
+    `.design-uiux/`.
   - Hai lệnh thoát mã 2 khi `npx` hỏng (gói đổi cấu trúc, registry lỗi); agent dừng, in dòng lỗi vào chat, không
     dựng page.
 - `default-design.md` chỉ là token khi `init` không có `--tokens` hay `--getdesign`: các script kiểm của skill dùng nó.
@@ -359,7 +359,7 @@ flowchart TB
 - **Lượt đọc hỏng không phải là hết tiến độ.** Thẻ script báo lỗi nạp thì page không có danh sách: coi như đã xong,
   thôi đọc (page dựng trước khi có danh sách bước dựng). Nạp được mà thiếu dữ liệu là đọc phải file đang ghi: bỏ lượt
   đó, đọc lại lượt sau.
-- Một shell chung ở `.design/_shell/`, `new-design.mjs init` hay `shell` chép bản mới nhất của skill vào. Shell chỉ
+- Một shell chung ở `.design-uiux/_shell/`, `new-design.mjs init` hay `shell` chép bản mới nhất của skill vào. Shell chỉ
   bọc quanh page nên cập nhật shell không đổi hình bản thiết kế cũ.
 - Thư mục luồng: shell cho page `$store.design.next()` · `prev()` để nút "Tiếp tục", "Quay lại" trong page sang màn
   kề, giữ mọi giá trị trên URL. Chữ người xem gõ ở các màn nằm trong `$store.design.form`, shell lưu nó vào
@@ -391,7 +391,7 @@ flowchart TB
     C1 -->|"bước xong"| C2
     C2 -->|"còn bước"| C1
   end
-  subgraph DIR["`**.design/NNN-slug/** — thứ người dùng mở`"]
+  subgraph DIR["`**.design-uiux/NNN-slug/** — thứ người dùng mở`"]
     direction LR
     S[["_shell/<br/>bọc quanh page"]]
     P["page mỗi phương án<br/>hay mỗi màn"]
@@ -656,7 +656,7 @@ thẳng.
 | nút gọi server luôn trả thành công; cảnh lỗi là một giá trị `state` | nút vặn "lần gọi tới lỗi" không đổi gì trên page khi vặn, nên máy kiểm báo nút vặn khai thừa |
 | tải lại ở cảnh rỗng qua lúc chờ rồi vẫn rỗng | ngày chưa ai đặt thì tải lại vẫn chưa có lịch; lúc chờ đủ cho người xem thấy app đã hỏi server |
 | page tự viết lúc chờ bằng `setTimeout`, không có hàm chung trong shell | hàm đó chỉ bọc một cờ và `setTimeout`. Thêm vào shell thì shell có thêm một chỗ phải giữ tương thích |
-| một shell chung `.design/_shell/` cho mọi thư mục design | shell chỉ bọc quanh page, không chạm vào bản thiết kế: cập nhật shell thì page cũ có toolbar mới mà hình thiết kế không đổi |
+| một shell chung `.design-uiux/_shell/` cho mọi thư mục design | shell chỉ bọc quanh page, không chạm vào bản thiết kế: cập nhật shell thì page cũ có toolbar mới mà hình thiết kế không đổi |
 | shell có màu trung tính riêng, không dùng token của design system | shell phải tách khỏi bản thiết kế mà không chói; dùng token thì đổi design system là đổi luôn công cụ xem |
 | hai panel tên "Data Config" và "Layout Config", tiếng Anh ở cả page tiếng Việt | hai tên cùng đuôi "Config" nên người xem thấy ngay đây là hai nhóm nút vặn, khác nhau ở thứ bị vặn: dữ liệu hay cách sắp page. "Dữ liệu", "Cấu hình" đứng riêng thì "Cấu hình" quá chung, không nói vặn cái gì. Khối bên phải tên layout-panel theo cùng lý do |
 | page tự tải lại khi có bước dựng mới xong, không có nút tải lại, không có server | người dùng muốn thấy tiến độ mà không phải nhớ bấm; server là thêm tiến trình phải bật tắt, chiếm cổng |
@@ -720,9 +720,9 @@ thẳng.
 | | |
 | --- | --- |
 | **Input** | đề trong chat; design system (file CSS có `@theme`, `DESIGN.md`, design của getdesign do đề chỉ định hay người dùng chọn, hay bộ mặc định); code dự án nếu có, chỉ để đọc |
-| **Output** | thư mục `.design/NNN-slug/` ở thư mục làm việc: `brief.md`, `tokens.js`, `pages.js`, mỗi phương án một `NN-slug.html` kèm danh sách bước dựng `NN-slug.progress.js`, ảnh `shots/`. Mọi thư mục design dùng chung `.design/_shell/` |
+| **Output** | thư mục `.design-uiux/NNN-slug/` ở thư mục làm việc: `brief.md`, `tokens.js`, `pages.js`, mỗi phương án một `NN-slug.html` kèm danh sách bước dựng `NN-slug.progress.js`, ảnh `shots/`. Mọi thư mục design dùng chung `.design-uiux/_shell/` |
 | **Verify** | `check.mjs --quick` trên page sau mỗi bước dựng; `check.mjs` trên page hay cả thư mục: thứ tự nạp, brief, mọi tổ hợp tweak × sáng tối × `state` × preset ở 375 và 1280px, lượt bấm, luật UX và luật UI. `test-shell.mjs` khi sửa shell |
-| **Mutate** | chỉ ghi trong `.design/`. Không sửa code dự án, không cài gì vào dự án (Playwright cài vào thư mục tạm) |
+| **Mutate** | chỉ ghi trong `.design-uiux/`. Không sửa code dự án, không cài gì vào dự án (Playwright cài vào thư mục tạm) |
 
 | File | Vai trò |
 | --- | --- |
@@ -749,7 +749,7 @@ thẳng.
 
 ## 6. Không thuộc phạm vi
 
-- Chuyển prototype thành code dự án, hay ghi bất cứ gì vào repo dự án ngoài `.design/`.
+- Chuyển prototype thành code dự án, hay ghi bất cứ gì vào repo dự án ngoài `.design-uiux/`.
 - Gọi API thật, chạy logic thật. Page chỉ chạy trên dữ liệu giả.
 - Gu thẩm mỹ riêng của skill: component mẫu, bố cục mẫu từng loại màn. Skill theo design system được đưa; luật UI
   chỉ lấp chỗ design system không nói tới.

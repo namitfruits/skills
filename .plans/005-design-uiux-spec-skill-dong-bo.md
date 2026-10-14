@@ -6,7 +6,7 @@ status: done # draft → approved → done
 version: 0.7
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SKILL.md, skills/design-uiux/PLANS.md, .plan/004-design-uiux-dung-theo-buoc.md]
+sources: [CLAUDE.md, skills/design-uiux/SKILL.md, skills/design-uiux/PLANS.md, .plans/004-design-uiux-dung-theo-buoc.md]
 supersedes: []
 ---
 
@@ -157,7 +157,7 @@ thử mà lộ lỗi thì sửa SKILL đúng chỗ lỗi.
 **Lý do:** soát được chiều SKILL → SPEC; mục im lặng thì không phân biệt được quên gắn với cố ý → DS2 · DS3
 **Phương án đã loại:** chỉ soát chiều SPEC → SKILL — luật trong SKILL không có yêu cầu đứng sau vẫn lọt
 
-### D9 👤 — SPEC chỉ tả yêu cầu và thiết kế, như PRD gộp với tài liệu kiến trúc; cách nghiệm thu từng sub-scope và bộ kịch bản chạy thử nằm trong plan; kết quả mỗi lần chạy nằm ở `.test/`
+### D9 👤 — SPEC chỉ tả yêu cầu và thiết kế, như PRD gộp với tài liệu kiến trúc; cách nghiệm thu từng sub-scope và bộ kịch bản chạy thử nằm trong plan; kết quả mỗi lần chạy nằm ở `.tests/`
 
 **Lý do:** SPEC tả skill đang là gì; nghiệm thu là việc của một lần đổi, nên đi theo plan của lần đổi đó → DS7 · DS8
 **Đổi (2026-10-08):** người dùng lật, đổi 🤖 sang 👤. Câu cũ: "Cách nghiệm thu từng sub-scope và bộ kịch bản chạy thử nằm trong SPEC" — SPEC lẫn thứ chỉ đúng cho một lượt làm
@@ -175,21 +175,21 @@ thử mà lộ lỗi thì sửa SKILL đúng chỗ lỗi.
 ### D12 👤 — Mỗi skill có `PLANS.md` cạnh SPEC, hai mục Plan (việc đã viết plan) và Plan Queue (việc chưa viết plan); mỗi việc một mục có Mục tiêu và bảng mã yêu cầu nó chạm tới
 
 **Lý do:** người dùng ghi trước nhiều việc chưa làm ngay; ghi ở hàng chờ thì SPEC không đổi. SPEC chỉ chứa yêu cầu đã có, nên lệnh soát không cần trạng thái → DS3 · DS9
-**Phương án đã loại:** dùng thẳng `.plan/` — không có chỗ cho việc chưa thành plan, không nhìn được theo từng skill
+**Phương án đã loại:** dùng thẳng `.plans/` — không có chỗ cho việc chưa thành plan, không nhìn được theo từng skill
 **Đổi (2026-10-08):** PLANS.md là optional — người dùng: SKILL.md và SPEC.md bắt buộc, PLANS.md optional; skill không có file này thì `spec-check` bỏ qua phần PLANS.md
 **Đổi (2026-10-08):** hai mục từ "Chưa hoàn thành (hàng chờ, `chờ duyệt` · `đang làm`) và Đã hoàn thành (mỗi việc ghi mã yêu cầu nó đưa vào SPEC)" thành Plan · Plan Queue theo `agents/.docs/003-PLANS.md` → DS9
 **Đổi (2026-10-08):** người dùng lật. Câu cũ: "Trạng thái từng sub-scope (`chưa làm` · `đang làm` · `xong`) là một cột của bảng Nghiệm thu trong SPEC; `xong` bắt buộc trỏ tới bảng kết quả có dòng của nó đạt" — SPEC không mô tả trạng thái
 
-### ~~D13~~ 🤖 — Bảng kết quả nghiệm thu để ở `.nghiem-thu/<tên-skill>/NNN-<slug>.md` (được track); thư mục chạy thử nặng vẫn ở `.test/`
+### ~~D13~~ 🤖 — Bảng kết quả nghiệm thu để ở `.nghiem-thu/<tên-skill>/NNN-<slug>.md` (được track); thư mục chạy thử nặng vẫn ở `.tests/`
 
-**Lý do:** `.test/` bị gitignore, bằng chứng của `xong` mà chỉ ở đó thì clone về máy khác mọi dòng `xong` đều báo thiếu → DS8
-**Phương án đã loại:** bảng kết quả trong `.test/` — mất khỏi git; trong thư mục skill — đi theo skill khi cài, người dùng skill không cần
+**Lý do:** `.tests/` bị gitignore, bằng chứng của `xong` mà chỉ ở đó thì clone về máy khác mọi dòng `xong` đều báo thiếu → DS8
+**Phương án đã loại:** bảng kết quả trong `.tests/` — mất khỏi git; trong thư mục skill — đi theo skill khi cài, người dùng skill không cần
 **Đổi (2026-10-08):** bỏ — người dùng: nghiệm thu đi qua lượt chạy thử là đủ, không cần thư mục `.nghiem-thu/` → D14
 
-### D14 👤 — Bảng kết quả nghiệm thu là `ket-qua.md` trong thư mục chạy thử `.test/<tên-skill>/NNN-nghiem-thu-<slug>/`
+### D14 👤 — Bảng kết quả nghiệm thu là `ket-qua.md` trong thư mục chạy thử `.tests/<tên-skill>/NNN-nghiem-thu-<slug>/`
 
 **Lý do:** nghiệm thu là một lượt chạy thử; bảng kết quả nằm cạnh chat, log, ảnh nó dẫn chứng → DS8
-**Chấp nhận:** `.test/` bị gitignore, máy không có lượt chạy thì `spec-check` báo thiếu bằng chứng cho mọi dòng `xong`
+**Chấp nhận:** `.tests/` bị gitignore, máy không có lượt chạy thì `spec-check` báo thiếu bằng chứng cho mọi dòng `xong`
 **Đổi (2026-10-08):** `spec-check` không còn đọc bảng kết quả (D12), câu Chấp nhận hết đúng; bảng vẫn ở chỗ này
 
 ## 6. Design
@@ -242,7 +242,7 @@ node scripts/spec-check.mjs [skills/<tên> …] [--list | --matrix]
 | mã trong bảng mà SPEC không có (trừ dòng `new` của việc chưa `done`) | 2 | `PLANS.md:65 F4.9 có trong 002 mà SPEC không có` |
 | status hay tiêu đề không hợp mục (Plan: `NNN` · `draft` `approved` `done`; Plan Queue: `PQ-NN` · `new`) | 2 | `PLANS.md:90 PQ-01 status "approved", ở mục Plan Queue cần new` |
 | việc không có **Mục tiêu** | 2 | `PLANS.md:105 PQ-02 chưa có dòng **Mục tiêu:**` |
-| **Plan** trỏ file không có · thay đổi ngoài `new` `update` `remove` `fix` | 2 | `PLANS.md:39 001 trỏ tới ../../.plan/001-khong-co.md, mà không có file đó` |
+| **Plan** trỏ file không có · thay đổi ngoài `new` `update` `remove` `fix` | 2 | `PLANS.md:39 001 trỏ tới ../../.plans/001-khong-co.md, mà không có file đó` |
 
 **Đổi (2026-10-08):** bỏ các kiểm bảng Nghiệm thu, kịch bản, ba trạng thái, bằng chứng của `xong` (D9 · D12);
 thêm các kiểm PLANS.md. Dòng `new` của việc chưa `done` được nhắc mã SPEC chưa có — việc đó sẽ thêm yêu cầu mới.
@@ -370,13 +370,13 @@ Mỗi kịch bản một dòng `K<n>` · đề · cách gọi · phủ mã nào.
 
 **Đổi (2026-10-08):** `K2` chạy `--auto` — người dùng muốn mọi kịch bản tự chạy; không còn kiểm được nhánh người dùng bỏ một phương án.
 
-Kết quả mỗi lượt chạy bộ kịch bản: thư mục chạy `.test/design-uiux/NNN-nghiem-thu-<slug>/`, mỗi kịch bản một thư
-mục con `K<n>/` (chứa `.design/`, log, chat); bảng kết quả `ket-qua.md` trong cùng thư mục (D14):
+Kết quả mỗi lượt chạy bộ kịch bản: thư mục chạy `.tests/design-uiux/NNN-nghiem-thu-<slug>/`, mỗi kịch bản một thư
+mục con `K<n>/` (chứa `.design-uiux/`, log, chat); bảng kết quả `ket-qua.md` trong cùng thư mục (D14):
 
 ```markdown
 | Mã | Kết quả | Bằng chứng |
 | --- | --- | --- |
-| `F1.1` | đạt | `.test/design-uiux/028-nghiem-thu-005/K2/chat.md` dòng 12: AskUserQuestion 3 câu, câu đầu "(Khuyên dùng)" |
+| `F1.1` | đạt | `.tests/design-uiux/028-nghiem-thu-005/K2/chat.md` dòng 12: AskUserQuestion 3 câu, câu đầu "(Khuyên dùng)" |
 | `F3.3` | trượt | `K1/…/02-tuan.html` thiếu `state=empty` — sửa SKILL.md "Viết một page", chạy lại K1 |
 ```
 
@@ -393,7 +393,7 @@ việc đã viết plan, theo thứ tự viết; **Plan Queue** — việc chưa
 ```markdown
 ### 005 · <tên plan>                       ← ở Plan Queue là `### PQ-NN · <tên>`
 
-- **Plan:** [005-<slug>.md](../../.plan/005-<slug>.md)   ← chỉ ở Plan
+- **Plan:** [005-<slug>.md](../../.plans/005-<slug>.md)   ← chỉ ở Plan
 - **Status:** approved
 - **Mục tiêu:** <vì sao làm, xong thì thấy được gì, đầu vào nếu có>
 
@@ -443,7 +443,7 @@ có Mục tiêu và bảng Mã · Thay đổi — người dùng: việc chờ p
 - [x] 🤖 `python3 ~/.claude/skills/mermaid-diagram-design/verify.py skills/design-uiux/SPEC.md` — 0 ERROR; ảnh render nền tối đọc được — 3 block, 0 ERROR, 1 WARN (block 3.2 thiếu `~~~`, hình vẫn đúng); xem ảnh 3.3, 3.5 — 2026-10-08
 - [x] 🤖 `grep -nE "quick|build|tải lại|Đang dựng|link đưa sớm" skills/design-uiux/SPEC.md` không ra dòng nào thuộc hành vi của 004 — DS4 · D6 — còn 3 dòng "tải lại", đều nói tải lại trình duyệt giữ giá trị trên URL (`F2.5`), 2026-10-08
 - [x] 🤖 bảng Nghiệm thu có đúng một dòng cho mỗi sub-scope; mọi `K<n>` trong bảng có trong mục Kịch bản; mỗi kịch bản phủ ít nhất một mã — DS7 — `spec-check.mjs` kiểm cả ba, exit 0, 2026-10-08
-- [x] 🤖 agent con context mới đọc SPEC từ mục 1 tới mục 3, kể lại được skill làm gì và các phần nối với nhau thế nào; mục 1–6 đúng khung — `.test/spec-check/010-soat-noi-dung/ket-qua.md` việc 3: kể lại 5 câu đúng luồng, đủ sáu mục đúng thứ tự · DS1 · BH5 — 2026-10-08
+- [x] 🤖 agent con context mới đọc SPEC từ mục 1 tới mục 3, kể lại được skill làm gì và các phần nối với nhau thế nào; mục 1–6 đúng khung — `.tests/spec-check/010-soat-noi-dung/ket-qua.md` việc 3: kể lại 5 câu đúng luồng, đủ sáu mục đúng thứ tự · DS1 · BH5 — 2026-10-08
 
 ### Phase 2 — lệnh soát SPEC với SKILL.md (việc 1)
 
@@ -460,15 +460,15 @@ có Mục tiêu và bảng Mã · Thay đổi — người dùng: việc chờ p
 - [x] 🤖 `shell/shell.js`: `spec: F2 F4.2` → `spec: F2`; `new-design.mjs`: `spec: F1.2 F4.3` → `spec: F1.2 F4`; SKILL.md `## Vòng sau`: `F4.3` → `F4` (D6) — 2026-10-08; `shell.js` giữ `F2 F4.2` (xem Đổi ở DS4)
 - [x] 🤖 `CLAUDE.md` mục DS5 bản đầu — 2026-10-08
 - [x] 🤖 `CLAUDE.md`: thêm luật `spec: —`, bảng Nghiệm thu, kịch bản, chỗ để kết quả theo DS5 (D8 · D9) — 2026-10-08
-- [x] 🤖 `.plan/004-design-uiux-dung-theo-buoc.md` Phase 3: thêm action "SPEC thêm sub-scope cho dựng theo bước, link sớm, nhãn trạng thái, kèm dòng Nghiệm thu và kịch bản; gắn mã ở SKILL.md; `spec-check.mjs` sạch" (D6) — 2026-10-08, thêm một action và một Gate; verify 004 0 ERROR
+- [x] 🤖 `.plans/004-design-uiux-dung-theo-buoc.md` Phase 3: thêm action "SPEC thêm sub-scope cho dựng theo bước, link sớm, nhãn trạng thái, kèm dòng Nghiệm thu và kịch bản; gắn mã ở SKILL.md; `spec-check.mjs` sạch" (D6) — 2026-10-08, thêm một action và một Gate; verify 004 0 ERROR
 
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs` — `design-uiux` ✓, `brainstorm-v1` · `fetch-page` · `mermaid-diagram-design` bỏ qua, exit 0 — DS3 · DS4 · BH4 — "18 sub-scope đều có trong SKILL.md và có cách nghiệm thu", 2026-10-08
-- [x] 🤖 ba ca trạng thái của DS6 (BH10 · BH11 · BH12) trên bản chép tạm ra đúng kết quả — DS6 · BH10 · BH11 · BH12 — 5 ca (thêm ca `xong` có bằng chứng đạt → exit 0, ca bằng chứng ghi trượt → exit 1), tổng 13 ca đúng, `.test/spec-check/001-ca-loi/run.log`, 2026-10-08
-- [x] 🤖 bảy ca lỗi của DS6 trên bản chép tạm: mỗi ca ra đúng dòng lỗi, exit 1; thư mục không có → exit 2 — DS6 · BH1 · BH2 · BH3 · BH6 · BH7 — 8 ca (thêm ca kịch bản không phủ sub-scope) đúng lỗi, `.test/spec-check/001-ca-loi/run.sh` · `run.log`, 2026-10-08
+- [x] 🤖 ba ca trạng thái của DS6 (BH10 · BH11 · BH12) trên bản chép tạm ra đúng kết quả — DS6 · BH10 · BH11 · BH12 — 5 ca (thêm ca `xong` có bằng chứng đạt → exit 0, ca bằng chứng ghi trượt → exit 1), tổng 13 ca đúng, `.tests/spec-check/001-ca-loi/run.log`, 2026-10-08
+- [x] 🤖 bảy ca lỗi của DS6 trên bản chép tạm: mỗi ca ra đúng dòng lỗi, exit 1; thư mục không có → exit 2 — DS6 · BH1 · BH2 · BH3 · BH6 · BH7 — 8 ca (thêm ca kịch bản không phủ sub-scope) đúng lỗi, `.tests/spec-check/001-ca-loi/run.sh` · `run.log`, 2026-10-08
 - [x] 🤖 `node --check` mọi file code vừa gắn mã · `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` vẫn mọi phép ✓ — 64/64 ✓, exit 0, 2026-10-08
-- [x] 🤖 agent con context mới đọc `--matrix`: mỗi yêu cầu đặt cạnh các mục SKILL.md thực thi nó, nội dung mục đúng ý yêu cầu — lượt 1 `.test/spec-check/010-soat-noi-dung/ket-qua.md`: 15/18 khớp; sửa; lượt 2 `.test/spec-check/013-sau-soat/soat-lai.md`: 20/21 khớp, `F1.5` lệch nhẹ (một phương án thì agent chính tự dựng) đã sửa chữ SPEC · DS3 · BH9 — 2026-10-08
+- [x] 🤖 agent con context mới đọc `--matrix`: mỗi yêu cầu đặt cạnh các mục SKILL.md thực thi nó, nội dung mục đúng ý yêu cầu — lượt 1 `.tests/spec-check/010-soat-noi-dung/ket-qua.md`: 15/18 khớp; sửa; lượt 2 `.tests/spec-check/013-sau-soat/soat-lai.md`: 20/21 khớp, `F1.5` lệch nhẹ (một phương án thì agent chính tự dựng) đã sửa chữ SPEC · DS3 · BH9 — 2026-10-08
 - [x] 🤖 CLAUDE.md có cú pháp `spec:` và `spec: —`, luật hai chiều, bảng Nghiệm thu, kịch bản, lệnh `spec-check.mjs` — DS5 · DS2 — mục "SPEC thiết kế, SKILL.md và code thực thi", 2026-10-08
 
 ### Phase 3 — chạy bộ kịch bản (việc 2)
@@ -478,19 +478,19 @@ có Mục tiêu và bảng Mã · Thay đổi — người dùng: việc chờ p
 
 **Actions:**
 
-- [x] 🤖 004 huỷ: revert code Phase 1 của 004 về commit `76dea99`, gắn lại dòng `spec:` cho `shell.js`, `new-design.mjs`; SPEC bỏ dòng `page.html` · `example.html` (D11) — 2026-10-08; `spec-check.mjs` exit 0, `test-shell.mjs` 51/51 ✓, diff lưu ở `.test/design-uiux/027-huy-004/`
-- [x] 🤖 chạy `K1`, `K3` vào `.test/design-uiux/NNN-nghiem-thu-<slug>/K1/`, `K3/`; `K4` trên page của `K1` — 2026-10-08, `.test/design-uiux/028-nghiem-thu-005/`; K1 3 page · 562 tổ hợp · 0 lỗi, K3 434 · 0, K4 trên bản chép của K1, 562 · 0
+- [x] 🤖 004 huỷ: revert code Phase 1 của 004 về commit `76dea99`, gắn lại dòng `spec:` cho `shell.js`, `new-design.mjs`; SPEC bỏ dòng `page.html` · `example.html` (D11) — 2026-10-08; `spec-check.mjs` exit 0, `test-shell.mjs` 51/51 ✓, diff lưu ở `.tests/design-uiux/027-huy-004/`
+- [x] 🤖 chạy `K1`, `K3` vào `.tests/design-uiux/NNN-nghiem-thu-<slug>/K1/`, `K3/`; `K4` trên page của `K1` — 2026-10-08, `.tests/design-uiux/028-nghiem-thu-005/`; K1 3 page · 562 tổ hợp · 0 lỗi, K3 434 · 0, K4 trên bản chép của K1, 562 · 0
 - [x] 🤖 chạy `K2` (`--auto`) vào `K2/` — 2026-10-08, 3 page · 576 tổ hợp · 0 lỗi
-- [x] 🤖 điền `.test/design-uiux/028-nghiem-thu-005/ket-qua.md` theo DS8, mỗi sub-scope một dòng kèm bằng chứng (D14) — 2026-10-08, 18 dòng đạt
+- [x] 🤖 điền `.tests/design-uiux/028-nghiem-thu-005/ket-qua.md` theo DS8, mỗi sub-scope một dòng kèm bằng chứng (D14) — 2026-10-08, 18 dòng đạt
 - [x] 🤖 SPEC: sub-scope đạt đổi sang `xong`, cột Bằng chứng trỏ tới bảng kết quả (D12) — 2026-10-08, 18/18; sửa thêm "Đạt khi" của `F1.4` cho đúng ý SKILL.md (phần `--auto` mở đầu, không phải cả tin)
 - [x] 🤖 sub-scope trượt: sửa SKILL.md hay code đúng chỗ, chạy `spec-check.mjs`, chạy lại kịch bản đó, ghi kết quả mới — không sub-scope nào trượt. 12 vấn đề các agent ghi trong `K*/van-de.md` (lệnh grep thiếu nháy trong zsh, số `data-block` không chốt chung, cặp màu trượt N13…) gom ở mục "Vấn đề tìm được, chưa sửa" của bảng kết quả, chờ người dùng quyết
 
 **Gate:**
 
-- [x] 🤖 `.test/design-uiux/028-nghiem-thu-005/ket-qua.md` có đúng một dòng cho mỗi sub-scope của SPEC, cột Kết quả toàn "đạt" — DS8 · BH8 · <số sub-scope> — 18/18 đạt
+- [x] 🤖 `.tests/design-uiux/028-nghiem-thu-005/ket-qua.md` có đúng một dòng cho mỗi sub-scope của SPEC, cột Kết quả toàn "đạt" — DS8 · BH8 · <số sub-scope> — 18/18 đạt
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` exit 0, dòng kết "<n> xong · 0 đang làm · 0 chưa làm" — DS7 · BH11 — "18 xong · 0 đang làm · 0 chưa làm", 2026-10-08
 - [x] 🤖 mỗi dòng có bằng chứng trỏ được tới file trong thư mục kết quả (đường dẫn, dòng, ảnh) — DS8 — mỗi dòng trỏ `K*/chat.md` kèm số dòng, `check.log`, ảnh `shots/`, `shell/test-shell.log` — 18 dòng, 2026-10-08
-- [x] 🤖 `node skills/design-uiux/scripts/check.mjs` trên thư mục `.design/` của `K1` và `K3` exit 0 — <số tổ hợp> — K1 562, K3 434 tổ hợp, 0 lỗi
+- [x] 🤖 `node skills/design-uiux/scripts/check.mjs` trên thư mục `.design-uiux/` của `K1` và `K3` exit 0 — <số tổ hợp> — K1 562, K3 434 tổ hợp, 0 lỗi
 
 ### Phase 4 — SPEC chỉ còn yêu cầu và thiết kế, tiến độ sang PLANS.md
 
@@ -504,15 +504,15 @@ có Mục tiêu và bảng Mã · Thay đổi — người dùng: việc chờ p
 - [x] 🤖 `scripts/spec-check.mjs`: bỏ đọc bảng Nghiệm thu, kịch bản, trạng thái, bằng chứng; thêm bốn kiểm PLANS.md theo DS3; `--matrix` cột "Việc đưa vào" (D12) — 2026-10-08
 - [x] 🤖 `CLAUDE.md`: mục `### SPEC, PLANS.md, SKILL.md` theo DS5 (D9 · D12) — 2026-10-08
 - [x] 🤖 SKILL.md và SPEC.md bắt buộc, PLANS.md optional: CLAUDE.md ghi luật, `spec-check` bỏ qua phần PLANS.md khi skill không có file (D12) — 2026-10-08
-- [x] 🤖 ca thử DS6 viết lại ở `.test/spec-check/003-ca-loi-plans/run.sh` — 2026-10-08, 12 ca
-- [x] 🤖 PLANS.md theo dạng `agents/.docs/003-PLANS.md`: hai mục Plan · Plan Queue, mỗi việc `### NNN · tên` hay `### PQ-NN · tên` với Plan · Status · Mục tiêu và bảng Mã · Thay đổi · Tóm tắt; `spec-check` đọc dạng này (D12) — 2026-10-08, 12 vấn đề thành bảng `fix` của `PQ-02`; ca thử ở `.test/spec-check/007-ca-loi-plan-queue/`
+- [x] 🤖 ca thử DS6 viết lại ở `.tests/spec-check/003-ca-loi-plans/run.sh` — 2026-10-08, 12 ca
+- [x] 🤖 PLANS.md theo dạng `agents/.docs/003-PLANS.md`: hai mục Plan · Plan Queue, mỗi việc `### NNN · tên` hay `### PQ-NN · tên` với Plan · Status · Mục tiêu và bảng Mã · Thay đổi · Tóm tắt; `spec-check` đọc dạng này (D12) — 2026-10-08, 12 vấn đề thành bảng `fix` của `PQ-02`; ca thử ở `.tests/spec-check/007-ca-loi-plan-queue/`
 
 **Gate:**
 
 - [x] 🤖 `grep -nE "Trạng thái và nghiệm thu|Kịch bản chạy thử|chưa làm|ket-qua|Bằng chứng" skills/design-uiux/SPEC.md` không ra dòng nào — D9 — 0 dòng, 2026-10-08
 - [x] 🤖 `node scripts/spec-check.mjs` — design-uiux ✓, ba skill còn lại bỏ qua, exit 0 — DS3 · DS9 — "18 sub-scope · PLANS.md: 0 draft · 1 approved · 3 done · 2 new", 2026-10-08
-- [x] 🤖 ca DS6 mới: sub-scope không việc nào chạm tới, mã lạ, status hay tiêu đề sai mục, thiếu Mục tiêu, Plan trỏ file không có, thay đổi lạ → exit 1 đúng dòng lỗi; plan approved đưa sub-scope mới, không có PLANS.md → exit 0 — DS6 · BH13 · BH14 — 18 ca đúng, `.test/spec-check/012-phuc-vu/run.log`, 2026-10-08
-- [x] 🤖 agent con context mới đối chiếu bảng PLANS.md với §2 · §6 của plan 001–003: mỗi plan ghi đúng yêu cầu nó chạm tới — lượt 1 `.test/spec-check/010-soat-noi-dung/ket-qua.md`: 7/9 đúng; sửa, mỗi plan ghi từng sub-scope; lượt 2 `.test/spec-check/013-sau-soat/soat-lai.md`: 23/25 đúng, 2 sai và 2 thiếu đã sửa · DS9 · BH15 — 2026-10-08
+- [x] 🤖 ca DS6 mới: sub-scope không việc nào chạm tới, mã lạ, status hay tiêu đề sai mục, thiếu Mục tiêu, Plan trỏ file không có, thay đổi lạ → exit 1 đúng dòng lỗi; plan approved đưa sub-scope mới, không có PLANS.md → exit 0 — DS6 · BH13 · BH14 — 18 ca đúng, `.tests/spec-check/012-phuc-vu/run.log`, 2026-10-08
+- [x] 🤖 agent con context mới đối chiếu bảng PLANS.md với §2 · §6 của plan 001–003: mỗi plan ghi đúng yêu cầu nó chạm tới — lượt 1 `.tests/spec-check/010-soat-noi-dung/ket-qua.md`: 7/9 đúng; sửa, mỗi plan ghi từng sub-scope; lượt 2 `.tests/spec-check/013-sau-soat/soat-lai.md`: 23/25 đúng, 2 sai và 2 thiếu đã sửa · DS9 · BH15 — 2026-10-08
 
 ### Phase 5 — nghiệm thu
 
@@ -521,19 +521,19 @@ có Mục tiêu và bảng Mã · Thay đổi — người dùng: việc chờ p
 
 **Actions:**
 
-- [x] 🤖 chạy lại `spec-check.mjs` cả repo, `--matrix` cho design-uiux, và bảy ca lỗi trên bản chép tạm, giữ output — 2026-10-08, 13 ca, `.test/spec-check/001-ca-loi/run.log`, `002-matrix-design-uiux/matrix.md`
-- [x] 🤖 soát nội dung bằng agent con context mới thay cho người đọc: 18 sub-scope cạnh mục SKILL.md, bảng PLANS.md của 001–003, đọc SPEC mục 1–3 — 2026-10-08, `.test/spec-check/010-soat-noi-dung/ket-qua.md`: 15 khớp · 2 thiếu (`F2.5`, `F4.3`) · 1 lệch (`F1.3` bề rộng riêng); PLANS 7 đúng · 2 sai
-- [x] 🤖 sửa theo phát hiện: SPEC thêm `F1.5` `F1.6` `F3.4`, `F1.3` ghi ngoại lệ bề rộng, `F5.1` viết đúng phạm vi máy kiểm; SKILL.md thêm URL (`F2.5`), số kiểm chéo và `check.mjs` cả thư mục khi đổi dữ liệu chung (`F4.3`), đoạn sản phẩm và lệnh ra khỏi "Các khối điều khiển", gắn mã còn thiếu; PLANS.md mỗi plan ghi từng sub-scope, 001–003 `approved` khớp front matter; `spec-check` cấm mã scope ở mục Plan (D12) — 2026-10-08, 21 sub-scope, 19 ca `.test/spec-check/013-sau-soat/run.log`
-- [x] 🤖 sau Phase 4: chạy lại ca thử và `--matrix` — 2026-10-08, 12 ca `.test/spec-check/003-ca-loi-plans/run.log`, `004-matrix-plans/matrix.md`
+- [x] 🤖 chạy lại `spec-check.mjs` cả repo, `--matrix` cho design-uiux, và bảy ca lỗi trên bản chép tạm, giữ output — 2026-10-08, 13 ca, `.tests/spec-check/001-ca-loi/run.log`, `002-matrix-design-uiux/matrix.md`
+- [x] 🤖 soát nội dung bằng agent con context mới thay cho người đọc: 18 sub-scope cạnh mục SKILL.md, bảng PLANS.md của 001–003, đọc SPEC mục 1–3 — 2026-10-08, `.tests/spec-check/010-soat-noi-dung/ket-qua.md`: 15 khớp · 2 thiếu (`F2.5`, `F4.3`) · 1 lệch (`F1.3` bề rộng riêng); PLANS 7 đúng · 2 sai
+- [x] 🤖 sửa theo phát hiện: SPEC thêm `F1.5` `F1.6` `F3.4`, `F1.3` ghi ngoại lệ bề rộng, `F5.1` viết đúng phạm vi máy kiểm; SKILL.md thêm URL (`F2.5`), số kiểm chéo và `check.mjs` cả thư mục khi đổi dữ liệu chung (`F4.3`), đoạn sản phẩm và lệnh ra khỏi "Các khối điều khiển", gắn mã còn thiếu; PLANS.md mỗi plan ghi từng sub-scope, 001–003 `approved` khớp front matter; `spec-check` cấm mã scope ở mục Plan (D12) — 2026-10-08, 21 sub-scope, 19 ca `.tests/spec-check/013-sau-soat/run.log`
+- [x] 🤖 sau Phase 4: chạy lại ca thử và `--matrix` — 2026-10-08, 12 ca `.tests/spec-check/003-ca-loi-plans/run.log`, `004-matrix-plans/matrix.md`
 
 **Gate** — một dòng ứng một bullet §2:
 
 - [x] 🤖 §2 việc 1, bullet 1: SPEC design-uiux có yêu cầu có mã, technical design ghi mã phục vụ — `spec-check` đọc ra 5 scope · 21 sub-scope; 6/6 phần của mục 3 có dòng **Scope:** (`grep -A2 "^### 3\." SPEC.md`) · BH5 — 2026-10-08
 - [x] 🤖 §2 việc 1, bullet 2: `spec-check.mjs` exit 0 trên repo; thêm sub-scope chưa gắn, hay mục SKILL.md không gắn → exit 1 — BH1 · BH6 — exit 0; ca "sub-scope mới chưa gắn đâu", "mục SKILL.md mới không gắn mã" exit 1
-- [x] 🤖 §2 việc 1, bullet 3: bảng `--matrix` (`.test/spec-check/013-sau-soat/matrix.md`) đọc một lượt thấy nội dung SKILL.md khớp từng yêu cầu — agent con soát `.test/spec-check/013-sau-soat/soat-lai.md`: 20/21 khớp, dòng còn lại đã sửa · BH9 — 2026-10-08
+- [x] 🤖 §2 việc 1, bullet 3: bảng `--matrix` (`.tests/spec-check/013-sau-soat/matrix.md`) đọc một lượt thấy nội dung SKILL.md khớp từng yêu cầu — agent con soát `.tests/spec-check/013-sau-soat/soat-lai.md`: 20/21 khớp, dòng còn lại đã sửa · BH9 — 2026-10-08
 - [x] 🤖 §2 việc 2, bullet 1: mọi sub-scope có một dòng "kiểm bằng · đạt khi" trong DS7 — 21 dòng, khớp 21 sub-scope của SPEC, 2026-10-08
-- [x] 🤖 §2 việc 2, bullet 2: bảng kết quả toàn "đạt", mọi file và "dòng N" bằng chứng trỏ tới có thật — `check.py` trên `.test/design-uiux/028-nghiem-thu-005/ket-qua.md` 18/18 và `029-nghiem-thu-005-k4/ket-qua.md` 6/6 (`F1.5` `F1.6` `F3.4` mới, `K4` chạy lại trên SKILL.md đã sửa), exit 0; gài dòng sai, file không có → exit 1 · BH8 — 2026-10-08
-- [x] 🤖 §2 việc 2, bullet 3: PLANS.md có Plan · Plan Queue; `PQ-01` ghi `F6` `new` chưa có trong SPEC → exit 0; bỏ một mã khỏi plan `approved` → "chưa có trong PLANS.md", exit 1 — BH13 · BH14 — `.test/spec-check/013-sau-soat/run.log`, 2026-10-08
+- [x] 🤖 §2 việc 2, bullet 2: bảng kết quả toàn "đạt", mọi file và "dòng N" bằng chứng trỏ tới có thật — `check.py` trên `.tests/design-uiux/028-nghiem-thu-005/ket-qua.md` 18/18 và `029-nghiem-thu-005-k4/ket-qua.md` 6/6 (`F1.5` `F1.6` `F3.4` mới, `K4` chạy lại trên SKILL.md đã sửa), exit 0; gài dòng sai, file không có → exit 1 · BH8 — 2026-10-08
+- [x] 🤖 §2 việc 2, bullet 3: PLANS.md có Plan · Plan Queue; `PQ-01` ghi `F6` `new` chưa có trong SPEC → exit 0; bỏ một mã khỏi plan `approved` → "chưa có trong PLANS.md", exit 1 — BH13 · BH14 — `.tests/spec-check/013-sau-soat/run.log`, 2026-10-08
 - [x] 🤖 §2 chung, bullet 1: ba skill có SPEC kiểu cũ ra dòng "bỏ qua", không lỗi — BH4 — `brainstorm-v1` · `fetch-page` · `mermaid-diagram-design` "bỏ qua", exit 0
 - [x] 🤖 §2 chung, bullet 2: CLAUDE.md có ba file mỗi file một câu hỏi, đường đi của một việc, lệnh soát — mục "SPEC.md, SKILL.md, PLANS.md" và "Chạy thử skill" (luật `--auto`), 2026-10-08
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/005-design-uiux-spec-skill-dong-bo.md` — 0 ERROR — 0 ERROR · 0 WARN, 2026-10-08
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/005-design-uiux-spec-skill-dong-bo.md` — 0 ERROR — 0 ERROR · 0 WARN, 2026-10-08

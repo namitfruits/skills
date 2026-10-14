@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.4
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plan/002-design-uiux-improve.md, skills/design-uiux/samples/02-onboarding-flow/sample.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plans/002-design-uiux-improve.md, skills/design-uiux/samples/02-onboarding-flow/sample.md]
 supersedes: [002]
 ---
 
@@ -98,7 +98,7 @@ kiểm chúng · data-panel, config-panel, khổ màn, sáng tối · cách dự
 ### P1 — Trên `file://` trong Chrome, `sessionStorage` có giữ khi sang một file HTML khác cùng thư mục, và iframe có đọc chung với page cha không?
 
 **Biết để làm gì:** được thì chữ đã gõ đi theo giữa các màn mà không cần URL; không được thì chỉ còn mang chữ trên URL hay bỏ tính năng
-**Cách chạy lại:** `node .test/design-uiux/033-probe-session-file/probe.mjs` — `a.html` ghi khoá rồi nhúng iframe `c.html`, chuyển sang `b.html` đọc lại
+**Cách chạy lại:** `node .tests/design-uiux/033-probe-session-file/probe.mjs` — `a.html` ghi khoá rồi nhúng iframe `c.html`, chuyển sang `b.html` đọc lại
 **Kết quả:** iframe đọc được khoá của page cha; `b.html` đọc được khoá của `a.html` và khoá iframe ghi — 2026-10-08, Chrome hệ thống qua Playwright `channel: "chrome"`
 
 ## 5. Decisions
@@ -271,7 +271,7 @@ SKILL.md:
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` exit 0 — 2026-10-08, đạt sau Phase 2: `✓ 38 sub-scope`. Lần chạy đầu ở Phase 0 exit 1, 8 lỗi đều là "`F1.11`–`F1.17`, `F5.8` chưa có trong SKILL.md", vì mục SKILL.md gắn các mã này viết ở Phase 2
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/008-design-uiux-mot-man-luong.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/008-design-uiux-mot-man-luong.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN
 
 ### Phase 1 — thư mục luồng: mỗi màn một page, đi qua được
 
@@ -289,10 +289,10 @@ SKILL.md:
 
 **Gate:**
 
-- [x] 🤖 `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` — mọi phép ✓, gồm các phép luồng: dãy màn đúng, `next()` giữ query, `form.email` còn sau `next()` rồi `prev()` — DS2 · BH4 · BH5 — 2026-10-08: 59/59 ✓, exit 0, `.test/design-uiux/044-shell-luong/test-shell.log`; ảnh `flow-1280.png`, `flow-375.png`
-- [x] 🤖 `node skills/design-uiux/scripts/test-check.mjs` — bản thiếu nút exit 1 `không sang được màn 3`; bản đủ nút exit 0; thư mục 3 page `option` exit 1 `quá hai phương án` — DS3 — 2026-10-08: C1–C8 ✓; C6 `✓ 3 page · 60 tổ hợp · 0 lỗi`; log ở `.test/design-uiux/045-check-luong/`
+- [x] 🤖 `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` — mọi phép ✓, gồm các phép luồng: dãy màn đúng, `next()` giữ query, `form.email` còn sau `next()` rồi `prev()` — DS2 · BH4 · BH5 — 2026-10-08: 59/59 ✓, exit 0, `.tests/design-uiux/044-shell-luong/test-shell.log`; ảnh `flow-1280.png`, `flow-375.png`
+- [x] 🤖 `node skills/design-uiux/scripts/test-check.mjs` — bản thiếu nút exit 1 `không sang được màn 3`; bản đủ nút exit 0; thư mục 3 page `option` exit 1 `quá hai phương án` — DS3 — 2026-10-08: C1–C8 ✓; C6 `✓ 3 page · 60 tổ hợp · 0 lỗi`; log ở `.tests/design-uiux/045-check-luong/`
 - [x] 🤖 `new-design.mjs page` với `--screen` vào thư mục đã có page `--option` → exit 1 — DS2 — 2026-10-08, phép "new-design: … từ chối" ✓ trong test-shell, gồm cả chiều ngược lại và `--screen` sai dạng
-- [x] 🤖 `check.mjs` trên `.design/` của K1, K2, K3 trong `028-nghiem-thu-005` vẫn 0 lỗi (thư mục phương án không bị lượt luồng báo nhầm) — DS3 — 2026-10-08: không lượt nào báo lỗi luồng, dãy màn, bảng Luồng; mỗi thư mục có đúng một lỗi mới của 008 là "thư mục phương án có 3 page" — `.test/design-uiux/050-check-k-cu/K*.log`
+- [x] 🤖 `check.mjs` trên `.design-uiux/` của K1, K2, K3 trong `028-nghiem-thu-005` vẫn 0 lỗi (thư mục phương án không bị lượt luồng báo nhầm) — DS3 — 2026-10-08: không lượt nào báo lỗi luồng, dãy màn, bảng Luồng; mỗi thư mục có đúng một lỗi mới của 008 là "thư mục phương án có 3 page" — `.tests/design-uiux/050-check-k-cu/K*.log`
   **Đổi (2026-10-08):** Gate đọc là "không lỗi nào do 008 báo nhầm" thay vì "0 lỗi": cả ba thư mục có 3 page A B C, nên phép chặn quá hai phương án báo đúng luật mới; các lỗi còn lại (`## Khối`, `x-show` cùng `:style`, nút chính khác màu) là phép kiểm của plan 006 trên bài cũ
 
 ### Phase 2 — skill xếp đề và dựng theo loại đề
@@ -319,7 +319,7 @@ SKILL.md:
 
 **Actions:**
 
-- [x] 🤖 chạy bài 01 (một màn), 02 (một luồng), 03 (đề mơ hồ) `--auto` theo `samples/README.md`, vào `.test/design-uiux/<NNN>-nghiem-thu-008-*/` — 2026-10-08: `046-mau-01-…`, `047-mau-02-…`, `048-mau-03-…`, bản skill chụp `SKILL.md 30b362ba`; chạy bằng `chuan-bi.mjs` trước khi `samples/` đổi tên, nên file trong các thư mục này giữ tên cũ (`agent-con-*.md`, `check-truoc-gop-y.log`)
+- [x] 🤖 chạy bài 01 (một màn), 02 (một luồng), 03 (đề mơ hồ) `--auto` theo `samples/README.md`, vào `.tests/design-uiux/<NNN>-nghiem-thu-008-*/` — 2026-10-08: `046-mau-01-…`, `047-mau-02-…`, `048-mau-03-…`, bản skill chụp `SKILL.md 30b362ba`; chạy bằng `chuan-bi.mjs` trước khi `samples/` đổi tên, nên file trong các thư mục này giữ tên cũ (`agent-con-*.md`, `check-truoc-gop-y.log`)
 - [x] 🤖 chạy thêm bài 01 với đề sửa thành "cho tôi 3 phương án", và một góp ý "muốn xem hướng C thay B" — 2026-10-08: `049-mau-01-…-ba-pa`; tin giao không còn hướng `chưa chọn` nên góp ý gửi là "Cho tôi thêm một phương án thứ ba."
 - [ ] 👤 gọi `/design-uiux` với một đề thật một màn và một đề thật một luồng; đi hết luồng trên trình duyệt
 
@@ -331,4 +331,4 @@ SKILL.md:
 - [x] 🤖 §2 bullet 3: bài 02 — `chat.md` có bảng Luồng 3 dòng; 3 page, `pages.js` có `screen` — 2026-10-08: 047 bảng màn Welcome · Đăng ký · Hồ sơ trong `chat.md` trước link đầu tiên; `## Luồng` 3 dòng có `.html`; 3 page, 3 mục `screen`, 0 mục `option`; 3 agent con gọi cùng một lượt · BH4
 - [ ] 👤 §2 bullet 4: bài 02 và đề luồng thật — `check.mjs` cả thư mục exit 0 gồm lượt đi luồng; trên trình duyệt đi từ màn 1 tới màn cuối bằng nút trong page, quay lại thấy chữ đã gõ — <ngày + ai xác nhận> · BH5
   Phần máy (2026-10-08): 047 `✓ 3 page · 232 tổ hợp · 0 lỗi`, 048 `✓ 3 page · 314 tổ hợp · 0 lỗi`, cả hai gồm lượt đi luồng (đi tới màn cuối, quay lại màn trước ô còn chữ). Còn chờ người dùng đi hết luồng trên trình duyệt.
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/008-design-uiux-mot-man-luong.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/008-design-uiux-mot-man-luong.md` — 0 ERROR — 2026-10-08, 0 ERROR · 0 WARN

@@ -47,7 +47,7 @@ const inboxServer = createServer((sock) => sock.on("data", (chunk) => inbox.line
 await new Promise((resolve) => inboxServer.listen(inbox.path, resolve));
 
 try {
-  const dir = run(["init", "cau-noi", "--root", join(work, ".design")]);
+  const dir = run(["init", "cau-noi", "--root", join(work, ".design-uiux")]);
   const file = join(run(["page", dir, "bang", "--title", "Bảng", "--option", "A · Bảng"])).split("/").pop();
   const env = { ...baseEnv, CLAUDE_PID: String(sleeper.pid), CLAUDE_CODE_SESSION_ID: "s-1", CLAUDE_CODE_ENTRYPOINT: "cli", CLAUDE_CODE_MESSAGING_SOCKET: inbox.path, CLAUDE_CODE_MESSAGING_TOKEN: "hop-thu" };
 
@@ -108,7 +108,7 @@ try {
   const log = readFileSync(join(dir, "run.log"), "utf8");
   expect("run.log có dòng comment-bridge (bật, tắt) và comment", /\tcomment-bridge\t.*hộp thư inbox/.test(log) && /\tcomment-bridge\t.*tắt: session/.test(log) && /\tcomment\t/.test(log));
 
-  const quiet = run(["init", "khong-hop-thu", "--root", join(work, ".design")]);
+  const quiet = run(["init", "khong-hop-thu", "--root", join(work, ".design-uiux")]);
   run(["page", quiet, "bang", "--title", "Bảng", "--option", "A · Bảng"]);
   const quietOut = run(["comment-bridge", quiet]);
   const noInbox = readBridge(quiet);

@@ -6,7 +6,7 @@ status: done # draft → approved → done
 version: 0.3
 updated: 2026-10-08
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plan/005-design-uiux-spec-skill-dong-bo.md, .test/design-uiux/028-nghiem-thu-005/ket-qua.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plans/005-design-uiux-spec-skill-dong-bo.md, .tests/design-uiux/028-nghiem-thu-005/ket-qua.md]
 supersedes: []
 ---
 
@@ -89,7 +89,7 @@ flowchart LR
 ### P1 — `x-show` trong `x-for` có hiện sai sau khi đổi store không, và so page đổi tại chỗ với page mở mới từ cùng URL có bắt được không?
 
 **Biết để làm gì:** không tái hiện được thì không viết được phép kiểm hay test cho nó, phải dừng ở chỗ ghi luật vào SKILL.md. Tái hiện được thì cần biết cách so nào bắt được mà không báo nhầm ở page lành.
-**Cách chạy lại:** `.test/design-uiux/030-probe-xshow-xfor/`: `node probe.mjs $TMPDIR/design-uiux-pw .design/001-probe/01-xfor.html` (6 biến thể tự viết); `node probe2.mjs $TMPDIR/design-uiux-pw k2c/03-tong-ket-12-thang.html` (page C của K2 trong 028, đổi 4 chỗ `:class hidden` lại thành `x-show`)
+**Cách chạy lại:** `.tests/design-uiux/030-probe-xshow-xfor/`: `node probe.mjs $TMPDIR/design-uiux-pw .design-uiux/001-probe/01-xfor.html` (6 biến thể tự viết); `node probe2.mjs $TMPDIR/design-uiux-pw k2c/03-tong-ket-12-thang.html` (page C của K2 trong 028, đổi 4 chỗ `:class hidden` lại thành `x-show`)
 **Kết quả:** 2026-10-08, Alpine 3 (CDN), Playwright Chromium.
 
 - 6 biến thể tự viết (key theo id hay index, có `x-transition`, mảng trong data, `x-show` trên gốc `x-for`): 0 lệch.
@@ -201,7 +201,7 @@ Cặp màu dưới 4.5 : 1 (N13) — chốt cách dùng vào "Cặp màu không 
 
 ### DS7 — Test Strategy `scripts/test-check.mjs`
 
-Cùng kiểu `test-shell.mjs`: script dựng `.design/` trong thư mục tạm bằng `new-design.mjs`, ghi page từ `scripts/fixtures/check/*.html`, chạy `check.mjs`, rồi so dòng lỗi.
+Cùng kiểu `test-shell.mjs`: script dựng `.design-uiux/` trong thư mục tạm bằng `new-design.mjs`, ghi page từ `scripts/fixtures/check/*.html`, chạy `check.mjs`, rồi so dòng lỗi.
 
 | Ca | Fixture | Mong đợi |
 | -- | ------- | -------- |
@@ -237,7 +237,7 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` exit 0 — 2026-10-08: 28 sub-scope · 0 draft · 4 approved · 1 done · 2 new
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/006-design-uiux-sua-loi-nghiem-thu-005.md` — 0 ERROR — 2026-10-08: 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/006-design-uiux-sua-loi-nghiem-thu-005.md` — 0 ERROR — 2026-10-08: 0 ERROR · 0 WARN
 
 ### Phase 1 — Bước 1 đọc đúng design system và bề rộng
 
@@ -246,7 +246,7 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 
 **Actions:**
 
-- [x] 🤖 tái hiện: chạy hai lệnh `grep` chép nguyên từ SKILL.md bằng `zsh -c` trong `.test/design-uiux/031-…` có `src/app.css` chứa `@theme` → `no matches found` (D0) — 2026-10-08: zsh báo `no matches found: --include=*.css` và `--include=*.tsx`, exit 1 — `.test/design-uiux/031-bo-thu-006/grep-truoc.log`
+- [x] 🤖 tái hiện: chạy hai lệnh `grep` chép nguyên từ SKILL.md bằng `zsh -c` trong `.tests/design-uiux/031-…` có `src/app.css` chứa `@theme` → `no matches found` (D0) — 2026-10-08: zsh báo `no matches found: --include=*.css` và `--include=*.tsx`, exit 1 — `.tests/design-uiux/031-bo-thu-006/grep-truoc.log`
 - [x] 🤖 SKILL.md Bước 1: thêm nháy cho hai lệnh, sửa luật bề rộng theo DS1 (D7) — 2026-10-08; thêm câu vì sao phải có nháy
 - [x] 🤖 khuôn `brief.md`: dòng "Bề rộng trang" nhắc nguồn có thể là design system — 2026-10-08
 
@@ -271,7 +271,7 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 **Gate:**
 
 - [x] 🤖 `test-check.mjs` C1 · C2 · C3 đạt — DS2 · DS3 · BH2 · BH3 — 2026-10-08: 3/3 — `031-bo-thu-006/test-check-sau-p2.txt`
-- [x] 🤖 `check.mjs` chạy lại trên `.design/` của K1, K2, K3 trong `028-nghiem-thu-005` vẫn 0 lỗi (không báo nhầm), ghi thời gian chạy so với trước — DS2 · DS3 — 2026-10-08: phép so lúc vặn và lượt bấm không báo nhầm. Lỗi mới đều đúng: phép tĩnh x-show cùng :style chuỗi K1 1 chỗ (kiểm tay: tắt "So với TB" rồi vặn số tuần thì vạch TB hiện lại — `030-probe-xshow-xfor/probe3-k1c.log`), K3 8 chỗ (`:style` chuỗi trên menu, toast). Thời gian K1 96 giây → 186 giây (bản cũ và bản mới chạy song song) — `031-bo-thu-006/k-sau-p3/`
+- [x] 🤖 `check.mjs` chạy lại trên `.design-uiux/` của K1, K2, K3 trong `028-nghiem-thu-005` vẫn 0 lỗi (không báo nhầm), ghi thời gian chạy so với trước — DS2 · DS3 — 2026-10-08: phép so lúc vặn và lượt bấm không báo nhầm. Lỗi mới đều đúng: phép tĩnh x-show cùng :style chuỗi K1 1 chỗ (kiểm tay: tắt "So với TB" rồi vặn số tuần thì vạch TB hiện lại — `030-probe-xshow-xfor/probe3-k1c.log`), K3 8 chỗ (`:style` chuỗi trên menu, toast). Thời gian K1 96 giây → 186 giây (bản cũ và bản mới chạy song song) — `031-bo-thu-006/k-sau-p3/`
 - [x] 🤖 `test-shell.mjs` mọi phép ✓ — 2026-10-08: 51 ✓, 0 ✗
 
 ### Phase 3 — các page cùng thư mục không lệch nhau
@@ -281,7 +281,7 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 
 **Actions:**
 
-- [x] 🤖 tái hiện: `check.mjs` (bản Phase 2) trên `.design/` của K1 trong `028-nghiem-thu-005` → 0 lỗi dù nút chính lệch màu (D0) — 2026-10-08: K1 chỉ báo phép tĩnh x-show, không báo nút chính lệch — `031-bo-thu-006/k-sau-p2/K1.log`
+- [x] 🤖 tái hiện: `check.mjs` (bản Phase 2) trên `.design-uiux/` của K1 trong `028-nghiem-thu-005` → 0 lỗi dù nút chính lệch màu (D0) — 2026-10-08: K1 chỉ báo phép tĩnh x-show, không báo nút chính lệch — `031-bo-thu-006/k-sau-p2/K1.log`
 - [x] 🤖 `tokens.mjs` `weakPairs`, `new-design.mjs init` in ra stderr theo DS5 (D3) — 2026-10-08
 - [x] 🤖 khuôn `brief.md`: bảng "Cặp màu không đủ đọc", mục `## Khối` theo DS4 — 2026-10-08
 - [x] 🤖 SKILL.md Bước 4: agent chính điền hai bảng trước khi gọi agent con; lời giao thêm hai dòng; câu variable chung theo DS4 — 2026-10-08; Bước 5 liệt kê hai phép cả thư mục
@@ -291,8 +291,8 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 **Gate:**
 
 - [x] 🤖 `new-design.mjs init` với `K1/DESIGN.md` in `on-primary trên primary 3.28 : 1`; stdout chỉ có đường dẫn — DS5 · BH5 — 2026-10-08: stderr có `sáng  on-primary trên primary 3.28 : 1`, stdout chỉ một dòng đường dẫn — `031-bo-thu-006/init-k1/`
-- [x] 🤖 `check.mjs` trên `.design/` của K1 trong `028` báo "nút chính các page khác màu" — DS6 · BH5 — 2026-10-08: "01-du-bao.html nền primary, chữ #181715 · 02-session.html nền primary-active, chữ #ffffff · 03-cac-tuan.html nền primary, chữ #181715" — `k-sau-p3/K1-nut-chinh.log`
-- [x] 🤖 thư mục mới từ `init` có `brief.md` chứa `### Cặp màu không đủ đọc` và `## Khối`; lời giao trong SKILL.md có hai dòng của DS4 — DS4 · BH4 — 2026-10-08: `init-k1-moi/.design/001-k1/brief.md` có `### Cặp màu không đủ đọc` (dòng 25) và `## Khối` (dòng 67); lời giao SKILL.md có hai dòng "data-block lấy đúng số", "Cặp màu có trong bảng"
+- [x] 🤖 `check.mjs` trên `.design-uiux/` của K1 trong `028` báo "nút chính các page khác màu" — DS6 · BH5 — 2026-10-08: "01-du-bao.html nền primary, chữ #181715 · 02-session.html nền primary-active, chữ #ffffff · 03-cac-tuan.html nền primary, chữ #181715" — `k-sau-p3/K1-nut-chinh.log`
+- [x] 🤖 thư mục mới từ `init` có `brief.md` chứa `### Cặp màu không đủ đọc` và `## Khối`; lời giao trong SKILL.md có hai dòng của DS4 — DS4 · BH4 — 2026-10-08: `init-k1-moi/.design-uiux/001-k1/brief.md` có `### Cặp màu không đủ đọc` (dòng 25) và `## Khối` (dòng 67); lời giao SKILL.md có hai dòng "data-block lấy đúng số", "Cặp màu có trong bảng"
 - [x] 🤖 `test-check.mjs` C1–C5 đạt — DS6 · DS7 · BH4 — 2026-10-08: 5/5 trên bản cuối — `031-bo-thu-006/test-check-cuoi.txt`
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` exit 0 — 2026-10-08: exit 0, 28 sub-scope
 
@@ -303,7 +303,7 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 
 **Actions:**
 
-- [x] 🤖 chạy K1, K2, K3 `--auto` vào `.test/design-uiux/NNN-nghiem-thu-006/`, mỗi kịch bản một agent, cùng đề và đầu vào như `028` — 2026-10-08: `.test/design-uiux/032-nghiem-thu-006/`. Plan 008 sửa `check.mjs` giữa lượt chạy (thêm "tối đa hai phương án"), nên K1 và K3 có 1 lỗi không thuộc plan này. K2 kiểm bằng bản chụp: 0 lỗi
+- [x] 🤖 chạy K1, K2, K3 `--auto` vào `.tests/design-uiux/NNN-nghiem-thu-006/`, mỗi kịch bản một agent, cùng đề và đầu vào như `028` — 2026-10-08: `.tests/design-uiux/032-nghiem-thu-006/`. Plan 008 sửa `check.mjs` giữa lượt chạy (thêm "tối đa hai phương án"), nên K1 và K3 có 1 lỗi không thuộc plan này. K2 kiểm bằng bản chụp: 0 lỗi
 - [x] 🤖 mỗi kịch bản ghi `van-de.md` như 005; gom vào `ket-qua.md` — 2026-10-08: `032-nghiem-thu-006/ket-qua.md`
 
 **Gate** — một dòng ứng một bullet §2:
@@ -312,5 +312,5 @@ node skills/design-uiux/scripts/test-check.mjs --pw "$TMPDIR/design-uiux-pw"
 - [x] 🤖 §2 bullet 2: `test-check.mjs` C1 đạt trên bản cuối — BH2 — 2026-10-08: C1 ✓ C2 ✓ — `031-bo-thu-006/test-check-ban-cuoi.txt` (8/8 ca)
 - [x] 🤖 §2 bullet 3: `test-check.mjs` C3 đạt trên bản cuối — BH3 — 2026-10-08: C3 ✓, `bấm "Đặt mục tiêu" (target=0)` báo khung nổi dưới toolbar
 - [x] 🤖 §2 bullet 4: `brief.md` của K1, K2, K3 có bảng Khối và bảng Cặp màu; `check.mjs` cả thư mục 0 lỗi; mở `data-block` từng page đối chiếu bảng Khối, khớp tên khối — BH4 · BH5 — 2026-10-08: ba brief có cả hai bảng; số khối mọi page khớp cột "Có ở page" (`032-nghiem-thu-006/doi-chieu-khoi.md`); `check.log` không báo khối ngoài bảng hay nút chính lệch; còn lại: cùng số khối nhưng khác hình (N6), ghi vào PQ-04
-- [x] 🤖 §2 bullet 5: `brief.md` của K1 ghi bề rộng `1200px` lấy từ `DESIGN.md`; `tokens.js` có `"width":"1200px"` — BH6 — 2026-10-08: `K1/.design/001-quota-ai-theo-tuan/brief.md` dòng 38 `1200px` lấy từ "Max content width: ~1200px centered."; `tokens.js` `"width":"1200px"`
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/006-design-uiux-sua-loi-nghiem-thu-005.md` — 0 ERROR — 2026-10-08: 0 ERROR · 0 WARN, status done
+- [x] 🤖 §2 bullet 5: `brief.md` của K1 ghi bề rộng `1200px` lấy từ `DESIGN.md`; `tokens.js` có `"width":"1200px"` — BH6 — 2026-10-08: `K1/.design-uiux/001-quota-ai-theo-tuan/brief.md` dòng 38 `1200px` lấy từ "Max content width: ~1200px centered."; `tokens.js` `"width":"1200px"`
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/006-design-uiux-sua-loi-nghiem-thu-005.md` — 0 ERROR — 2026-10-08: 0 ERROR · 0 WARN, status done

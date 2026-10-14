@@ -33,7 +33,7 @@ thiện trang Insights cần bám đúng design system và component của dự 
   cục, độ dày), khổ màn desktop / tablet / mobile, và sáng / tối. Vặn nút nào thì UI đổi ngay, thứ đang
   mở trên page (modal, tab) không mất. Chép link gửi đi thì mở ra đúng các giá trị đang xem. Design
   system chỉ có một giao diện thì giao diện còn lại do skill suy ra, và thanh ghi rõ là suy ra.
-- Mọi page của một requirement nằm chung một thư mục trong `.design`, trên thanh có menu chuyển page: một page
+- Mọi page của một requirement nằm chung một thư mục trong `.design-uiux`, trên thanh có menu chuyển page: một page
   Options, và mỗi phương án được chọn đúng một page Details. Góp ý thì sửa thẳng page đó tới khi xong; chỉ
   khi chọn thêm một phương án khác mới có page mới.
 - Mỗi page giao ra đã qua lệnh tự kiểm: không lỗi console, không cuộn ngang ở 375px, ở mọi tổ hợp tweak ×
@@ -84,7 +84,7 @@ flowchart LR
 | `BH11` | Xem rồi muốn thử thêm phương án khác | Vẽ lại cả file phác thảo | Thêm một page Details cho phương án đó, page phương án cũ giữ nguyên |
 
 **Không đụng:** skill ui-ux (bản cài và bản tham khảo); code của dự án được đọc, skill chỉ ghi vào thư mục
-`.design` ở chỗ đang làm việc.
+`.design-uiux` ở chỗ đang làm việc.
 
 ---
 
@@ -119,7 +119,7 @@ heatmap…). Trang `/insights` là `routes/insights.tsx` 668 dòng cùng 7 trang
 
 **Biết để làm gì:** Chrome có lúc chặn ghi URL trên trang `file://`; chặn thì giá trị phải nằm ở chỗ khác
 (phần `#` của URL, hay bắt chạy server), và khung mobile phải nghĩ cách khác.
-**Cách chạy lại:** `PW_DIR=<thư mục có node_modules/playwright> node .test/design-uiux/000-probe-file-protocol/run.mjs`
+**Cách chạy lại:** `PW_DIR=<thư mục có node_modules/playwright> node .tests/design-uiux/000-probe-file-protocol/run.mjs`
 — page dùng Alpine 3 + Tailwind v4 bản trình duyệt + `pages.js` + iframe `?frame=1`
 **Kết quả:** chạy hết. `history.replaceState` ghi `?weeks=9` không lỗi, `navigation` vẫn 1 lượt; modal
 đang mở vẫn mở, số trong modal đổi theo; iframe nhận `postMessage` đổi sang 7; mở lại URL ở tab mới ra 9;
@@ -134,7 +134,7 @@ phải mang `x-data`. — 2026-10-05, Chrome 154.0.8037.93, Playwright 1.x
 
 **Lý do:** chuyển HTML thành code đã có công cụ khác lo.
 
-### ~~D1~~ — Mỗi requirement một thư mục `.design/NNN-slug/`, mỗi page một file, vòng sau thêm file chứ không ghi đè
+### ~~D1~~ — Mỗi requirement một thư mục `.design-uiux/NNN-slug/`, mỗi page một file, vòng sau thêm file chứ không ghi đè
 
 **Lý do:** giữ được lịch sử quyết định để mở lại và so, như project trong Claude Design. → DS2
 **Đổi (2026-10-05):** bỏ — người dùng chốt mỗi phương án một page, góp ý sửa thẳng page đó; thay bằng D21.
@@ -224,13 +224,13 @@ hứa hẹn ở DS2–DS6 có một phép kiểm trong `check.mjs`. → DS8
 ### D21 👤 — Mỗi phương án được chọn đúng một page Details; góp ý sửa thẳng page đó, page mới chỉ khi chọn thêm phương án
 
 **Lý do:** người dùng chốt giữa lúc dựng — làm một page cho tới khi xong, không rải bản nháp. Thư mục
-`.design/NNN-slug/` vẫn một đề một thư mục. → DS2 · DS7
+`.design-uiux/NNN-slug/` vẫn một đề một thư mục. → DS2 · DS7
 
 ### D18 🤖 — Lấy từ skill ui-ux ba thứ: khung lý do và ưu nhược trên page Options, đánh số khối trên mọi page, nút gợi ý góp ý chép được
 
 **Lý do:** người dùng góp ý bằng số khối ("bỏ khối 3") và bằng câu có sẵn, không phải tả lại bằng lời. → DS6 · DS7
 
-### D19 🤖 — Thư mục `.design` nằm ở thư mục làm việc lúc gọi skill; khi chạy thử thì đó là `.test/design-uiux/NNN-slug/`
+### D19 🤖 — Thư mục `.design-uiux` nằm ở thư mục làm việc lúc gọi skill; khi chạy thử thì đó là `.tests/design-uiux/NNN-slug/`
 
 **Lý do:** đề 02 đọc một repo khác; skill không ghi vào repo đó (§2 Ngoài scope). → DS9
 
@@ -249,7 +249,7 @@ skills/design-uiux/
     options.html           # khung page Options: phương án, khung lý do, số khối
     details.html           # khung page Details: khai DESIGN, Alpine, bốn trạng thái
   scripts/
-    new-design.mjs         # init (tạo .design/NNN-slug) · page (thêm page từ mẫu, ghi pages.js) · tokens
+    new-design.mjs         # init (tạo .design-uiux/NNN-slug) · page (thêm page từ mẫu, ghi pages.js) · tokens
     tokens.mjs             # DS4: DESIGN.md hoặc CSS có @theme → tokens.js, suy ra giao diện còn thiếu
     check.mjs              # DS8
 ```
@@ -259,10 +259,10 @@ thật; bỏ `templates/pages.js`, `new-design.mjs` tự ghi `pages.js` để s�
 
 `README.md` của repo thêm một dòng cho `design-uiux`.
 
-### DS2 — Thư mục `.design` và danh sách page
+### DS2 — Thư mục `.design-uiux` và danh sách page
 
 ```
-.design/001-quota-timeline/
+.design-uiux/001-quota-timeline/
   _shell/                  # copy từ skills/design-uiux/shell/ lúc tạo thư mục (D8)
   tokens.js                # DS4
   pages.js
@@ -283,7 +283,7 @@ thật; bỏ `templates/pages.js`, `new-design.mjs` tự ghi `pages.js` để s�
 | `note` | `string` | | một dòng: chọn gì, góp ý gì |
 | `updated` | `string` | ✓ | `YYYY-MM-DD` |
 
-`NNN` đếm riêng trong từng `.design`, lấy số lớn nhất đang có cộng 1; `NN` của page đếm trong thư mục.
+`NNN` đếm riêng trong từng `.design-uiux`, lấy số lớn nhất đang có cộng 1; `NN` của page đếm trong thư mục.
 `new-design.mjs init` và `page` làm cả hai việc đếm này.
 
 ### DS3 — Khai báo nút của page
@@ -397,7 +397,7 @@ kho ≠ desktop → thân page thành iframe 375 / 768 của chính URL + frame=
 ### DS8 — CLI của `check.mjs`
 
 ```bash
-node skills/design-uiux/scripts/check.mjs <thư mục .design/NNN-slug | page.html> [--pw <dir>] [--no-shots]
+node skills/design-uiux/scripts/check.mjs <thư mục .design-uiux/NNN-slug | page.html> [--pw <dir>] [--no-shots]
 ```
 
 | Lượt | Phép kiểm | Hứa ở |
@@ -431,13 +431,13 @@ lỗi: lượt tổ hợp chỉ vặn thanh nút, không bấm gì trong page, n
 
 | Fixture | Thư mục chạy thử | Kiểm cái gì |
 | ------- | ---------------- | ----------- |
-| `templates/details.html` | `.test/design-uiux/001-shell/` | page mẫu của skill qua `new-design.mjs`; `gate.mjs` kiểm hành vi riêng của page mẫu |
-| Bản gài lỗi của page mẫu | `.test/design-uiux/002-check-planted/` | bảy lỗi gài, mỗi lỗi `check.mjs` phải bắt một dòng |
-| Đề 01 `.refer/design-requirement-01.md` | `.test/design-uiux/003-quota-timeline/` | không có codebase, token chuyển từ `DESIGN.md` của getdesign, chỉ có sáng nên tối phải suy ra, có page Options |
-| Đề 02 `.refer/design-requirement-02.md` | `.test/design-uiux/004-insights/` | có codebase, dán `@theme` của dự án, dùng component của dự án, chỉ có tối nên sáng phải suy ra; repo dự án không đổi |
-| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu" | `.test/design-uiux/005-notify-settings/` | đề một hướng, không được ra page Options |
+| `templates/details.html` | `.tests/design-uiux/001-shell/` | page mẫu của skill qua `new-design.mjs`; `gate.mjs` kiểm hành vi riêng của page mẫu |
+| Bản gài lỗi của page mẫu | `.tests/design-uiux/002-check-planted/` | bảy lỗi gài, mỗi lỗi `check.mjs` phải bắt một dòng |
+| Đề 01 `.refer/design-requirement-01.md` | `.tests/design-uiux/003-quota-timeline/` | không có codebase, token chuyển từ `DESIGN.md` của getdesign, chỉ có sáng nên tối phải suy ra, có page Options |
+| Đề 02 `.refer/design-requirement-02.md` | `.tests/design-uiux/004-insights/` | có codebase, dán `@theme` của dự án, dùng component của dự án, chỉ có tối nên sáng phải suy ra; repo dự án không đổi |
+| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu" | `.tests/design-uiux/005-notify-settings/` | đề một hướng, không được ra page Options |
 
-Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lượt chạy theo quy ước `CLAUDE.md`.
+Mỗi thư mục chạy thử giữ `.design-uiux/` do skill sinh, và log của lượt chạy theo quy ước `CLAUDE.md`.
 
 ## 7. Phases
 
@@ -458,7 +458,7 @@ Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lư�
 - [x] 🤖 `shell/shell.js`: menu page đọc `window.DESIGN_PAGES`, chuyển page giữ `kho`, `theme` (D10) — 2026-10-05
 - [x] 🤖 `shell/shell.css` · `shell/default-design.md` · `scripts/tokens.mjs` (tối suy ra) — 2026-10-05; tokens.mjs chạy được trên default-design.md, DESIGN.md của getdesign, tokens.css của ats-proxy-v2
 - [x] 🤖 `templates/details.html`: danh sách có tab, modal mời, modal xoá, ô tìm; tweak `role` (viewer: nút mời, nút xoá khoá kèm `title`), `layout`, `density`; `state` đủ bốn giá trị; hai preset — 2026-10-05
-- [x] 🤖 `scripts/new-design.mjs` `init` + `page`: `.test/design-uiux/001-shell/.design/001-members/` có hai page, `pages.js` có `from` · `note` — 2026-10-05
+- [x] 🤖 `scripts/new-design.mjs` `init` + `page`: `.tests/design-uiux/001-shell/.design-uiux/001-members/` có hai page, `pages.js` có `from` · `note` — 2026-10-05
 
 **Gate:**
 
@@ -467,7 +467,7 @@ Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lư�
 - [x] 🤖 Mở URL đã ghi ở tab mới → thanh và UI ra đúng các giá trị đó — DS5 · BH8 — `gate.mjs`: count=5, role=viewer, ô chọn trên thanh = viewer
 - [x] 🤖 `kho=mobile` → iframe rộng 375; đổi variable trên thanh → chữ trong iframe đổi — DS5 · BH5 — `gate.mjs`: `innerWidth` 375 (lần đầu ra 373 vì viền ăn bề rộng, đã sửa bằng `content-box`), count = 2 → iframe 2 dòng
 - [x] 🤖 `role=viewer` → nút xoá và nút mời bị khoá kèm `title` nói vì sao — DS3 · BH4 — `gate.mjs` 2026-10-05: mọi nút "Xoá …" `disabled` + `title`, nút mời cũng vậy
-- [x] 🤖 Menu page có đủ hai mục trong `pages.js`; chuyển page giữ `kho=mobile&theme=dark` — DS2 — `gate.mjs`: bấm mục hai → `02-members-v2.html?kho=mobile&theme=dark`; cả lượt 9/9 ✓, log ở `.test/design-uiux/001-shell/gate.log`
+- [x] 🤖 Menu page có đủ hai mục trong `pages.js`; chuyển page giữ `kho=mobile&theme=dark` — DS2 — `gate.mjs`: bấm mục hai → `02-members-v2.html?kho=mobile&theme=dark`; cả lượt 9/9 ✓, log ở `.tests/design-uiux/001-shell/gate.log`
 - [ ] 👤 Bạn mở page mẫu, vặn thử từng nhóm nút — <ngày + ai xác nhận>
 
 ### Phase 2 — lệnh tự kiểm bắt được lỗi
@@ -478,16 +478,16 @@ Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lư�
 **Actions:**
 
 - [x] 🤖 `scripts/check.mjs` theo DS8; in lệnh cài Playwright vào thư mục tạm khi chưa có (D17, D20) — 2026-10-05
-- [x] 🤖 Bảy bản gài lỗi của `details.html` ở `.test/design-uiux/002-check-planted/`: khối 500px · `throw` khi `state=error` · nút khai không dùng · nút câm · mã màu · thiếu `empty` · page ngoài `pages.js` — 2026-10-05
+- [x] 🤖 Bảy bản gài lỗi của `details.html` ở `.tests/design-uiux/002-check-planted/`: khối 500px · `throw` khi `state=error` · nút khai không dùng · nút câm · mã màu · thiếu `empty` · page ngoài `pages.js` — 2026-10-05
 
 **Gate:**
 
 - [x] 🤖 `check.mjs` trên page mẫu → exit 0; số tổ hợp in ra = tweak × theme × state × 2 khổ + preset — DS8 — `✓ 2 page · 272 tổ hợp · 0 lỗi` = 2 × (8 × 2 × 4 + 2 × 2) × 2, 46 giây
 - [x] 🤖 Bản khối 500px → exit 1, dòng lỗi ghi "cuộn ngang" ở 375 — DS8 — `10-overflow.html [68 chỗ, vd 375px …]: cuộn ngang 141px`
 - [x] 🤖 Bản `throw` → exit 1, dòng lỗi ghi đúng tổ hợp `state=error` — DS8 — 32 chỗ, đều `state=error` (8 tweak × 2 theme × 2 khổ); năm lỗi gài còn lại mỗi lỗi một dòng; bản shell cũ bị bắt `iframe rộng 373px, cần đúng 375px`
-- [x] 🤖 Bản token cũ của đề 01 (`max-w-sm` = 12px) → exit 1, bắt modal "Ngưỡng" và đoạn chữ trạng thái rỗng — DS8 — 2026-10-06, `.test/design-uiux/006-modal-squeezed/check.log`: `[375px bấm "Ngưỡng"; 1280px bấm "Ngưỡng"]: chữ bị ép mỗi dòng một chữ` và `[48 chỗ, vd 375px … state=empty]`; token mới → ba đề 0 lỗi (642 · 199 · 88 tổ hợp), hai gate vẫn 11/11
+- [x] 🤖 Bản token cũ của đề 01 (`max-w-sm` = 12px) → exit 1, bắt modal "Ngưỡng" và đoạn chữ trạng thái rỗng — DS8 — 2026-10-06, `.tests/design-uiux/006-modal-squeezed/check.log`: `[375px bấm "Ngưỡng"; 1280px bấm "Ngưỡng"]: chữ bị ép mỗi dòng một chữ` và `[48 chỗ, vd 375px … state=empty]`; token mới → ba đề 0 lỗi (642 · 199 · 88 tổ hợp), hai gate vẫn 11/11
 
-### Phase 3 — gọi skill là ra thư mục `.design`
+### Phase 3 — gọi skill là ra thư mục `.design-uiux`
 
 **Goal:** `/design-uiux <đề>` đọc dự án, quyết page Options, dựng page, tự kiểm, giao link.
 **Cover:** DS1 · DS4 · DS6 · DS7
@@ -510,20 +510,20 @@ Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lư�
 
 ### Phase 4 — chạy thử ba đề
 
-**Goal:** ba đề của DS9 ra được thư mục `.design` sạch `check.mjs`.
+**Goal:** ba đề của DS9 ra được thư mục `.design-uiux` sạch `check.mjs`.
 **Cover:** DS9
 
 **Actions:**
 
-- [x] 🤖 Đề 01 trong `.test/design-uiux/003-quota-timeline/`: chạy `npx -y getdesign@latest add claude` ở đó, rồi gọi skill — 2026-10-05; getdesign ghi vào gốc git repo, đã chuyển về và thêm `--out ./DESIGN.md` vào SKILL.md
-- [x] 🤖 Đề 02 trong `.test/design-uiux/004-insights/`, đọc repo `ats-proxy-v2` — 2026-10-05, đọc `routes/insights.tsx`, `packages/ui/src/{tokens.css, card.tsx, stat-strip.tsx, shell/}`; page Options có khối "Đang có gì"
-- [x] 🤖 Đề 03 trong `.test/design-uiux/005-notify-settings/` — 2026-10-05, đi thẳng page Details, token mặc định của skill; `check.mjs` bắt "saveResult vặn không đổi UI" → đổi thành `state=saveFail`
+- [x] 🤖 Đề 01 trong `.tests/design-uiux/003-quota-timeline/`: chạy `npx -y getdesign@latest add claude` ở đó, rồi gọi skill — 2026-10-05; getdesign ghi vào gốc git repo, đã chuyển về và thêm `--out ./DESIGN.md` vào SKILL.md
+- [x] 🤖 Đề 02 trong `.tests/design-uiux/004-insights/`, đọc repo `ats-proxy-v2` — 2026-10-05, đọc `routes/insights.tsx`, `packages/ui/src/{tokens.css, card.tsx, stat-strip.tsx, shell/}`; page Options có khối "Đang có gì"
+- [x] 🤖 Đề 03 trong `.tests/design-uiux/005-notify-settings/` — 2026-10-05, đi thẳng page Details, token mặc định của skill; `check.mjs` bắt "saveResult vặn không đổi UI" → đổi thành `state=saveFail`
 - [x] 🤖 Đề 01 vòng hai: góp ý "thêm cột tóm tắt bên phải mỗi tuần" sửa thẳng page Details đã chọn — 2026-10-05, `02-week-timeline.html`
 - [x] 🤖 Đề 01: người dùng chọn thêm phương án B → thêm một page Details cho B — 2026-10-05, `03-week-grid.html`
 
 **Gate:**
 
-- [x] 🤖 `check.mjs` trên cả ba thư mục `.design` → exit 0 — DS9 — 2026-10-05: quota 3 page · 612 tổ hợp · 0 lỗi; insights 2 page · 176 · 0; notify 1 page · 84 · 0 (`.test/design-uiux/final-check.log`)
+- [x] 🤖 `check.mjs` trên cả ba thư mục `.design-uiux` → exit 0 — DS9 — 2026-10-05: quota 3 page · 612 tổ hợp · 0 lỗi; insights 2 page · 176 · 0; notify 1 page · 84 · 0 (`.tests/design-uiux/final-check.log`)
 - [x] 🤖 Đề 01 có `01-options.html` với 2–3 phương án; tin giao có dòng `Đọc:` nêu `DESIGN.md` của getdesign — BH1 — 2026-10-05, 3 `data-option` (check.mjs kiểm), dòng `Đọc:` ở tin giao lượt chạy thử
 - [x] 🤖 Đề 03 không có page `kind: "options"` trong `pages.js` — BH2 — 2026-10-05, `grep -c '"kind": "options"'` → 0
 - [x] 🤖 Đề 01 nút sáng tối ghi "Tối (suy ra)"; đề 02 ghi "Sáng (suy ra)" — BH6 — 2026-10-05, `DESIGN_THEME.derived` = dark / light; check.mjs kiểm nhãn "(suy ra)" trên mọi page
@@ -540,7 +540,7 @@ Mỗi thư mục chạy thử giữ `.design/` do skill sinh, và log của lư�
 
 - [ ] 👤 Bạn mở page Options và page Details của đề 01, bấm thử như người dùng thật, đặt cạnh bản Claude Design của cùng đề
 - [ ] 👤 Bạn mở page Details của đề 02, so với trang `/insights` đang chạy
-- [x] 🤖 Chạy lại `check.mjs` trên ba thư mục `.design`, giữ output — 2026-10-05, `.test/design-uiux/final-check.log`
+- [x] 🤖 Chạy lại `check.mjs` trên ba thư mục `.design-uiux`, giữ output — 2026-10-05, `.tests/design-uiux/final-check.log`
 
 **Gate** — một dòng ứng một bullet §2:
 

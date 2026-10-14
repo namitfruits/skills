@@ -1,5 +1,5 @@
 ---
-name: brainstorm-v1
+name: brainstorm
 description: >-
   Trao đổi với người dùng để làm rõ điều họ thực sự mong muốn — chỉ làm rõ, chưa phân tích. Mở đầu bằng nói lại
   đề cho người dùng sửa chỗ hiểu sai, hỏi hiện trạng (hệ thống đang có gì, chưa có gì), rồi tách đề thành module —
@@ -18,7 +18,7 @@ description: >-
   từng cái gồm gì.
 ---
 
-# brainstorm-v1 — trao đổi để làm rõ người dùng thực sự muốn gì
+# brainstorm — trao đổi để làm rõ người dùng thực sự muốn gì
 
 File này đủ để chạy skill. Vì sao skill được thiết kế như vậy thì ở [SPEC.md](SPEC.md), không cần đọc khi chạy.
 

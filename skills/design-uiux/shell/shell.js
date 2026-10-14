@@ -663,9 +663,9 @@
     const health = await fetch(`http://127.0.0.1:${info.port}/health`, { signal: AbortSignal.timeout(1500) }).then((res) => (res.ok ? res.json() : null), () => null);
     return (comments.bridge = { state: health ? (health.wake === "inbox" ? "inbox" : "saved") : "closed", info });
   }
-  // Thư mục design là thư mục của page; thư mục dự án là chỗ session đã chạy, hay chỗ chứa .design/ khi chưa có session.
+  // Thư mục design là thư mục của page; thư mục dự án là chỗ session đã chạy, hay chỗ chứa .design-uiux/ khi chưa có session.
   const designDir = () => decodeURIComponent(location.pathname).replace(/\/[^/]*$/, "");
-  const projectDir = () => comments.bridge.info?.session?.cwd ?? designDir().replace(/\/\.design\/.*$/, "");
+  const projectDir = () => comments.bridge.info?.session?.cwd ?? designDir().replace(/\/\.design-uiux\/[^/]*$/, "");
   function bridgeMessage() {
     const { state, info } = comments.bridge;
     if (state === "inbox") return escapeHtml(text.bridgeInbox);

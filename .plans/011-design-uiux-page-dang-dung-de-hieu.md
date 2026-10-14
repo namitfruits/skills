@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.3
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plan/009-design-uiux-tien-do-dung.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plans/009-design-uiux-tien-do-dung.md]
 supersedes: []
 ---
 
@@ -120,7 +120,7 @@ tải lại vài lần trong một bước mà không có gì mới
 
 **Lý do:** chấm đứng yên không phân biệt được agent đang chạy hay đã dừng → DS1
 **Đổi (2026-10-09):** nhãn chưa xong có vòng lan từ chấm, việc con ngay trên nhãn, thanh tiến độ ở đáy với vệt sáng
-chạy — người dùng thấy chấm mờ rõ chưa đủ gây ấn tượng; so sáu hướng ở `.test/design-uiux/061-nhan-dang-lam/demo.html`, người dùng giao agent chọn
+chạy — người dùng thấy chấm mờ rõ chưa đủ gây ấn tượng; so sáu hướng ở `.tests/design-uiux/061-nhan-dang-lam/demo.html`, người dùng giao agent chọn
 
 ### D3 👤 — Khối chờ chỉ có dữ liệu của page: tiêu đề là concept, phụ đề là nội dung cụ thể; bỏ chữ "Đang dựng" và câu hướng dẫn
 
@@ -349,7 +349,7 @@ node new-design.mjs progress <thư mục design> --delivered --all     # mọi p
 **Gate:**
 
 - [x] 🤖 `grep -c "F6.9\|F1.18" skills/design-uiux/SPEC.md` ≥ 2; `F6.5` có chữ "đang chuẩn bị" — 2026-10-09: 5 dòng; `F6.5` ghi "đang chuẩn bị"
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/011-design-uiux-page-dang-dung-de-hieu.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/011-design-uiux-page-dang-dung-de-hieu.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN
 
 ### Phase 1 — nhãn chuyển động và việc con
 
@@ -399,7 +399,7 @@ node new-design.mjs progress <thư mục design> --delivered --all     # mọi p
 - [x] 🤖 `scripts/new-design.mjs`: `page` tạo `prep`; `progress --prepared`; `--done` và `--doing` chặn khi `prep` chưa xong; file không có `prep` coi như xong (D5) — 2026-10-09
 - [x] 🤖 `shell/shell.js` + `shell/shell.css`: trạng thái `preparing`, nhóm "Chuẩn bị" trong danh sách, chấm cùng nhịp (D2 · D5) — 2026-10-09
 - [x] 🤖 `scripts/check.mjs`: `prep` chưa xong thì báo `còn bước chưa xong` — 2026-10-09
-- [x] 🤖 `scripts/new-design.mjs`: `--prepared` ghi sẵn việc con "Đọc brief và nguyên tắc" cho bước dựng 1 — 2026-10-09: lượt chạy thật `.design/003-lich-hen-hom-nay` không có dòng việc con 2 phút 23 giây (`--prepared` 13:39:40, `--doing` đầu tiên 13:42:03) vì agent con đọc brief, nguyên tắc trước; `test-progress.mjs` ca `--prepared` kiểm `doing`
+- [x] 🤖 `scripts/new-design.mjs`: `--prepared` ghi sẵn việc con "Đọc brief và nguyên tắc" cho bước dựng 1 — 2026-10-09: lượt chạy thật `.design-uiux/003-lich-hen-hom-nay` không có dòng việc con 2 phút 23 giây (`--prepared` 13:39:40, `--doing` đầu tiên 13:42:03) vì agent con đọc brief, nguyên tắc trước; `test-progress.mjs` ca `--prepared` kiểm `doing`
 - [x] 🤖 `SKILL.md` Bước 4: in khối link ngay sau các lệnh `page` (D7); chạy `--prepared` cho mọi page sau khi điền brief, trước khi gọi agent con; dòng lệnh; nhãn trong "Các khối điều khiển"; gắn `F6.5` — 2026-10-09: link chuyển lên "Agent chính chuẩn bị", vòng `--prepared` trước "Gọi agent con", sơ đồ Mental model, một dòng bẫy; thêm `watch-progress.mjs` ghi "chuẩn bị xong" và "việc con: …"
 - [x] 🤖 `SPEC.md` mục 3.5: thứ tự tạo page → in link → viết brief → `--prepared` → gọi agent con (D7) — 2026-10-09: bước 5–7 của agent chính
 - [x] 🤖 `scripts/test-progress.mjs` · `scripts/test-shell.mjs` · `scripts/test-check.mjs`: các ca của DS3 — 2026-10-09; hai phép cũ của `test-shell.mjs` đổi giá trị mong đợi vì danh sách có thêm nhóm "Chuẩn bị"
@@ -472,7 +472,7 @@ node new-design.mjs progress <thư mục design> --delivered --all     # mọi p
 
 **Actions:**
 
-- [ ] 🤖 chạy bài 01 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.test/design-uiux/<NNN>-nghiem-thu-011/`
+- [ ] 🤖 chạy bài 01 `--auto` theo `samples/README.md`, kèm `watch-progress.mjs`, vào `.tests/design-uiux/<NNN>-nghiem-thu-011/`
 - [ ] 👤 gọi `/design-uiux` với một đề thật, mở link ngay khi có, để page mở suốt lúc dựng
 
 **Gate** — một dòng ứng một bullet §2:
@@ -484,4 +484,4 @@ node new-design.mjs progress <thư mục design> --delivered --all     # mọi p
 - [ ] 👤 §2 bullet 5: tên hai phương án của bài 01 và của lượt chạy thật là cụm danh từ tả cách cả page được bày; người duyệt đọc tên là đoán được page có gì — <ngày + ai xác nhận>
 - [ ] 🤖 §2 bullet 6: trong `progress.log` của `watch-progress.mjs`, dòng "đã giao" của mọi page đứng sau lần chạy `check.mjs` cả thư mục cuối cùng trong `chat.md` — <bằng chứng> · BH7
 - [ ] 👤 §2 bullet 7: lượt chạy thật — nhãn xong chỉ ghi "✓ Xong"; bấm vào thấy dòng cuối "Sửa lần cuối …" — <ngày + ai xác nhận> · BH6
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/011-design-uiux-page-dang-dung-de-hieu.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/011-design-uiux-page-dang-dung-de-hieu.md` — 0 ERROR

@@ -6,11 +6,11 @@ status: approved
 version: 0.2
 updated: 2026-10-07
 implements: []
-sources: [.plan/001-design-uiux.md, .plan/002-design-uiux-improve.md, .plan/003-design-uiux-principles.md, .test/design-uiux/020-login-pilot-app/nhan-xet.md]
+sources: [.plans/001-design-uiux.md, .plans/002-design-uiux-improve.md, .plans/003-design-uiux-principles.md, .tests/design-uiux/020-login-pilot-app/nhan-xet.md]
 supersedes: [001]
 ---
 
-> **Huỷ (2026-10-08):** Andy quyết huỷ plan này. Code Phase 1 (nhãn trạng thái, nút tải lại, page mới tạo là màn chờ, `details.html` → `example.html`) đã revert về commit `76dea99`; bản diff lưu ở `.test/design-uiux/027-huy-004/phase1.patch` và `page.html`. Phase 2–4 không làm. Theo dõi tiến độ thiết kế làm lại ở plan 006, dùng bản diff trên làm đầu vào. Plan [005](005-design-uiux-spec-skill-dong-bo.md) không còn chờ plan này.
+> **Huỷ (2026-10-08):** Andy quyết huỷ plan này. Code Phase 1 (nhãn trạng thái, nút tải lại, page mới tạo là màn chờ, `details.html` → `example.html`) đã revert về commit `76dea99`; bản diff lưu ở `.tests/design-uiux/027-huy-004/phase1.patch` và `page.html`. Phase 2–4 không làm. Theo dõi tiến độ thiết kế làm lại ở plan 006, dùng bản diff trên làm đầu vào. Plan [005](005-design-uiux-spec-skill-dong-bo.md) không còn chờ plan này.
 
 > **Nối tiếp:** [002](002-design-uiux-improve.md) — các page dựng song song, mỗi agent con một page. Plan này đổi cách một agent con dựng page của nó: từng bước, xem được trong lúc dựng.
 > **Lật:** D20 của [001](001-design-uiux.md), phần "chỉ giao link khi `check.mjs` ra exit 0": link đưa ngay khi page còn đang dựng; báo xong vẫn chỉ khi exit 0. **Giữ:** D21 của 001; D6 · D7 của 002.
@@ -97,7 +97,7 @@ flowchart LR
 
 **Biết để làm gì:** dưới ~5 giây thì kiểm được sau từng bước dựng; vài chục giây như kiểm đầy đủ thì phần nghĩ
 được cắt bớt lại tốn sang phần chờ kiểm, và chỉ nên kiểm ở cuối
-**Cách chạy lại:** `node .test/design-uiux/021-probe-quick-check/probe-quick.mjs <page.html>`, ba lần liền
+**Cách chạy lại:** `node .tests/design-uiux/021-probe-quick-check/probe-quick.mjs <page.html>`, ba lần liền
 **Kết quả:** 1,89s lần đầu (Chrome nguội), 1,08s và 1,11s các lần sau — 2026-10-07, Playwright ở
 `$TMPDIR/design-uiux-pw`, Chrome hệ thống, page `020-login-pilot-app/01-vao-thang.html`. Chưa tính lượt dò nguyên
 tắc trên tổ hợp đó (kiểm đầy đủ: ~30s cho ~120 tổ hợp, tức ~0,25s mỗi tổ hợp)
@@ -273,9 +273,9 @@ node check.mjs <thư mục design | page.html> [--pw <dir>] [--no-shots]      # 
 | File / lệnh | Vai |
 | ----------- | --- |
 | `scripts/test-shell.mjs` | thêm phép: nút tải lại có ở 1600 / 700 / 375px; vặn `state`, cuộn xuống, bấm tải lại → URL, `state`, `scrollY` giữ nguyên; page có `build` 2/6 → nhãn "Đang dựng 2/6", danh sách đúng ✓ ● ○; có bước vòng 2 chưa xong → "Đang sửa a/b", danh sách có nhóm "Góp ý vòng 2"; mọi bước xong → "✓ Xong · <ngày trong `pages.js`>"; không có `build` → "✓ Xong" kèm dòng "Page dựng trước khi có danh sách bước" |
-| `.test/design-uiux/017-taste-planted/run.sh` + `verify.py` | hồi quy: mọi ca vẫn ra đúng phán quyết trong `expect.json` |
-| `.test/design-uiux/<NNN>-quick/` | ca cho `--quick`: page có `build` dở (kiểm đầy đủ phải báo "còn bước chưa xong"); page bước 1 xong mà `state=error` chưa dựng (`--quick` sạch, đầy đủ báo lỗi) |
-| `.test/design-uiux/<NNN>/watch-build.mjs` | công cụ đo: 2 giây đọc page một lần, ghi giờ mỗi lần một bước đổi sang xong, vào `build.log` |
+| `.tests/design-uiux/017-taste-planted/run.sh` + `verify.py` | hồi quy: mọi ca vẫn ra đúng phán quyết trong `expect.json` |
+| `.tests/design-uiux/<NNN>-quick/` | ca cho `--quick`: page có `build` dở (kiểm đầy đủ phải báo "còn bước chưa xong"); page bước 1 xong mà `state=error` chưa dựng (`--quick` sạch, đầy đủ báo lỗi) |
+| `.tests/design-uiux/<NNN>/watch-build.mjs` | công cụ đo: 2 giây đọc page một lần, ghi giờ mỗi lần một bước đổi sang xong, vào `build.log` |
 
 **Baseline:** lần chạy 020 (màn đăng nhập, 2 page) — 13 phút tổng; agent con 556s và 588s; lần ghi page đầu tiên ở
 giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026-10-07.
@@ -301,7 +301,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 **Gate:**
 
-- [x] 🤖 `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` — mọi phép ✓, gồm các phép mới — DS1 · BH2 — 64/64 ✓, exit 0, `.test/design-uiux/022-shell-status/test-shell.log`, 2026-10-07
+- [x] 🤖 `node skills/design-uiux/scripts/test-shell.mjs --pw $TMPDIR/design-uiux-pw` — mọi phép ✓, gồm các phép mới — DS1 · BH2 — 64/64 ✓, exit 0, `.tests/design-uiux/022-shell-status/test-shell.log`, 2026-10-07
 - [x] 🤖 page vừa tạo bằng `new-design.mjs page` mở ra có khối "Đang dựng <phương án>" và nhãn "Đang dựng 0/6"; grep không còn chữ "Thành viên" trong page đó — DS2 · DS4 · BH1 — phép "page mới tạo: màn chờ có tên phương án" ✓ trong test-shell, 2026-10-07
 - [x] 🤖 page `020-login-pilot-app/01-vao-thang.html` (không có `build`) mở ra có nhãn "✓ Xong · <ngày trong `pages.js`>", phần còn lại của toolbar như trước — BH6 — bản chép ở `023-old-page-new-shell`, cả 2 page "Xong 07/10", A B và nút tải lại có, không lỗi JS, 2026-10-07
 - [ ] 👤 mở page chờ, sửa tay hai bước sang `done: true`, bấm tải lại: thấy "Đang dựng 2/6", danh sách đúng, trạng thái và vị trí cuộn giữ nguyên; sửa tiếp hết sáu bước xong rồi thêm hai bước vòng 2: thấy "✓ Xong", rồi "Đang sửa 0/2" kèm nhóm "Góp ý vòng 2" — <ngày + ai xác nhận> · BH5 · BH7
@@ -315,7 +315,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 
 - [ ] 🤖 `scripts/check.mjs`: cờ `--quick`, `--state`, `--preset` theo DS3 (D4)
 - [ ] 🤖 `scripts/check.mjs`: kiểm đầy đủ báo `còn bước chưa xong` khi `build` có bước `done: false`; không có `build` thì bỏ qua (D7)
-- [ ] 🤖 `.test/design-uiux/<NNN>-quick/`: hai ca của DS6
+- [ ] 🤖 `.tests/design-uiux/<NNN>-quick/`: hai ca của DS6
 
 **Gate:**
 
@@ -323,7 +323,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 - [ ] 🤖 ca page bước 1 xong, `state=error` chưa dựng: `--quick` exit 0; kiểm đầy đủ exit 1 — DS3 · BH3
 - [ ] 🤖 ca `build` còn bước chưa xong: kiểm đầy đủ exit 1, có dòng `còn bước chưa xong: <tên bước>` — BH5
 - [ ] 🤖 `--quick` đưa thư mục: exit 2 kèm câu hướng dẫn
-- [ ] 🤖 kiểm đầy đủ thư mục `020-login-pilot-app/.design/001-login-redesign`: vẫn exit 0, 240 tổ hợp — BH6
+- [ ] 🤖 kiểm đầy đủ thư mục `020-login-pilot-app/.design-uiux/001-login-redesign`: vẫn exit 0, 240 tổ hợp — BH6
 - [ ] 🤖 `017-taste-planted`: `bash run.sh && python3 verify.py` — mọi ca khớp `expect.json` — <số ca>
 
 ### Phase 3 — skill chạy theo bước, đưa link sớm
@@ -336,9 +336,9 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 - [ ] 🤖 `skills/design-uiux/SPEC.md`: thêm sub-scope cho dựng theo bước, đưa link sớm, nhãn trạng thái và nút tải lại, `--quick`, kèm dòng Nghiệm thu và kịch bản phủ chúng; technical design 3.4–3.6 và lý do tương ứng (plan 005, D6)
 - [ ] 🤖 `skills/design-uiux/SKILL.md`: các mục theo DS5 (D0 · D6) — kèm dòng `spec:` gắn mã các sub-scope vừa thêm
 - [ ] 🤖 `README.md` của repo: dòng mô tả `design-uiux` nhắc dựng theo bước, nút tải lại, nếu README có tả cách skill chạy
-- [ ] 🤖 `.test/design-uiux/<NNN>/watch-build.mjs` theo DS6
-- [ ] 🤖 chạy thử `--auto` đề "thiết kế lại màn hình login của …/pilot-app" vào `.test/design-uiux/<NNN>-login-steps/`, kèm `watch-build.mjs` cho từng page
-- [ ] 🤖 chạy thử `--auto` lại đề của `018-quota-taste` (màn dữ liệu) vào `.test/design-uiux/<NNN>-quota-steps/`, kèm `watch-build.mjs`
+- [ ] 🤖 `.tests/design-uiux/<NNN>/watch-build.mjs` theo DS6
+- [ ] 🤖 chạy thử `--auto` đề "thiết kế lại màn hình login của …/pilot-app" vào `.tests/design-uiux/<NNN>-login-steps/`, kèm `watch-build.mjs` cho từng page
+- [ ] 🤖 chạy thử `--auto` lại đề của `018-quota-taste` (màn dữ liệu) vào `.tests/design-uiux/<NNN>-quota-steps/`, kèm `watch-build.mjs`
 - [ ] 🤖 chạy thử ngắt: dừng một agent con sau khi bước 2 đánh dấu xong, gọi agent con mới cùng lời giao, ghi lại bước đầu tiên nó sửa
 - [ ] 🤖 chạy thử vòng góp ý trên page A của lần chạy màn đăng nhập: hai ý "đưa Quên mật khẩu xuống dưới nút Đăng nhập", "bỏ dòng giới thiệu ở chân trang", kèm `watch-build.mjs`
 
@@ -360,7 +360,7 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 **Actions:**
 
 - [ ] 👤 gọi `/design-uiux` với một đề thật, mở link ngay khi có, bấm tải lại vài lần trong lúc dựng; dựng xong góp ý một ý, bấm tải lại trong lúc sửa
-- [ ] 🤖 gom `build.log`, giờ đưa link, giờ xong của các lần chạy Phase 3 vào `.test/design-uiux/<NNN>-login-steps/nhan-xet.md`
+- [ ] 🤖 gom `build.log`, giờ đưa link, giờ xong của các lần chạy Phase 3 vào `.tests/design-uiux/<NNN>-login-steps/nhan-xet.md`
 
 **Gate** — một dòng ứng một bullet §2:
 
@@ -370,4 +370,4 @@ giây 319 và 321 của agent con; người dùng có link ở phút 13 — 2026
 - [ ] 👤 §2 bullet 4: nhãn trạng thái đi đúng "Đang dựng a/6" → "✓ Xong · <ngày>" → "Đang sửa a/b" → "✓ Xong · <ngày mới>" qua lượt dựng và góp ý ở trên; bấm vào thấy nhóm "Dựng" và "Góp ý vòng 2" — <ngày + ai xác nhận> · BH5 · BH7
 - [ ] 🤖 §2 bullet 5: lần chạy ngắt làm tiếp từ bước 3 — <bằng chứng: lượt sửa đầu tiên> · BH4
 - [ ] 🤖 §2 bullet 6: kiểm đầy đủ chặn page còn bước dở; thư mục 020 dựng trước plan vẫn exit 0 và mở ra ghi "✓ Xong" — BH5 · BH6
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/004-design-uiux-dung-theo-buoc.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/004-design-uiux-dung-theo-buoc.md` — 0 ERROR

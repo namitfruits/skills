@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/samples/README.md, scripts/spec-check.mjs, .plan/011-design-uiux-page-dang-dung-de-hieu.md, .plan/013-design-uiux-bai-mau-mac-dinh.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/samples/README.md, scripts/spec-check.mjs, .plans/011-design-uiux-page-dang-dung-de-hieu.md, .plans/013-design-uiux-bai-mau-mac-dinh.md]
 supersedes: []
 ---
 
@@ -232,7 +232,7 @@ node $SKILL/scripts/new-design.mjs progress <thư mục design> --prepared --all
 - [x] 🤖 `SPEC.md` mục 3.5: agent con đọc `build-page.md`; agent chính tự dựng một page cũng đọc file đó (D0 · D2) — 2026-10-09
 - [x] 🤖 `SPEC.md` bảng file (mục 5) và bảng đầu mục 3: thêm `build-page.md`, `getdesign.md`; dòng `SKILL.md` nói khai file kéo theo (D1) — 2026-10-09; dòng `shell-principles.md`, `samples/faults/` sửa theo
 - [x] 🤖 `SPEC.md` mục 4: lý do tách file theo người đọc (D0) — 2026-10-09: hai dòng ở bảng "Kiểm"
-- [x] 🤖 chấm lượt mốc `064-sample-01-orders-screen-nghiem-thu-012` và `065-sample-04-quick-screen-nghiem-thu-013` theo "Chấm" của `samples/README.md`, ra `result.md` — 2026-10-09, hai agent chấm; bản SKILL.md trước plan chép ở `.test/design-uiux/067-nghiem-thu-014/SKILL.before.md`
+- [x] 🤖 chấm lượt mốc `064-sample-01-orders-screen-nghiem-thu-012` và `065-sample-04-quick-screen-nghiem-thu-013` theo "Chấm" của `samples/README.md`, ra `result.md` — 2026-10-09, hai agent chấm; bản SKILL.md trước plan chép ở `.tests/design-uiux/067-nghiem-thu-014/SKILL.before.md`
 
 **Gate:**
 
@@ -311,4 +311,4 @@ node $SKILL/scripts/new-design.mjs progress <thư mục design> --prepared --all
 - [ ] 🤖 §2 bullet 4: `wc -l SKILL.md` ≤ 450; SKILL.md không còn `test-shell`, `box-sizing`, `@layer`
   Chưa đạt một nửa — 2026-10-09: SKILL.md không còn `test-shell`, `box-sizing`, `@layer`. SKILL.md 533 dòng: 507 sau plan này, cộng phần plan 011 thêm (bước giao) và một câu về lời giao vòng góp ý. Chờ người dùng chọn, như Gate DS2 của Phase 3.
 - [x] 🤖 §2 bullet 5: hai lượt mới có số mục đạt bằng lượt mốc (`lint.mjs --compare`), `check.log` dòng cuối `0 lỗi`; lượt bài 04 có danh sách design của getdesign — BH4 — 2026-10-09: bài 04 `✓ 5 dòng cùng kết quả`, `✓ 1 page · 82 tổ hợp · 0 lỗi`, `chat.md` dòng 3 có khối 68 bộ; bài 01 C1–C6 cùng kết quả với `064` (G1, G2 đạt, mốc không chạy góp ý), `✓ 2 page · 332 tổ hợp · 0 lỗi` trước và sau góp ý
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/014-design-uiux-rut-gon-skill-md.md` — 0 ERROR — 2026-10-09: `0 ERROR · 1 WARN`
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/014-design-uiux-rut-gon-skill-md.md` — 0 ERROR — 2026-10-09: `0 ERROR · 1 WARN`

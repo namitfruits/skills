@@ -75,7 +75,7 @@ làm); mỗi việc một mục cùng dạng:
 ```markdown
 ### 005 · Tên việc                    ← ở Plan Queue là `### PQ-NN · Tên việc`
 
-- **Plan:** [005-slug.md](../../.plan/005-slug.md)   ← chỉ ở Plan
+- **Plan:** [005-slug.md](../../.plans/005-slug.md)   ← chỉ ở Plan
 - **Status:** approved
 - **Mục tiêu:** vì sao làm (ai đau, số đo thật), xong thì thấy gì, đầu vào nếu có
 
@@ -91,10 +91,10 @@ làm); mỗi việc một mục cùng dạng:
   `remove` yêu cầu bị bỏ · `fix` chữ yêu cầu giữ nguyên, SKILL.md hay code làm chưa đúng. Việc không đổi yêu cầu nào
   thì không có bảng.
 
-Một việc đi từ Plan Queue tới `done`: ghi mục `PQ-NN` → viết plan ở `.plan/`, chuyển mục sang Plan, `draft` → duyệt,
+Một việc đi từ Plan Queue tới `done`: ghi mục `PQ-NN` → viết plan ở `.plans/`, chuyển mục sang Plan, `draft` → duyệt,
 `approved` → sửa SPEC (yêu cầu, technical design) → SKILL.md, code và gắn mã → chạy lệnh soát → chạy thử theo gate
 nghiệm thu của plan → đạt thì `done`. Cách nghiệm thu từng yêu cầu ("đạt khi thấy gì") và kịch bản chạy thử nằm trong
-plan; kết quả nằm trong thư mục chạy thử `.test/<tên-skill>/NNN-nghiem-thu-<slug>/`.
+plan; kết quả nằm trong thư mục chạy thử `.tests/<tên-skill>/NNN-nghiem-thu-<slug>/`.
 
 ### Lệnh soát
 
@@ -116,8 +116,8 @@ Feature requirement thì lệnh bỏ qua skill đó.
 
 ## Plan
 
-Plan để ở `.plan/NNN-<tên-skill>-<slug>.md`. `NNN` đếm chung cho cả thư mục; tên skill đứng ngay sau số để lướt
-`ls .plan` là biết plan thuộc skill nào, vd `004-design-uiux-dung-theo-buoc.md`. Plan đụng nhiều skill thì lấy tên
+Plan để ở `.plans/NNN-<tên-skill>-<slug>.md`. `NNN` đếm chung cho cả thư mục; tên skill đứng ngay sau số để lướt
+`ls .plans` là biết plan thuộc skill nào, vd `004-design-uiux-dung-theo-buoc.md`. Plan đụng nhiều skill thì lấy tên
 skill chính của plan.
 
 ## Probe
@@ -126,7 +126,7 @@ Probe là script thăm dò một câu hỏi kỹ thuật trước khi plan chố
 Probe của plan. Mỗi plan có một thư mục probe; mỗi `P<n>` là một thư mục con:
 
 ```text
-.probe/009-design-uiux-tien-do-dung/
+.probes/009-design-uiux-tien-do-dung/
   P1-quick-check/
     probe.mjs
     probe.log
@@ -136,18 +136,18 @@ Probe của plan. Mỗi plan có một thư mục probe; mỗi `P<n>` là một 
     page.html
 ```
 
-- Tên thư mục plan là tên file plan bỏ đuôi `.md`. Nhờ vậy `ls .probe` khớp từng dòng với `ls .plan`.
+- Tên thư mục plan là tên file plan bỏ đuôi `.md`. Nhờ vậy `ls .probes` khớp từng dòng với `ls .plans`.
 - Tên thư mục con là mã `P<n>` trong plan, thêm vài chữ tả câu hỏi.
-- Khi probe chạy trước lúc có file plan, agent lấy số kế tiếp trong `.plan/` và slug định đặt cho plan. File plan
+- Khi probe chạy trước lúc có file plan, agent lấy số kế tiếp trong `.plans/` và slug định đặt cho plan. File plan
   viết sau dùng đúng tên đó. Nếu đổi tên plan, thì đổi tên thư mục probe theo.
 
 Luật cho từng probe:
 
-- Thư mục probe chứa mọi thứ script cần: script, page thử, file đầu vào chép từ chỗ khác. Probe không ghi ra `.test/`
-  hay `.design/`. Nhờ vậy khi skill đổi, probe vẫn chạy lại được trên đúng đầu vào lúc đo.
+- Thư mục probe chứa mọi thứ script cần: script, page thử, file đầu vào chép từ chỗ khác. Probe không ghi ra `.tests/`
+  hay `.design-uiux/`. Nhờ vậy khi skill đổi, probe vẫn chạy lại được trên đúng đầu vào lúc đo.
 - Script tìm file theo thư mục của chính nó (`import.meta.url`), nên chạy từ đâu cũng được.
 - Dòng **Cách chạy lại:** trong plan ghi lệnh chạy từ gốc repo, vd
-  `node .probe/009-design-uiux-tien-do-dung/P2-poll-file/probe.mjs`.
+  `node .probes/009-design-uiux-tien-do-dung/P2-poll-file/probe.mjs`.
 - Nếu script cần thứ nằm ngoài repo (Playwright, Chrome), thì script nhận đường dẫn qua biến môi trường hoặc tham
   số. Dòng **Cách chạy lại:** ghi luôn biến đó, vd `PW_DIR=<thư mục có node_modules/playwright>`.
 - Script ghi kết quả ra file cùng tên, đuôi `.log` (`probe.mjs` ra `probe.log`). Dòng đầu log ghi ngày chạy và version
@@ -157,10 +157,10 @@ Luật cho từng probe:
   bị ghi đè.
 - Khi plan sau dùng lại probe của plan trước, dòng **Cách chạy lại:** của plan sau trỏ vào thư mục của plan trước.
   Agent không chép probe sang thư mục plan mới.
-- `.probe/` nằm trong `.gitignore`. Probe chỉ có ở máy đã chạy nó, agent không commit probe.
+- `.probes/` nằm trong `.gitignore`. Probe chỉ có ở máy đã chạy nó, agent không commit probe.
 
 Probe khác chạy thử skill: probe hỏi thiết kế có đứng được không, chạy trước khi chốt plan. Chạy thử gọi skill thật để
-nghiệm thu, kết quả để ở `.test/`.
+nghiệm thu, kết quả để ở `.tests/`.
 
 ## Chạy thử skill
 
@@ -178,16 +178,16 @@ người thật trả lời.
 Nếu skill có bài mẫu, thì plan nghiệm thu bằng bài nhỏ nhất có đầu vào chạm phần plan đổi. Nếu plan dùng bài khác bài
 mặc định, thì plan ghi lý do. Bài mặc định và bảng chọn bài nằm trong `samples/README.md` của skill.
 
-Kết quả mỗi lần chạy thử để ở `.test/<tên-skill>/NNN-<slug>/`. `.test/` đã được gitignore.
+Kết quả mỗi lần chạy thử để ở `.tests/<tên-skill>/NNN-<slug>/`. `.tests/` đã được gitignore.
 
 - `NNN` là số thứ tự ba chữ số, đếm riêng cho từng skill: xem số lớn nhất đang có trong
-  `.test/<tên-skill>/` rồi cộng 1. Không ghi đè thư mục của lần chạy cũ, để còn so được giữa các lần.
+  `.tests/<tên-skill>/` rồi cộng 1. Không ghi đè thư mục của lần chạy cũ, để còn so được giữa các lần.
 - `slug` là vài chữ tả lần chạy đó, vd `001-apnews-bessent-ai`, `003-apnews-after-rename`.
 - Trong thư mục, file đặt tên chung một tiền tố và phân biệt bằng đuôi: `page.md`, `page.json`…
   Phần skill in ra stderr ghi thành file cùng tên thêm `.log` (`page.md.log`).
 - Chạy thử `fetch-page` thì luôn kèm `--raw-html page.raw.html`. Nhờ vậy mỗi thư mục trong
-  `.test/fetch-page/` là một trang đã lưu để `replay.mjs` chạy lại (bước "Kiểm tra" trong "Vòng lặp cải
-  tiến" của SKILL.md). Sửa script xong thì replay cả bộ: `node skills/fetch-page/replay.mjs .test/fetch-page/*/`.
+  `.tests/fetch-page/` là một trang đã lưu để `replay.mjs` chạy lại (bước "Kiểm tra" trong "Vòng lặp cải
+  tiến" của SKILL.md). Sửa script xong thì replay cả bộ: `node skills/fetch-page/replay.mjs .tests/fetch-page/*/`.
 
 ## Sơ đồ
 

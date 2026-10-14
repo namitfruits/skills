@@ -6,7 +6,7 @@ status: done # draft → approved → done
 version: 0.1
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plan/003-design-uiux-principles.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, .plans/003-design-uiux-principles.md]
 supersedes: []
 ---
 
@@ -262,14 +262,14 @@ thiết kế shell".
 
 | Phép thử | Chứng minh |
 | --- | --- |
-| `check.mjs` trên `.design/003-lich-hen-hom-nay` trước Phase 1, lưu `truoc.log`; sau Phase 1, lưu `sau.log`; đổi mã trong `truoc.log` theo DS1 rồi `diff` với `sau.log` | đổi mã không đổi phép đo |
+| `check.mjs` trên `.design-uiux/003-lich-hen-hom-nay` trước Phase 1, lưu `truoc.log`; sau Phase 1, lưu `sau.log`; đổi mã trong `truoc.log` theo DS1 rồi `diff` với `sau.log` | đổi mã không đổi phép đo |
 | `test-check.mjs` ca `C15`: bảng ghi `UI6` đủ bốn cột, page có card có bóng | không dòng `[UI6]`, không lỗi bảng |
 | `C16`: bảng ghi `G6` | lỗi `G6 là mã cũ, đổi thành UI6` |
 | `C17`: bảng ghi `UX4` | lỗi `UX4 là luật UX, không nhường được` |
 | `C18`: bảng ghi `UI6`, cột 4 trống | lỗi `chưa ghi cách giữ UX4` |
 | `C19`: bảng ghi `UI2`, cột 4 trống | không lỗi bảng |
 
-Kết quả để ở `.test/design-uiux/062-doi-ma-luat/`.
+Kết quả để ở `.tests/design-uiux/062-doi-ma-luat/`.
 
 ## 7. Phases
 
@@ -293,7 +293,7 @@ Kết quả để ở `.test/design-uiux/062-doi-ma-luat/`.
 **Gate:**
 
 - [x] 🤖 `grep -c "ux-principles\|ui-principles" skills/design-uiux/SPEC.md` ≥ 3; `grep -c "page-principles" skills/design-uiux/SPEC.md` = 0 — 2026-10-09: 7 dòng; 0 dòng
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/012-design-uiux-tach-ui-ux-principles.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/012-design-uiux-tach-ui-ux-principles.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN
 
 ### Phase 1 — hai file luật, mã mới
 
@@ -302,14 +302,14 @@ Kết quả để ở `.test/design-uiux/062-doi-ma-luat/`.
 
 **Actions:**
 
-- [x] 🤖 trước mọi sửa: `check.mjs .design/003-lich-hen-hom-nay` → `.test/design-uiux/062-doi-ma-luat/truoc.log` — 2026-10-09: 2 page · 363 tổ hợp · 41 lỗi
+- [x] 🤖 trước mọi sửa: `check.mjs .design-uiux/003-lich-hen-hom-nay` → `.tests/design-uiux/062-doi-ma-luat/truoc.log` — 2026-10-09: 2 page · 363 tổ hợp · 41 lỗi
 - [x] 🤖 `references/ux-principles.md`, `references/ui-principles.md` theo DS2; xoá `references/page-principles.md` (D0 · D2 · D3 · D4 · D5) — 2026-10-09: `git rm` file cũ
 - [x] 🤖 `scripts/principles-check.mjs`: mọi mã theo DS1; comment đầu file nói hai file (D1) — 2026-10-09: 106 chỗ đổi
 - [x] 🤖 `scripts/check.mjs`: đọc mã từ hai file theo DS4; luật được nhường bắt đầu `UI`; `ruleTag` theo DS1 (D1) — 2026-10-09: lỗi lệch in tên file chứa luật
 - [x] 🤖 comment trong `shell/shell.css`, `templates/example.html`, `scripts/new-design.mjs`, `scripts/tokens.mjs` theo DS1 — 2026-10-09: 5 file
 - [x] 🤖 `SKILL.md`: bảng "Đánh dấu trong page" ở "Dựng một page theo bước"; "Trả về danh sách tự kiểm" ở "Bước 5"; lời giao agent con đọc cả hai file; mọi mã `N`, `G` theo DS1 (D3) — 2026-10-09: bảng ở "Dựng một page theo bước", khối trả về ở "Bước 5"
 - [x] 🤖 chữ theo DS6 ở mọi chỗ của Phase 1; `test-progress.mjs`, `test-shell.mjs` đổi chuỗi mong đợi (D8) — 2026-10-09
-- [x] 🤖 sau mọi sửa: `check.mjs .design/003-lich-hen-hom-nay` → `.test/design-uiux/062-doi-ma-luat/sau.log` — 2026-10-09: 2 page · 363 tổ hợp · 41 lỗi
+- [x] 🤖 sau mọi sửa: `check.mjs .design-uiux/003-lich-hen-hom-nay` → `.tests/design-uiux/062-doi-ma-luat/sau.log` — 2026-10-09: 2 page · 363 tổ hợp · 41 lỗi
 
 **Gate:**
 
@@ -348,7 +348,7 @@ Kết quả để ở `.test/design-uiux/062-doi-ma-luat/`.
 
 **Actions:**
 
-- [x] 🤖 chạy bài mẫu 01 (design system đổ bóng cho card) với `--auto`, `prepare.mjs 01-orders-screen --slug nghiem-thu-012`, không chạy vòng góp ý — 2026-10-09: `.test/design-uiux/064-sample-01-orders-screen-nghiem-thu-012/`; người chạy trả lượt trước khi hai agent con xong, agent chính chép báo cáo A, B và chạy `check.log`
+- [x] 🤖 chạy bài mẫu 01 (design system đổ bóng cho card) với `--auto`, `prepare.mjs 01-orders-screen --slug nghiem-thu-012`, không chạy vòng góp ý — 2026-10-09: `.tests/design-uiux/064-sample-01-orders-screen-nghiem-thu-012/`; người chạy trả lượt trước khi hai agent con xong, agent chính chép báo cáo A, B và chạy `check.log`
 - [x] 🤖 đọc `brief.md`, `check.log` và khối tự kiểm agent con trả về của lượt chạy đó — 2026-10-09
 
 **Gate:**
@@ -359,4 +359,4 @@ Kết quả để ở `.test/design-uiux/062-doi-ma-luat/`.
 - [x] 🤖 §2 bullet 4: `C17` báo `UX4 là luật UX, không nhường được` — BH3 — 2026-10-09: C17 ✓
 - [x] 🤖 §2 bullet 5: `diff` ở Phase 1 rỗng; `check.log` của lượt chạy chỉ có mã `UX` và `UI` — BH5 — 2026-10-09: diff Phase 1 rỗng; `check.log` lượt chạy `✓ 2 page · 316 tổ hợp · 0 lỗi`; lỗi giữa chừng agent con B báo là `[UX4]`, A báo `UX9`
 - [x] 🤖 khối tự kiểm của agent con dùng mã `UX`, `UI`, không có dòng `UI6` — BH7 — 2026-10-09: A 12 dòng, B 15 dòng, mọi dòng mang mã `UX`/`UI`, 0 mã `N`/`G`, không dòng nào tự kiểm `UI6`
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/012-design-uiux-tach-ui-ux-principles.md` — 0 ERROR — 2026-10-09: 0 ERROR
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/012-design-uiux-tach-ui-ux-principles.md` — 0 ERROR — 2026-10-09: 0 ERROR

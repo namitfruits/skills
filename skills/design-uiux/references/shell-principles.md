@@ -135,13 +135,13 @@ phép kiểm đó nằm trong script; thêm nguyên tắc mới thì thêm phép
 ## Lệnh khi sửa shell
 
 ```bash
-node $SKILL/scripts/new-design.mjs shell [--root .design]   # chép shell mới nhất vào .design/_shell/; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
+node $SKILL/scripts/new-design.mjs shell [--root .design-uiux]   # chép shell mới nhất vào .design-uiux/_shell/; chuyển thư mục design cũ (có _shell/ riêng) sang shell chung
 node $SKILL/scripts/test-shell.mjs [--pw <thư mục có playwright>] [--out <thư mục ảnh>]
 node $SKILL/scripts/test-progress.mjs   # sau khi sửa lệnh progress của new-design.mjs
 node $SKILL/scripts/test-comment-bridge.mjs   # sau khi sửa lệnh comment-bridge, comment của new-design.mjs
 ```
 
-`test-shell.mjs` tự dựng một `.design/` mẫu trong thư mục tạm, kiểm toolbar và panel ở 1600 / 1280 / 700 / 375px, sáng
+`test-shell.mjs` tự dựng một `.design-uiux/` mẫu trong thư mục tạm, kiểm toolbar và panel ở 1600 / 1280 / 700 / 375px, sáng
 và tối, trong vài giây. Sửa shell thì không cần chạy `check.mjs`: lệnh đó kiểm page.
 
 ## Bẫy khi sửa shell

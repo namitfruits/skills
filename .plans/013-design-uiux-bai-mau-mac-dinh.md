@@ -6,7 +6,7 @@ status: done # draft → approved → done
 version: 0.1
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/samples/README.md, .plan/007-design-uiux-bai-mau-dat-chuan.md, .plan/010-design-uiux-chon-design-getdesign.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/samples/README.md, .plans/007-design-uiux-bai-mau-dat-chuan.md, .plans/010-design-uiux-chon-design-getdesign.md]
 supersedes: []
 ---
 
@@ -207,4 +207,4 @@ skill."
 - [x] 🤖 §2 bullet 3: `chat.md` của lượt bài 04 có dòng `Đề xin một phương án.` — BH2 — 2026-10-09: `chat.md` dòng 118 (khối phương án) và 160 (tin giao)
 - [x] 🤖 §2 bullet 4: lượt bài 02 có `tokens.js` `"source":"getdesign linear.app"`, `chat.md` không có khối `Design của getdesign dùng được` — BH4 — 2026-10-09: `tokens.js` `"source":"getdesign linear.app"`; `grep -c "Design của getdesign dùng được" chat.md` ra 0; dòng `Đọc:` nêu `getdesign linear.app` theo đề
 - [x] 🤖 §2 bullet 5: bảng chọn bài trong `samples/README.md` chỉ bài 01 cho plan 012 (luật UI theo design system) — BH5 — 2026-10-09: dòng "đọc design system… luật UI theo design system" chỉ bài 01
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/013-design-uiux-bai-mau-mac-dinh.md` — 0 ERROR — 2026-10-09: `0 ERROR · 1 WARN` (tên design `linear.app` ở §3)
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/013-design-uiux-bai-mau-mac-dinh.md` — 0 ERROR — 2026-10-09: `0 ERROR · 1 WARN` (tên design `linear.app` ở §3)

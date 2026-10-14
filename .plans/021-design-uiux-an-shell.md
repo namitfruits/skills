@@ -149,7 +149,7 @@ Trạng thái:
 
 ### DS3 — Test Strategy
 
-Thêm khối vào `scripts/test-shell.mjs`, chạy trên `.design/` mẫu sẵn có của script:
+Thêm khối vào `scripts/test-shell.mjs`, chạy trên `.design-uiux/` mẫu sẵn có của script:
 
 | Ca | Thư mục mẫu, bề rộng | Đạt khi |
 | --- | --- | --- |
@@ -188,7 +188,7 @@ node skills/design-uiux/scripts/test-shell.mjs --pw <thư mục có node_modules
 **Gate:**
 
 - [x] 🤖 `node scripts/spec-check.mjs skills/design-uiux` không báo lỗi PLANS.md; `F2.9` có mục SKILL.md nhờ gắn `F2` — ✓ 80 sub-scope, 2026-10-14
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/021-design-uiux-an-shell.md` — 0 ERROR, 0 WARN, 2026-10-14
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/021-design-uiux-an-shell.md` — 0 ERROR, 0 WARN, 2026-10-14
 
 ### Phase 1 — nút ẩn và hiện shell
 
@@ -214,21 +214,21 @@ node skills/design-uiux/scripts/test-shell.mjs --pw <thư mục có node_modules
 **Cover:** —
 
 Plan chỉ đổi shell, không đổi việc agent làm, nên nghiệm thu không chạy lại skill. Thư mục design thật lấy từ lượt
-`078` (một page lịch hẹn, có danh sách bước dựng và comment), chép sang `.test/design-uiux/080-nghiem-thu-021-an-shell/`,
+`078` (một page lịch hẹn, có danh sách bước dựng và comment), chép sang `.tests/design-uiux/080-nghiem-thu-021-an-shell/`,
 rồi `new-design.mjs shell` thay shell mới. Sang màn kế trong luồng chỉ có ở thư mục luồng mẫu của `test-shell.mjs`.
 
 **Actions:**
 
-- [x] 🤖 chép `.design/` của lượt `078` sang `080-nghiem-thu-021-an-shell/`, chạy `new-design.mjs shell` — `_shell/shell.js` trùng bản skill, 2026-10-14
+- [x] 🤖 chép `.design-uiux/` của lượt `078` sang `080-nghiem-thu-021-an-shell/`, chạy `new-design.mjs shell` — `_shell/shell.js` trùng bản skill, 2026-10-14
 - [x] 🤖 chụp ảnh shell hiện và ẩn ở 1760 (1600 chưa mở sẵn panel vì trang rộng 1200px), 1280 khổ mobile, 375; lưu vào `080/shots/` bằng `nghiem-thu.mjs` — 2026-10-14
 - [ ] 👤 Andy mở page `01-bang-lich-hen.html` trong thư mục `080`, bấm ẩn, hiện, nhấn `\`
 
 **Gate** — một dòng ứng một bullet §2:
 
-- [x] 🤖 §2 bullet 1: ảnh 1600 ẩn không còn thanh, panel, ghim; `#design` cùng `left`, `width` — BH1 · 1760: panel trước true, sau ẩn; khối trang 280/1200 → 280/1200; ghim đo ở `test-shell.mjs` (ghim trước true, sau ẩn) — `.test/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
+- [x] 🤖 §2 bullet 1: ảnh 1600 ẩn không còn thanh, panel, ghim; `#design` cùng `left`, `width` — BH1 · 1760: panel trước true, sau ẩn; khối trang 280/1200 → 280/1200; ghim đo ở `test-shell.mjs` (ghim trước true, sau ẩn) — `.tests/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
 - [ ] 👤 §2 bullet 2: nút góc và `\` hiện lại, `\` ẩn, gõ `\` trong ô tìm kiếm ra chữ — BH2 · BH7
   Máy đã đo đạt (`nghiem-thu.log` bullet 2, ca H2 · H7). Chờ Andy bấm thử bằng tay trên page `080`.
-- [x] 🤖 §2 bullet 3: tải lại page `080` khi đang ẩn, vẫn ẩn; mở URL ở tab mới thì có thanh; ca H9 ✓ — BH5 · BH8 · `.test/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`, 2026-10-14
-- [x] 🤖 §2 bullet 4: đánh dấu một bước dựng chưa xong bằng lệnh `progress`, nút góc có chấm — BH6 · bước giao để chưa xong trên bản chép, `state: checking`, chấm có hình, `.test/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
-- [x] 🤖 §2 bullet 5: ảnh 375 có nút ẩn shell trong màn hình — BH3 · nút trong 375px; khổ mobile ẩn shell giữ khung 377px, `.test/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/021-design-uiux-an-shell.md` — 0 ERROR, 0 WARN, 2026-10-14
+- [x] 🤖 §2 bullet 3: tải lại page `080` khi đang ẩn, vẫn ẩn; mở URL ở tab mới thì có thanh; ca H9 ✓ — BH5 · BH8 · `.tests/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`, 2026-10-14
+- [x] 🤖 §2 bullet 4: đánh dấu một bước dựng chưa xong bằng lệnh `progress`, nút góc có chấm — BH6 · bước giao để chưa xong trên bản chép, `state: checking`, chấm có hình, `.tests/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
+- [x] 🤖 §2 bullet 5: ảnh 375 có nút ẩn shell trong màn hình — BH3 · nút trong 375px; khổ mobile ẩn shell giữ khung 377px, `.tests/design-uiux/080-nghiem-thu-021-an-shell/nghiem-thu.log`
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/021-design-uiux-an-shell.md` — 0 ERROR, 0 WARN, 2026-10-14

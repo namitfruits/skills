@@ -1,12 +1,12 @@
 ---
-name: brainstorm-v1-spec
+name: brainstorm-spec
 type: skill-spec
 version: v1
 status: active
 created: 2026-10-07
 ---
 
-# SPEC — `brainstorm-v1`
+# SPEC — `brainstorm`
 
 ## 1. Vấn đề
 

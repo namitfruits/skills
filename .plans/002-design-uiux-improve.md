@@ -98,7 +98,7 @@ kiểm, page chi tiết đã giao ở các lần chạy trước.
 **Biết để làm gì:** không giẫm thì mỗi agent con tự kiểm page của mình ngay khi dựng xong; giẫm (ảnh ghi
 đè, Chrome tranh nhau) thì chỉ agent chính được kiểm, sau khi mọi agent con xong.
 **Cách chạy lại:** chạy song song `check.mjs` trên `02-week-timeline.html` và `03-week-grid.html` của
-`.test/design-uiux/003-quota-timeline/.design/001-quota-timeline/`
+`.tests/design-uiux/003-quota-timeline/.design-uiux/001-quota-timeline/`
 **Kết quả:** không giẫm. Hai lượt cùng exit 0 (318 và 312 tổ hợp), tổng 57 giây; ảnh của hai page tên
 khác nhau trong cùng `shots/`. — 2026-10-06, Chrome 154
 
@@ -151,7 +151,7 @@ hơn bắt người dùng trả lời tiếp. → DS3
 ### D9 🤖 — Thư mục design của các lần chạy trước không kiểm lại bằng `check.mjs` mới
 
 **Lý do:** thư mục cũ có page Options, mà `check.mjs` mới không còn hiểu loại page này. Các thư mục đó
-chỉ nằm trong `.test/`, giữ để so với lần chạy mới. → DS6
+chỉ nằm trong `.tests/`, giữ để so với lần chạy mới. → DS6
 
 ### D10 👤 — Cờ `--auto`: câu hỏi làm rõ tự lấy đáp án khuyên dùng, chọn phương án thì chọn tất cả, mọi lựa chọn tự động ghi vào `## Giả định`
 
@@ -291,12 +291,12 @@ dòng bảng) vẫn gộp.
 
 | Fixture | Thư mục chạy thử | Kiểm cái gì |
 | ------- | ---------------- | ----------- |
-| Đề 01 `.refer/design-requirement-01.md` | `.test/design-uiux/007-quota-pick/` | không có page Options; bảng tình huống trong chat; người dùng tick ≥ 2 phương án, các agent con dựng cùng lúc |
-| Đề 02 `.refer/design-requirement-02.md` | `.test/design-uiux/008-insights-pick/` | khối "Đang có gì" trong chat; repo dự án không đổi |
-| Đề mơ hồ "Làm trang báo cáo cho team" | `.test/design-uiux/009-vague-report/` | skill hỏi trước khi tả phương án; câu nào cũng có đáp án sẵn |
-| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu" | `.test/design-uiux/010-notify-one/` | không hỏi gì, vào thẳng dựng một page |
-| Đề mơ hồ trên, chạy với `--auto` | `.test/design-uiux/012-vague-auto/` | không câu hỏi nào; dựng đủ mọi phương án; `## Giả định` ghi từng câu đã tự trả lời |
-| Bản gài lỗi | `.test/design-uiux/011-check-planted/` | `brief.md` còn chỗ trống; hai page khác bộ nút dữ liệu; page thiếu `state`: mỗi lỗi `check.mjs` bắt một dòng |
+| Đề 01 `.refer/design-requirement-01.md` | `.tests/design-uiux/007-quota-pick/` | không có page Options; bảng tình huống trong chat; người dùng tick ≥ 2 phương án, các agent con dựng cùng lúc |
+| Đề 02 `.refer/design-requirement-02.md` | `.tests/design-uiux/008-insights-pick/` | khối "Đang có gì" trong chat; repo dự án không đổi |
+| Đề mơ hồ "Làm trang báo cáo cho team" | `.tests/design-uiux/009-vague-report/` | skill hỏi trước khi tả phương án; câu nào cũng có đáp án sẵn |
+| Đề 03 "Dựng màn cài đặt thông báo: ba công tắc email, push, tin nhắn, một nút lưu" | `.tests/design-uiux/010-notify-one/` | không hỏi gì, vào thẳng dựng một page |
+| Đề mơ hồ trên, chạy với `--auto` | `.tests/design-uiux/012-vague-auto/` | không câu hỏi nào; dựng đủ mọi phương án; `## Giả định` ghi từng câu đã tự trả lời |
+| Bản gài lỗi | `.tests/design-uiux/011-check-planted/` | `brief.md` còn chỗ trống; hai page khác bộ nút dữ liệu; page thiếu `state`: mỗi lỗi `check.mjs` bắt một dòng |
 
 ### DS8 — Cờ `--auto`
 
@@ -375,11 +375,11 @@ Bật khi lời gọi skill có `--auto` (`/design-uiux --auto <đề>`), hay ng
 - [x] 🤖 `shell/shell.js`: menu page ghi `option` · ngày — 2026-10-06
 - [x] 🤖 `check.mjs`: bỏ nhánh page Options; kiểm `brief.md`; kiểm `state` trên mọi page; kiểm cùng bộ `key` variables (D8, D9) — 2026-10-06; bộ key lấy từ bảng "Nút dữ liệu chung" của `brief.md`, nên agent con kiểm riêng page của mình cũng bắt được; brief còn chỗ trống thì chưa so
 - [x] 🤖 Xoá `templates/options.html` — 2026-10-06; khuôn `details.html` bỏ nhắc `--kind`
-- [x] 🤖 Ba bản gài lỗi ở `.test/design-uiux/011-check-planted/` — 2026-10-06: `002-brief-blank` · `003-keys-differ` · `004-state-missing`
+- [x] 🤖 Ba bản gài lỗi ở `.tests/design-uiux/011-check-planted/` — 2026-10-06: `002-brief-blank` · `003-keys-differ` · `004-state-missing`
 
 **Gate:**
 
-- [x] 🤖 `init` + hai `page --option` → thư mục có `brief.md`, `pages.js` hai mục có `option`, không có `kind` — DS4 · DS6 — 2026-10-06, `011-check-planted/.design/001-members`
+- [x] 🤖 `init` + hai `page --option` → thư mục có `brief.md`, `pages.js` hai mục có `option`, không có `kind` — DS4 · DS6 — 2026-10-06, `011-check-planted/.design-uiux/001-members`
 - [x] 🤖 Ba bản gài lỗi → mỗi bản exit 1, đúng một dòng lỗi nói đúng chỗ — DS6 — 2026-10-06: `brief.md [dòng 8, dòng 12, dòng 16]: còn chỗ trống chưa điền` · `02-members-activity.html: variables khác bảng "Nút dữ liệu chung" của brief.md: thiếu longNames` · `01-members-list.html: variable state thiếu: error`; log `011-check-planted/*.check.log`
 - [x] 🤖 Hai page mẫu điền đủ `brief.md` → `check.mjs` exit 0 — 2026-10-06, `✓ 2 page · 288 tổ hợp · 0 lỗi`
 
@@ -460,7 +460,7 @@ Bật khi lời gọi skill có `--auto` (`/design-uiux --auto <đề>`), hay ng
 
 - [x] 🤖 Playwright trên `007`: thanh có 3 nút A B C, nút của page đang mở được tô; hover nút C → khung có câu hỏi trung tâm của C; bấm C → mở `03-habit-grid.html` giữ `theme=dark` — DS10 · BH9 — 2026-10-06, `007/gate-options.mjs` 12/12 ở 1280 (hover) và 375 (chạm giữ 600ms, không chuyển page)
 - [x] 🤖 Thư mục `010` một page: không có nút chữ, thanh hiện tên page — DS10 — 2026-10-06, cùng script, "Cài đặt thông báo"
-- [x] 🤖 Bản gài lỗi `011-check-planted/.design/008-option-letter` (hai page cùng chữ A) → exit 1, đúng một dòng — DS10 — 2026-10-06: `pages.js [01-members-list.html; 02-members-activity.html]: chữ A trùng với page khác`
+- [x] 🤖 Bản gài lỗi `011-check-planted/.design-uiux/008-option-letter` (hai page cùng chữ A) → exit 1, đúng một dòng — DS10 — 2026-10-06: `pages.js [01-members-list.html; 02-members-activity.html]: chữ A trùng với page khác`
 - [x] 🤖 Năm thư mục chạy đề → `check.mjs` exit 0 — 2026-10-06: 714 · 664 · 162 · 88 · 486 tổ hợp, 0 lỗi (`check-options.log`)
 
 ### Phase 6 — nghiệm thu

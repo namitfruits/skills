@@ -19,7 +19,7 @@
 // Gắn mã scope (F2) là thực thi mọi sub-scope của nó.
 // PLANS.md cạnh SPEC.md, optional, có hai mục: ## Plan (việc đã viết plan) và ## Plan Queue (chưa viết plan); mỗi việc một mục
 //   ### 005 · Tên việc        (ở Plan Queue: ### PQ-01 · Tên việc)
-//   - **Plan:** [005-x.md](../../.plan/005-x.md)        (chỉ ở Plan)
+//   - **Plan:** [005-x.md](../../.plans/005-x.md)        (chỉ ở Plan)
 //   - **Status:** draft · approved · done (Plan) · new (Plan Queue)
 //   - **Mục tiêu:** vì sao làm, xong thì thấy gì
 //   | Mã | Thay đổi | Tóm tắt |   thay đổi là new · update · remove · fix

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lint file brief của skill brainstorm-v1.
+"""Lint file brief của skill brainstorm.
 
 Kiểm phần cấu trúc kiểm được bằng code: khung section (Tổng quan · Hiện trạng · Ai dùng · Module · … · Nhật ký), bảng module
 ở Tổng quan khớp các section `## Module · …` và các feature `### …` trong đó, mỗi module có mục tiêu, mỗi ý ghi lại có

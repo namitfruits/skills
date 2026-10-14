@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-09
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plan/009-design-uiux-tien-do-dung.md, .plan/015-design-uiux-tang-toc.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, .plans/009-design-uiux-tien-do-dung.md, .plans/015-design-uiux-tang-toc.md]
 supersedes: []
 ---
 
@@ -87,7 +87,7 @@ flowchart LR
 
 **Biết để làm gì:** nếu được, thì một lệnh hệ điều hành là đủ, không cần tiến trình nào phải tắt. Nếu không, thì phải
 điều khiển Chrome bằng Playwright, và khi đó không dùng được profile thật vì Chrome khoá thư mục profile đang chạy.
-**Cách chạy lại:** `node .probe/016-design-uiux-mo-page-trong-chrome/P1-open-new-window/probe.mjs` (mở một cửa sổ
+**Cách chạy lại:** `node .probes/016-design-uiux-mo-page-trong-chrome/P1-open-new-window/probe.mjs` (mở một cửa sổ
 thật, tự đóng sau 3 giây; cần Chrome đang chạy)
 **Kết quả:** được — 2026-10-09, macOS 26.5.1, Chrome 154.0.8037.98, `probe.log`. Lệnh trả về sau 85 ms, exit 0. Số
 cửa sổ tăng từ 2 lên 3. Cửa sổ mới có 1 tab, đúng URL. Đường dẫn có dấu và dấu cách được mã hoá đúng (`th%E1%BB%AD%20trang.html`).
@@ -236,7 +236,7 @@ node skills/design-uiux/scripts/test-open.mjs --keep   # giữ thư mục A/B đ
 **Gate:**
 
 - [x] 🤖 `grep -n "F6.1[345]" skills/design-uiux/SPEC.md` ra ba sub-scope và dòng **Scope:** của §3.5 — 2026-10-09: dòng 104, 105, 107, 329
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/016-design-uiux-mo-page-trong-chrome.md` — 0 ERROR — 2026-10-09
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/016-design-uiux-mo-page-trong-chrome.md` — 0 ERROR — 2026-10-09
 
 ### Phase 1 — lệnh mở page
 
@@ -280,7 +280,7 @@ bằng `claude -p --resume`.
 
 **Actions:**
 
-- [x] 🤖 chạy bài 04 `--auto` từ `prepare.mjs 04-quick-screen --slug nghiem-thu-016`; đếm cửa sổ Chrome bằng AppleScript trước và sau — 2026-10-09: `.test/design-uiux/074-sample-04-quick-screen-nghiem-thu-016-auto/`, 17:17:40–17:32:12, chế độ `auto`. Lượt `073` dừng ở bước 1 vì `run.sh` ép `acceptEdits`, lệnh `node` bị chặn; lỗi của cách gọi, không của skill
+- [x] 🤖 chạy bài 04 `--auto` từ `prepare.mjs 04-quick-screen --slug nghiem-thu-016`; đếm cửa sổ Chrome bằng AppleScript trước và sau — 2026-10-09: `.tests/design-uiux/074-sample-04-quick-screen-nghiem-thu-016-auto/`, 17:17:40–17:32:12, chế độ `auto`. Lượt `073` dừng ở bước 1 vì `run.sh` ép `acceptEdits`, lệnh `node` bị chặn; lỗi của cách gọi, không của skill
 - [x] 🤖 `claude -p --resume <session> "--auto Góp ý: tiêu đề bảng to hơn"`; đếm cửa sổ Chrome trước và sau — 2026-10-09: câu bắt đầu bằng `--` bị `claude` đọc thành cờ (`feedback.stream.err`), chạy lại với "Góp ý, vẫn chạy --auto: tiêu đề bảng to hơn" (`feedback2.sh`)
 - [ ] 👤 chạy `new-design.mjs open` trên thư mục design A/B của `test-open.mjs` (giữ lại bằng `--keep`), nhìn cửa sổ mở ra — 2026-10-09: agent đã chạy, `chrome file://…/001-open-ab/01-bang.html`, số cửa sổ 2 → 3, cửa sổ mới 1 tab "Lịch hẹn · A · Bảng gọn"; chờ Andy nhìn
 
@@ -291,4 +291,4 @@ bằng `claude -p --resume`.
 - [x] 🤖 §2 bullet 3: `test-open.mjs --real` C4 trên bản cuối — BH4 — 2026-10-09: `test-open.mjs --real` exit 0, C4 ✓ trên bản cuối
 - [x] 🤖 §2 bullet 4: transcript lượt góp ý không có `new-design.mjs open`, không có câu hỏi; số cửa sổ Chrome không đổi — BH5 — 2026-10-09: `feedback2.stream.jsonl` 5 tool_use, 1 `--round`, 0 `new-design.mjs open`, 0 AskUserQuestion; cửa sổ Chrome 2 → 2
 - [x] 🤖 §2 bullet 5: transcript lượt nghiệm thu không có `new-design.mjs open`; `## Quyết định` có dòng mở Chrome, đáp án "Không mở", ai quyết `--auto`; số cửa sổ Chrome không đổi — BH6 · BH3 — 2026-10-09: 0 tool_use chứa `new-design.mjs open` hay `open -na`; `run.log` không có dòng `open`; `brief.md` dòng 20 `| Mở page trong Chrome | Không mở | --auto |`; cửa sổ Chrome 2 → 2; AskUserQuestion 0 lần
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/016-design-uiux-mo-page-trong-chrome.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/016-design-uiux-mo-page-trong-chrome.md` — 0 ERROR — 2026-10-09: 0 ERROR · 0 WARN

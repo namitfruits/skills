@@ -1,6 +1,6 @@
 # PLANS — `design-uiux`
 
-Việc để làm skill, chia hai phần: **Plan** — việc đã viết plan ở `.plan/`, theo thứ tự viết; **Plan Queue** — việc
+Việc để làm skill, chia hai phần: **Plan** — việc đã viết plan ở `.plans/`, theo thứ tự viết; **Plan Queue** — việc
 dự kiến, chưa viết plan, xếp theo thứ tự định làm. [SPEC.md](SPEC.md) tả skill đang làm được gì; mỗi yêu cầu trong đó
 nằm ở ít nhất một plan `done` hay `approved`. Kiểm: `node scripts/spec-check.mjs skills/design-uiux`.
 
@@ -9,7 +9,7 @@ Mỗi việc:
 ```
 ### 005 · <tên plan>                       ← ở Plan Queue là `### PQ-NN · <tên>`
 
-- **Plan:** [005-<slug>.md](../../.plan/005-<slug>.md)   ← chỉ ở Plan
+- **Plan:** [005-<slug>.md](../../.plans/005-<slug>.md)   ← chỉ ở Plan
 - **Status:** approved
 - **Mục tiêu:** <vì sao làm, xong thì thấy được gì>
 
@@ -38,7 +38,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 001 · Prototype HTML nhiều page, vặn được dữ liệu và cấu hình
 
-- **Plan:** [001-design-uiux.md](../../.plan/001-design-uiux.md)
+- **Plan:** [001-design-uiux.md](../../.plans/001-design-uiux.md)
 - **Status:** approved
 - **Mục tiêu:** từ một đề ra thư mục prototype HTML mở bằng `file://`; mỗi page vặn được dữ liệu và cấu hình trên
   panel, đổi khổ màn và sáng tối, link mở lại đúng giá trị; màu chữ lấy từ design system; máy kiểm mọi tổ hợp nút.
@@ -65,7 +65,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 002 · Hỏi khi đề mơ hồ, chọn phương án ngay trong chat, dựng song song
 
-- **Plan:** [002-design-uiux-improve.md](../../.plan/002-design-uiux-improve.md)
+- **Plan:** [002-design-uiux-improve.md](../../.plans/002-design-uiux-improve.md)
 - **Status:** approved
 - **Mục tiêu:** đề mơ hồ thì hỏi bằng câu có sẵn đáp án; người dùng chọn 2–3 phương án ngay trong chat, mỗi phương án
   một agent con dựng song song trên cùng bộ dữ liệu; `--auto` tự chọn thay. Commit `670ae63`.
@@ -85,7 +85,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 003 · Nguyên tắc và giới hạn thiết kế, phần đo được kiểm bằng code
 
-- **Plan:** [003-design-uiux-principles.md](../../.plan/003-design-uiux-principles.md)
+- **Plan:** [003-design-uiux-principles.md](../../.plans/003-design-uiux-principles.md)
 - **Status:** approved
 - **Mục tiêu:** page theo một bộ nguyên tắc và giới hạn thiết kế; phần đo được do máy kiểm, phần còn lại agent soát
   trên ảnh; lỗi chưa sửa thì kể ra lúc giao. Commit `670ae63`.
@@ -99,7 +99,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 005 · Giữ SKILL.md theo đúng SPEC, nghiệm thu từng yêu cầu
 
-- **Plan:** [005-design-uiux-spec-skill-dong-bo.md](../../.plan/005-design-uiux-spec-skill-dong-bo.md)
+- **Plan:** [005-design-uiux-spec-skill-dong-bo.md](../../.plans/005-design-uiux-spec-skill-dong-bo.md)
 - **Status:** done
 - **Mục tiêu:** sửa thiết kế mà quên sửa SKILL.md thì agent không làm theo, vì nó chỉ đọc SKILL.md; 25 lần chạy thử
   trước đó không lần nào nói được yêu cầu nào đạt. Xong thì SPEC có yêu cầu đánh mã, mục SKILL.md nào cũng gắn mã nó
@@ -116,7 +116,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 006 · Sửa các lỗi nghiệm thu 005 làm hỏng đầu ra mà máy kiểm báo sạch
 
-- **Plan:** [006-design-uiux-sua-loi-nghiem-thu-005.md](../../.plan/006-design-uiux-sua-loi-nghiem-thu-005.md)
+- **Plan:** [006-design-uiux-sua-loi-nghiem-thu-005.md](../../.plans/006-design-uiux-sua-loi-nghiem-thu-005.md)
 - **Status:** done
 - **Mục tiêu:** nghiệm thu 005 đạt mọi yêu cầu, nhưng 5 chỗ làm đầu ra sai mà không ai hay: lệnh `grep` ở Bước 1 hỏng
   trong zsh (3/4 lần chạy) nên agent tưởng dự án không có design system; `check.mjs` báo sạch khi `x-show` đi cùng
@@ -134,7 +134,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 007 · Bài mẫu đạt chuẩn để chạy thử skill
 
-- **Plan:** [007-design-uiux-bai-mau-dat-chuan.md](../../.plan/007-design-uiux-bai-mau-dat-chuan.md)
+- **Plan:** [007-design-uiux-bai-mau-dat-chuan.md](../../.plans/007-design-uiux-bai-mau-dat-chuan.md)
 - **Status:** approved
 - **Mục tiêu:** skill có ba bài mẫu trong `samples/` để chạy thử sau mỗi lần sửa, nhưng chưa bài nào được chạy và
   không ai biết chúng có bắt được lỗi không; bốn kịch bản của 005 từng báo đạt hết trong khi còn 5 lỗi. Xong thì một
@@ -144,7 +144,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 008 · Đề một màn ra A/B, đề một luồng ra từng màn
 
-- **Plan:** [008-design-uiux-mot-man-luong.md](../../.plan/008-design-uiux-mot-man-luong.md)
+- **Plan:** [008-design-uiux-mot-man-luong.md](../../.plans/008-design-uiux-mot-man-luong.md)
 - **Status:** approved
 - **Mục tiêu:** đề nào skill cũng tìm 2–3 phương án rồi hỏi tick, người dùng phải đọc bảng và chọn trước khi có gì để
   xem; đề là một luồng nhiều màn cũng bị tìm phương án cho cả luồng, không tách thành từng màn, mỗi agent con tự quyết
@@ -171,7 +171,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 009 · Tiến độ dựng hiện liên tục trên page
 
-- **Plan:** [009-design-uiux-tien-do-dung.md](../../.plan/009-design-uiux-tien-do-dung.md)
+- **Plan:** [009-design-uiux-tien-do-dung.md](../../.plans/009-design-uiux-tien-do-dung.md)
 - **Status:** approved
 - **Mục tiêu:** lần chạy ngày 2026-10-07 (màn đăng nhập, hai phương án) mất 13 phút, và suốt 13 phút đó người dùng
   không có gì để xem. Mỗi agent con đọc và nghĩ 3–5 phút, rồi ghi cả page một lần. Agent chính chỉ đưa link khi mọi
@@ -205,12 +205,12 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 010 · Không có design system thì chọn một bộ từ getdesign
 
-- **Plan:** [010-design-uiux-chon-design-getdesign.md](../../.plan/010-design-uiux-chon-design-getdesign.md)
+- **Plan:** [010-design-uiux-chon-design-getdesign.md](../../.plans/010-design-uiux-chon-design-getdesign.md)
 - **Status:** approved
 - **Mục tiêu:** khi đề không chỉ định design system và thư mục làm việc không có file CSS có `@theme` hay `DESIGN.md`,
   skill dựng page bằng `shell/default-design.md`. Bộ này nền trung tính, một màu nhấn xanh, nên mọi prototype không có
   design system trông giống nhau; bốn lần chạy bài mẫu 02 đều ra bộ đó. Khi đề tự ghi lệnh `getdesign`, skill tải
-  file ra ngoài `.design/`. Xong thì trong trường hợp không có design system, agent làm bốn việc:
+  file ra ngoài `.design-uiux/`. Xong thì trong trường hợp không có design system, agent làm bốn việc:
   - In vào chat danh sách design của getdesign mà skill đọc được: 68 trên 76 bộ của gói `getdesign`. 8 bộ còn lại chỉ
     có phần chữ, không có bảng màu đầu file. Các design khác trên site không tải được.
   - Hỏi người dùng chọn một trong bốn design hợp đề nhất. Người dùng gõ được tên khác trong danh sách. Không có đáp
@@ -229,7 +229,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 011 · Page đang dựng đọc là hiểu
 
-- **Plan:** [011-design-uiux-page-dang-dung-de-hieu.md](../../.plan/011-design-uiux-page-dang-dung-de-hieu.md)
+- **Plan:** [011-design-uiux-page-dang-dung-de-hieu.md](../../.plans/011-design-uiux-page-dang-dung-de-hieu.md)
 - **Status:** approved
 - **Mục tiêu:** lượt review ngày 2026-10-09 (màn "Lịch hẹn hôm nay", hai phương án) mở link ngay khi có và gặp năm chỗ
   khó hiểu. Chat nói agent đang viết brief mà page ghi "Đang dựng 0/6". Chấm cạnh nhãn đứng yên. Một bước dựng 2–3 phút
@@ -255,7 +255,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 012 · Tách luật dựng page thành luật UX và luật UI
 
-- **Plan:** [012-design-uiux-tach-ui-ux-principles.md](../../.plan/012-design-uiux-tach-ui-ux-principles.md)
+- **Plan:** [012-design-uiux-tach-ui-ux-principles.md](../../.plans/012-design-uiux-tach-ui-ux-principles.md)
 
 - **Status:** done
 - **Mục tiêu:** `references/page-principles.md` có hai danh sách, nguyên tắc `N` và giới hạn `G`. File chia hai danh
@@ -285,7 +285,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 013 · Bài mẫu mặc định để nghiệm thu plan
 
-- **Plan:** [013-design-uiux-bai-mau-mac-dinh.md](../../.plan/013-design-uiux-bai-mau-mac-dinh.md)
+- **Plan:** [013-design-uiux-bai-mau-mac-dinh.md](../../.plans/013-design-uiux-bai-mau-mac-dinh.md)
 - **Status:** done
 - **Mục tiêu:** mỗi plan nghiệm thu bằng một lượt chạy skill thật, thường trên bài 01: hai page, khoảng 34 phút (lượt
   `059`). Lượt một page chỉ mất khoảng 9 phút (lượt `063`). Xong thì bài 04 là bài mặc định: một màn, đề xin một
@@ -299,7 +299,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 014 · Rút gọn SKILL.md, tách luật dựng page ra file riêng
 
-- **Plan:** [014-design-uiux-rut-gon-skill-md.md](../../.plan/014-design-uiux-rut-gon-skill-md.md)
+- **Plan:** [014-design-uiux-rut-gon-skill-md.md](../../.plans/014-design-uiux-rut-gon-skill-md.md)
 - **Status:** approved
 - **Mục tiêu:** SKILL.md dài 800 dòng, khoảng 33k token, vượt giới hạn một lượt đọc file: lượt đầu dừng ở dòng 517.
   Agent con chỉ cần mục "Dựng một page theo bước" và "Bước 5" (dòng 558–720), đúng phần bị cắt, và phải đọc qua cả
@@ -315,7 +315,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 015 · Tăng tốc lượt chạy: máy kiểm nhanh hơn, agent không tự viết script
 
-- **Plan:** [015-design-uiux-tang-toc.md](../../.plan/015-design-uiux-tang-toc.md)
+- **Plan:** [015-design-uiux-tang-toc.md](../../.plans/015-design-uiux-tang-toc.md)
 - **Status:** approved
 - **Mục tiêu:** bài mẫu mặc định (một page) chạy 15–24 phút, bài màn Đơn hàng (hai page) 33 phút; lượt mốc của 013 là
   8 phút 41 giây. Một lần kiểm đầy đủ một page mất 85–105 giây, gấp ba bản máy kiểm ngày 07/10, phần lớn ở lượt bấm.
@@ -336,7 +336,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 016 · Hỏi người dùng có mở page trong Chrome không
 
-- **Plan:** [016-design-uiux-mo-page-trong-chrome.md](../../.plan/016-design-uiux-mo-page-trong-chrome.md)
+- **Plan:** [016-design-uiux-mo-page-trong-chrome.md](../../.plans/016-design-uiux-mo-page-trong-chrome.md)
 
 - **Status:** approved
 - **Mục tiêu:** page đã tự tải lại mỗi khi một bước dựng xong (`F6.3`), nhưng người chạy skill phải tự bấm từng link
@@ -369,7 +369,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 017 · Comment trên page, gửi về session đang chạy skill
 
-- **Plan:** [017-design-uiux-comment-tren-page.md](../../.plan/017-design-uiux-comment-tren-page.md)
+- **Plan:** [017-design-uiux-comment-tren-page.md](../../.plans/017-design-uiux-comment-tren-page.md)
 - **Status:** done
 - **Mục tiêu:** muốn góp ý một chỗ trên page, người dùng phải quay sang chat và tả bằng chữ chỗ đó, kèm phương án,
   khổ màn, bộ dữ liệu đang xem. Agent đoán vị trí, đoán sai thì thêm một vòng. Xong thì người xem bật chế độ comment
@@ -395,7 +395,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 018 · Danh sách góp ý theo từng comment, bỏ "vòng"
 
-- **Plan:** [018-design-uiux-danh-sach-gop-y.md](../../.plan/018-design-uiux-danh-sach-gop-y.md)
+- **Plan:** [018-design-uiux-danh-sach-gop-y.md](../../.plans/018-design-uiux-danh-sach-gop-y.md)
 - **Status:** approved
 - **Mục tiêu:** bấm nhãn tiến độ thì toolbar xếp góp ý theo "Góp ý vòng 2, vòng 3…": người xem không biết vòng là gì,
   comment và ý gõ trong chat bị trộn, việc agent làm cho một góp ý xong là mất. Andy thử năm comment trên page 076 và
@@ -416,7 +416,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 019 · Nút gọi server chạy như thật, máy kiểm bắt cú bấm không đổi gì
 
-- **Plan:** [019-design-uiux-bam-nhu-that.md](../../.plan/019-design-uiux-bam-nhu-that.md)
+- **Plan:** [019-design-uiux-bam-nhu-that.md](../../.plans/019-design-uiux-bam-nhu-that.md)
 - **Status:** approved
 - **Mục tiêu:** các nút như "Tải lại lịch", "Thử lại", "Lưu", "Gửi" trên page hoặc đứng y nguyên, hoặc nhảy thẳng
   sang kết quả. Andy bấm "Tải lại lịch" ở cảnh 0 lịch hẹn của page 076 và không thấy gì xảy ra. Máy kiểm cho qua, vì
@@ -434,7 +434,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 ### 020 · Cầu nối comment sống suốt session, chỉ đường khi session đã đóng
 
-- **Plan:** [020-design-uiux-nghe-comment-suot-session.md](../../.plan/020-design-uiux-nghe-comment-suot-session.md)
+- **Plan:** [020-design-uiux-nghe-comment-suot-session.md](../../.plans/020-design-uiux-nghe-comment-suot-session.md)
 - **Status:** approved
 - **Mục tiêu:** lệnh nghe comment chỉ sống 30 phút một lượt. Agent dừng bật lại sau một giờ không có comment, và từ lúc
   đó page báo "Claude không nghe: chép rồi dán vào chat" mà không nói dán vào đâu. Andy gặp ca này trên page 076 dù
@@ -465,7 +465,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 - **Mục tiêu:** nghiệm thu 005 gom 12 chỗ SKILL.md mơ hồ hay sai; plan 006 sửa 5 chỗ làm đầu ra sai mà máy kiểm vẫn
   báo sạch. 7 chỗ còn lại không làm hỏng page nhưng mỗi agent hiểu một kiểu: tin giao và brief khác nhau giữa các lần
   chạy, vòng góp ý thiếu bước. Xong thì chạy lại bốn kịch bản của 005, các agent không còn ghi những chỗ trong bảng
-  dưới vào danh sách vấn đề. Đầu vào: `ket-qua.md` và `K*/van-de.md` trong `.test/design-uiux/028-nghiem-thu-005/` và
+  dưới vào danh sách vấn đề. Đầu vào: `ket-qua.md` và `K*/van-de.md` trong `.tests/design-uiux/028-nghiem-thu-005/` và
   `029-nghiem-thu-005-k4/` (chỉ có trên máy đã chạy).
 
 | Mã     | Thay đổi | Tóm tắt |
@@ -484,7 +484,7 @@ thì không có bảng, **Mục tiêu** nói rõ điều đó.
 
 - **Status:** new
 - **Mục tiêu:** sau plan 006, các page dựng song song đã cùng số khối và cùng màu nút chính. Nhưng nghiệm thu
-  (`.test/design-uiux/032-nghiem-thu-006/ket-qua.md`) cho thấy ba lỗ còn lại:
+  (`.tests/design-uiux/032-nghiem-thu-006/ket-qua.md`) cho thấy ba lỗ còn lại:
   - Cùng một số khối mà mỗi page dựng một kiểu (tiêu đề, nút, dòng phụ khác nhau), nên cả ba kịch bản để `[ ] N6`.
   - Cặp màu không có trong danh sách `init` in ra thì agent con vẫn tự chọn, và hai page chọn khác nhau.
   - `check.mjs` chạy lâu gấp đôi (K1 từ 96 giây lên 186 giây), vì mỗi giá trị vặn đều mở thêm một page.

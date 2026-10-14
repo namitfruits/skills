@@ -3,7 +3,7 @@ name: design-uiux
 description: >-
   Thiết kế UI thành prototype HTML bấm được, theo design system của dự án hay một bộ của getdesign: đề một màn ra hai
   phương án A/B, đề một luồng ra mỗi màn một page, có panel vặn dữ liệu và cấu hình, kiểm bằng code trước khi giao.
-  Chỉ ra HTML trong `.design/`, không sửa code dự án; `--auto` để không dừng hỏi. Dùng khi user nói "thiết kế màn X", "thiết kế luồng X", "nghĩ phương án hiển thị", "làm prototype", "mockup bấm được",
+  Chỉ ra HTML trong `.design-uiux/`, không sửa code dự án; `--auto` để không dừng hỏi. Dùng khi user nói "thiết kế màn X", "thiết kế luồng X", "nghĩ phương án hiển thị", "làm prototype", "mockup bấm được",
   "cải thiện giao diện trang Y", "design this screen", "design this flow", "prototype", "show me options", hoặc đưa
   một requirement UI và một design system.
 ---
@@ -39,12 +39,12 @@ Danh sách là chỗ duy nhất nói page đã tới đâu: agent dựng lấy b
 tự tải lại page, agent bị ngắt rồi gọi lại đọc nó để làm tiếp, `check.mjs` đọc nó để chặn page dựng dở. Mỗi page một
 danh sách, một agent con, nên các page vẫn dựng cùng lúc, không page nào chờ page khác.
 
-Một **thư mục design** `.design/NNN-slug/` cho mỗi đề, ở thư mục làm việc lúc gọi skill. Mọi thư mục design trong
-`.design/` dùng chung một shell ở `.design/_shell/`:
+Một **thư mục design** `.design-uiux/NNN-slug/` cho mỗi đề, ở thư mục làm việc lúc gọi skill. Mọi thư mục design trong
+`.design-uiux/` dùng chung một shell ở `.design-uiux/_shell/`:
 
 | File | Ai viết | Vai |
 | ---- | ------- | --- |
-| `.design/_shell/` | `new-design.mjs init` chép bản mới nhất từ skill | shell: toolbar và panel (mục "Các khối điều khiển"), khung mobile / tablet, ghi URL. Chỉ bọc quanh page nên cập nhật không đổi hình design cũ |
+| `.design-uiux/_shell/` | `new-design.mjs init` chép bản mới nhất từ skill | shell: toolbar và panel (mục "Các khối điều khiển"), khung mobile / tablet, ghi URL. Chỉ bọc quanh page nên cập nhật không đổi hình design cũ |
 | `tokens.js` | `new-design.mjs init --tokens --page-width` | mọi màu, chữ, bo góc, khoảng cách, bề rộng trang; giao diện còn thiếu do suy ra |
 | `brief.md` | agent chính, từ khuôn `templates/brief.md` | bốn mục đầu cho người đọc: tóm tắt đề, quyết định kèm ai quyết, design system, pages (đề một màn) hay luồng (đề một luồng); các mục sau cho agent dựng page: tình huống, dữ liệu chung, nút dữ liệu chung, khối, số kiểm chéo |
 | `pages.js` | `new-design.mjs page` | danh sách page theo thứ tự. Đề một màn: chữ và tên phương án, bố cục, các việc page tiện cho; option-switcher hiện thành nút A B. Đề một luồng: số và tên màn, màn để làm gì; option-switcher hiện thành dãy màn |
@@ -56,12 +56,12 @@ Một **thư mục design** `.design/NNN-slug/` cho mỗi đề, ở thư mục 
 | `_comment-bridge.js` | cầu nối comment lúc bật; lúc tắt thêm giờ tắt, không xoá | cổng và token của cầu nối, mã và nơi chạy của session đã bật nó; shell đọc để gửi comment, hay để chỉ cách mở lại session khi cầu nối đã tắt |
 
 Sản phẩm là **HTML prototype**, không nối gì với code dự án. Đọc code dự án chỉ để lấy design system và biết màn hiện
-có trông ra sao. **Không ghi vào repo dự án** ngoài `.design/` ở thư mục làm việc.
+có trông ra sao. **Không ghi vào repo dự án** ngoài `.design-uiux/` ở thư mục làm việc.
 
 Lệnh, `$SKILL` là thư mục chứa `SKILL.md`:
 
 ```bash
-node $SKILL/scripts/new-design.mjs init <slug> [--root .design] [--tokens <DESIGN.md | file CSS có @theme> | --getdesign <tên>] [--page-width <1280px | 80rem | full>]
+node $SKILL/scripts/new-design.mjs init <slug> [--root .design-uiux] [--tokens <DESIGN.md | file CSS có @theme> | --getdesign <tên>] [--page-width <1280px | 80rem | full>]
 node $SKILL/scripts/new-design.mjs designs   # design của getdesign dùng được, mỗi dòng `tên - mô tả`
 node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<tên>" --option "<A · tên phương án>" --layout "<bố cục>" [--good-for "<việc 1> · <việc 2>"]
 node $SKILL/scripts/new-design.mjs page <thư mục design> <slug> --title "<luồng> · <tên màn>" --screen "<n> · <tên màn>" --purpose "<màn để làm gì>"   # đề một luồng
@@ -130,7 +130,7 @@ Không hỏi những gì tự tìm được.
 - **Design system**, lấy theo thứ tự:
   1. đề chỉ định. Đề ghi lệnh `npx getdesign@latest add <tên>` thì **không chạy lệnh đó**: ghi lại `<tên>`, bước 4
      dùng `init --getdesign <tên>`. Chạy thẳng `getdesign add` thì file nằm ở gốc git repo hay thư mục làm việc, ngoài
-     `.design/`;
+     `.design-uiux/`;
   2. file CSS có `@theme` của dự án (`grep -rl "@theme" --include='*.css' . | grep -v node_modules`).
      Mẫu `*.css` phải có nháy: zsh tự mở `*` trước khi tới `grep`, không khớp file nào thì báo `no matches found` và
      `grep` không chạy. Lệnh báo lỗi là chưa tìm được gì, không có nghĩa dự án không có file `@theme`;

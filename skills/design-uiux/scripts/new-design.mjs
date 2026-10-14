@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Dựng và cập nhật thư mục design: tạo thư mục .design/NNN-slug, thêm page từ mẫu, sinh tokens.js.
+// Dựng và cập nhật thư mục design: tạo thư mục .design-uiux/NNN-slug, thêm page từ mẫu, sinh tokens.js.
 //
-//   node new-design.mjs init <slug> [--root .design] [--tokens <DESIGN.md | tokens.css> | --getdesign <tên>] [--page-width <1280px | 80rem | full>]
+//   node new-design.mjs init <slug> [--root .design-uiux] [--tokens <DESIGN.md | tokens.css> | --getdesign <tên>] [--page-width <1280px | 80rem | full>]
 //   node new-design.mjs designs
 //   node new-design.mjs page <thư mục design> <slug> --title "<tên>" [--option "A · <tên phương án>"] [--layout "<bố cục page>"]
 //                       [--good-for "<việc 1> · <việc 2>"] [--note "<một dòng>"]
@@ -11,7 +11,7 @@
 //   node new-design.mjs progress <thư mục design> (--prepared | --delivered) --all
 //   node new-design.mjs touch <thư mục design> <file> --note "<góp ý vừa sửa>"
 //   node new-design.mjs tokens <DESIGN.md | tokens.css> [--page-width <…>] [--out <tokens.js>]
-//   node new-design.mjs shell [--root .design]
+//   node new-design.mjs shell [--root .design-uiux]
 //   node new-design.mjs open <thư mục design> [--dry-run]
 //   node new-design.mjs comment-bridge <thư mục design> [--stop]
 //   node new-design.mjs comment <thư mục design> (--pending | --status <id> doing|done | --add '<json>')
@@ -37,7 +37,7 @@
 // chuẩn bị và bước giao, chỉ agent dựng page đó chạy progress trên file đó.
 // File tiến độ ghi theo kiểu cũ (bước góp ý xếp theo vòng, round ≥ 2) được đọc thành mục góp ý (normalizeProgress).
 //
-// Mọi thư mục design trong .design/ dùng chung một shell ở .design/_shell/, page nạp ../_shell/. shell chỉ bọc quanh
+// Mọi thư mục design trong .design-uiux/ dùng chung một shell ở .design-uiux/_shell/, page nạp ../_shell/. shell chỉ bọc quanh
 // page (toolbar, panel), không đụng vào bản thiết kế, nên cập nhật nó không đổi hình design cũ. init và lệnh shell chép
 // bản mới nhất của skill đè lên; lệnh shell còn chuyển thư mục design kiểu cũ (có _shell/ riêng) sang dùng shell chung.
 //
@@ -208,7 +208,7 @@ function refreshShell(root) {
 }
 
 function shell(flags) {
-  const root = resolve(flags.root ?? ".design");
+  const root = resolve(flags.root ?? ".design-uiux");
   if (!existsSync(root)) fail(`không thấy ${root}`);
   const { target, linked, moved } = refreshShell(root);
   console.log(linked ? `${target} là link về shell của skill, giữ nguyên` : `${target} đã là bản mới nhất`);
@@ -230,7 +230,7 @@ function init(slug, flags) {
     if (flags.getdesign && /không có YAML/.test(error.message)) fail(`${flags.getdesign} chỉ có phần chữ, không có token`);
     fail(error.message);
   }
-  const root = resolve(flags.root ?? ".design");
+  const root = resolve(flags.root ?? ".design-uiux");
   mkdirSync(root, { recursive: true });
   const designDir = join(root, `${nextNumber(readdirSync(root), 3)}-${slugify(slug)}`);
   mkdirSync(designDir);

@@ -6,7 +6,7 @@ status: approved # draft → approved → done
 version: 0.1
 updated: 2026-10-14
 implements: []
-sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, skills/design-uiux/scripts/check.mjs, .plan/009-design-uiux-tien-do-dung.md, .plan/017-design-uiux-comment-tren-page.md]
+sources: [CLAUDE.md, skills/design-uiux/SPEC.md, skills/design-uiux/PLANS.md, skills/design-uiux/SKILL.md, skills/design-uiux/scripts/new-design.mjs, skills/design-uiux/shell/shell.js, skills/design-uiux/scripts/check.mjs, .plans/009-design-uiux-tien-do-dung.md, .plans/017-design-uiux-comment-tren-page.md]
 supersedes: []
 ---
 
@@ -202,7 +202,7 @@ Shell và `readProgress` của `new-design.mjs` dùng cùng phép chuyển. Lệ
 **Gate:**
 
 - [x] 🤖 `grep -n "vòng" skills/design-uiux/SPEC.md` không còn dòng nào nói danh sách xếp theo vòng — 2026-10-14: còn "vòng lan" của chấm, "ba vòng" sửa lỗi lúc kiểm, đoạn tả cách đọc file kiểu cũ, lý do bỏ vòng
-- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/018-design-uiux-danh-sach-gop-y.md` — 0 ERROR — 2026-10-14
+- [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/018-design-uiux-danh-sach-gop-y.md` — 0 ERROR — 2026-10-14
 
 ### Phase 1 — dữ liệu và lệnh
 
@@ -265,4 +265,4 @@ Shell và `readProgress` của `new-design.mjs` dùng cùng phép chuyển. Lệ
 - [x] 🤖 §2 bullet 2: 077 có hai mục chat, mỗi mục có việc thụt dưới và "Kiểm đầy đủ" riêng — BH2 · BH3 — 2026-10-14: "Đổi tiêu đề trang thành Lịch hẹn" (✓ Đổi chữ tiêu đề trang), "Nút Thêm lịch hẹn nổi hơn" (✓ Phóng to nút Thêm lịch hẹn), mỗi mục một lần `check.mjs` đầy đủ
 - [ ] 👤 §2 bullet 3: lúc agent sửa comment của Andy, nhãn ghi "Đang sửa #<id> · <việc>" — BH4
 - [x] 🤖 §2 bullet 4: 076 (dữ liệu xếp theo vòng) hiện #1…#5 trong nhóm Comment — BH5 — 2026-10-14: nhóm Chuẩn bị · Dựng · Comment · Giao; #1…#5 mỗi mục một việc "Kiểm đầy đủ"; #6 ba việc rồi "Kiểm đầy đủ"; không chữ "vòng"
-- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plan/018-design-uiux-danh-sach-gop-y.md` — 0 ERROR
+- [ ] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/018-design-uiux-danh-sach-gop-y.md` — 0 ERROR

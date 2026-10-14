@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Kiểm check.mjs trên các page hỏng có chủ đích: mỗi ca một page trong fixtures/check/, dựng vào .design/ ở thư mục
+// Kiểm check.mjs trên các page hỏng có chủ đích: mỗi ca một page trong fixtures/check/, dựng vào .design-uiux/ ở thư mục
 // tạm, chạy check.mjs, rồi so dòng lỗi với mong đợi. Chạy sau mỗi lần sửa check.mjs hay principles-check.mjs.
 //
 //   node test-check.mjs [--pw <thư mục có node_modules/playwright>] [--only C1,C3] [--out <thư mục log>]
@@ -21,7 +21,7 @@ const pwDir = flag("pw") ?? process.env.PW_DIR;
 const only = flag("only")?.split(",");
 
 const work = mkdtempSync(join(tmpdir(), "design-uiux-check-"));
-const root = join(work, ".design");
+const root = join(work, ".design-uiux");
 const out = resolve(flag("out") ?? join(work, "logs"));
 mkdirSync(out, { recursive: true });
 const run = (...params) => execFileSync(process.execPath, [join(here, "new-design.mjs"), ...params], { cwd: work, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
