@@ -1,0 +1,785 @@
+<!doctype html>
+<!-- spec: F4 -->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Metrics</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --hover: rgba(11, 11, 11, 0.04);
+    --series-model: #2a78d6;
+    --series-tool: #eb6834;
+    --critical: #d03b3b;
+    --good: #006300;
+    --warning-ink: #9a6400;
+    --code-bg: #f0efec;
+    --sub-1: #1baf7a; --sub-2: #6250d6; --sub-3: #e87ba4; --sub-4: #eda100; --sub-5: #008300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #f0efec;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --hover: rgba(255, 255, 255, 0.05);
+      --series-model: #3987e5;
+      --series-tool: #d95926;
+      --good: #0ca30c;
+      --warning-ink: #fab219;
+      --code-bg: #232322;
+      --sub-1: #199e70; --sub-2: #9085e9; --sub-3: #d55181; --sub-4: #c98500; --sub-5: #008300;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --hover: rgba(255, 255, 255, 0.05);
+    --series-model: #3987e5;
+    --series-tool: #d95926;
+    --good: #0ca30c;
+    --warning-ink: #fab219;
+    --code-bg: #232322;
+    --sub-1: #199e70; --sub-2: #9085e9; --sub-3: #d55181; --sub-4: #c98500; --sub-5: #008300;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 32px 0 10px; }
+  .sub { color: var(--ink-2); margin: 0; }
+  .muted { color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+  button {
+    font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer;
+  }
+  button:hover { background: var(--hover); }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .tile { padding: 12px 14px; }
+  .tile .k { font-size: 12px; color: var(--ink-2); }
+  .tile .v { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .tile .d { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .legend { display: flex; gap: 16px; align-items: center; color: var(--ink-2); font-size: 12px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .toggles { display: flex; gap: 8px; margin-left: auto; }
+
+  .stats { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+  .stats b { color: var(--ink); font-weight: 600; }
+  .caret::before { content: "▸"; display: inline-block; width: 16px; color: var(--ink-2); }
+  .open > .session-head .caret::before,
+  .open > .turn-head .caret::before { content: "▾"; }
+
+  /* Tầng 1: session */
+  .session { margin-top: 14px; overflow: hidden; }
+  .session-head { padding: 14px 16px; cursor: pointer; }
+  .session-head:hover { background: var(--hover); }
+  .session-title { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .session.stopped .session-title { color: var(--ink-2); }
+
+  /* Trạng thái session: luôn đi kèm biểu tượng + chữ, không để màu đứng một mình */
+  .state {
+    display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; vertical-align: 2px;
+    font-size: 12px; font-weight: 500; border-radius: 999px; padding: 1px 9px; border: 1px solid currentColor;
+  }
+  .state .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .state.running { color: var(--good); }
+  .state.running .dot { animation: pulse 1.4s ease-in-out infinite; }
+  .state.waiting { color: var(--warning-ink); }
+  .state.waiting .dot { border-radius: 1px; }
+  .state.idle { color: var(--series-model); }
+  .state.idle .dot { background: transparent; border: 2px solid currentColor; width: 9px; height: 9px; }
+  .state.stopped { color: var(--muted); }
+  .state.stopped .dot { border-radius: 1px; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce) { .state.running .dot { animation: none; } }
+  .session-id { font-size: 12px; color: var(--muted); margin: 2px 0 8px 16px; }
+  .session-head .stats { margin-left: 16px; font-size: 13px; }
+  .session-body { display: none; padding: 0 12px 12px; border-top: 1px solid var(--grid); }
+  .session.open > .session-body { display: block; }
+
+  /* Tầng 2: prompt trong session */
+  .turn { margin-top: 12px; overflow: hidden; background: var(--page); }
+  .turn-head { padding: 12px 14px; cursor: pointer; }
+  .turn-head:hover { background: var(--hover); }
+  .turn-head .idx { font-size: 12px; color: var(--muted); }
+  .turn.open > .turn-head { border-bottom: 1px solid var(--grid); }
+  .turn-body { display: none; padding-bottom: 4px; }
+  .turn.open > .turn-body { display: block; }
+  .prompt { white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0 8px 16px; max-height: 2.9em; overflow: hidden; }
+  .turn.open .prompt { max-height: none; }
+  .turn-head .stats { margin-left: 16px; }
+
+  /* Ngữ cảnh đi kèm prompt: file IDE đang mở, đoạn đang chọn, @mention */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: -2px 0 8px 16px; }
+  .chip {
+    font-size: 12px; color: var(--ink-2); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chip .k { color: var(--muted); margin-right: 4px; }
+  .mention {
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink);
+    background: var(--code-bg); border-radius: 4px; padding: 1px 5px; white-space: nowrap;
+  }
+  .mention .ln { color: var(--muted); }
+
+  /* Prompt dạng thẻ <tên>…</tên> (vd <task-notification>, <command-name>): hiện thành khung khoá → giá trị */
+  .rich { white-space: normal; }
+  .rich .xtext { white-space: pre-wrap; overflow-wrap: anywhere; margin: 2px 0 6px; }
+  .xblock { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); margin: 2px 0 6px; overflow: hidden; }
+  .xblock-head {
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2);
+    background: var(--code-bg); padding: 3px 10px; border-bottom: 1px solid var(--grid);
+  }
+  .xrows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; padding: 8px 10px; align-items: baseline; }
+  .xblock .xrows { padding: 8px 10px; }
+  .rich > .xrows { padding: 0; margin: 2px 0 6px; }
+  .xk { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+  .xv { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .xnest, .xfree { grid-column: 1 / -1; }
+  .xnest .xblock { margin: 0; }
+  .turn:not(.open) .prompt.has-rich { max-height: 5.8em; }
+  .detail .chips { margin-left: 0; margin-top: 6px; }
+
+  /* Tầng 3: activity trong prompt */
+  .row {
+    display: grid;
+    grid-template-columns: 64px 112px minmax(0, 1fr) minmax(160px, 30%) 64px;
+    gap: 10px; align-items: center;
+    padding: 5px 14px; cursor: pointer;
+  }
+  .row:hover { background: var(--hover); }
+  .row .t { color: var(--muted); font-size: 12px; text-align: right; }
+  .row .dur { font-size: 12px; text-align: right; color: var(--ink-2); }
+  .row .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .label small { color: var(--muted); margin-left: 6px; }
+  .badge {
+    font-size: 12px; border-radius: 4px; padding: 1px 6px; justify-self: start;
+    border: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .badge::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+  .badge.model::before { background: var(--series-model); }
+  .badge.tool::before { background: var(--series-tool); }
+  .badge.prompt::before { background: var(--axis); }
+  .badge.err { color: var(--critical); border-color: var(--critical); }
+  .track { position: relative; height: 14px; border-left: 1px solid var(--axis); }
+  .bar { position: absolute; top: 2px; height: 10px; border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bar.model { background: var(--series-model); }
+  .bar.tool { background: var(--series-tool); }
+  .tick { position: absolute; top: 0; width: 2px; height: 14px; background: var(--muted); }
+
+  /* Agent chính và subagent. Mỗi subagent một khối thụt vào, viền trái mang màu riêng của nó.
+     Màu chỉ để nhận nhanh; tên "Sub N" luôn hiện kèm, nên không cần màu vẫn phân biệt được. */
+  .split { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--ink-2); margin: 4px 0 0 16px; }
+  .split b { color: var(--ink); font-weight: 600; }
+  .who { font-weight: 600; color: var(--ink); margin-right: 6px; }
+  .who.sub { color: var(--ink-2); }
+  .subagent {
+    margin: 2px 14px 6px 88px; border: 1px solid var(--border); border-left: 3px solid var(--sub, var(--axis));
+    border-radius: 6px; background: var(--surface); overflow: hidden;
+  }
+  .sub-head { padding: 8px 12px; cursor: pointer; }
+  .sub-head:hover { background: var(--hover); }
+  .sub-title { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+  .sub-title .caret::before { content: "▸"; display: inline-block; width: 14px; color: var(--ink-2); }
+  .subagent.open > .sub-head .caret::before { content: "▾"; }
+  .sub-tag {
+    font-size: 12px; font-weight: 600; color: var(--ink); padding: 0 8px; border-radius: 999px;
+    border: 1px solid var(--sub, var(--axis)); box-shadow: inset 4px 0 0 var(--sub, var(--axis));
+  }
+  .sub-desc { font-weight: 500; }
+  .sub-meta { font-size: 12px; color: var(--muted); }
+  .sub-head .stats { margin: 4px 0 0 14px; }
+  .sub-body { display: none; border-top: 1px solid var(--grid); padding: 2px 0 4px; }
+  .subagent.open > .sub-body { display: block; }
+  .subagent .row { padding-left: 8px; }
+  .subagent .subagent { margin-left: 60px; }
+  .row-sub { font-size: 12px; color: var(--muted); margin-left: 6px; }
+
+  /* Bảng skill của session: mỗi lần chạy skill một dòng, bước con thụt vào dưới skill điều phối */
+  .skills { margin-top: 12px; }
+  .skills h3 { font-size: 13px; margin: 0 0 6px; color: var(--ink-2); font-weight: 600; }
+  .skills .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--page); }
+  .skills table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .skills th, .skills td { padding: 5px 10px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
+  .skills th { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+  .skills td.r, .skills th.r { text-align: right; }
+  .skills tr:last-child td { border-bottom: 0; }
+  .skills tfoot td { color: var(--ink-2); font-size: 12px; border-top: 1px solid var(--grid); }
+  .skills .sk { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); }
+  .skills tr.lv0 .sk { font-weight: 600; }
+  .skills .args { color: var(--muted); max-width: 340px; overflow: hidden; text-overflow: ellipsis; }
+  .skills .tree { color: var(--muted); }
+  .skills .dbar { width: 140px; }
+  .skills .dbar span { display: block; height: 6px; border-radius: 0 3px 3px 0; background: var(--ink-2); opacity: 0.55; min-width: 2px; }
+  .skills tr.lv0 .dbar span { opacity: 0.9; }
+
+  .detail { padding: 6px 14px 12px 200px; display: none; }
+  .detail.open { display: block; }
+  .detail h4 { font-size: 12px; color: var(--ink-2); margin: 8px 0 4px; font-weight: 600; }
+  pre {
+    margin: 0; padding: 8px 10px; background: var(--code-bg); border-radius: 6px;
+    white-space: pre-wrap; word-break: break-word; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    max-height: 320px; overflow: auto;
+  }
+  .kv { display: grid; grid-template-columns: max-content max-content; gap: 2px 16px; font-size: 12px; }
+
+  #tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); max-width: 320px;
+  }
+  .empty { padding: 24px; }
+
+  @media (max-width: 720px) {
+    .session-body { padding: 0 6px 8px; }
+    .row { grid-template-columns: 52px minmax(0, 1fr) 56px; }
+    .row .label { grid-column: 2 / 4; grid-row: 2; }
+    .row .track { grid-column: 1 / 4; grid-row: 3; }
+    .detail { padding-left: 14px; }
+    .subagent, .subagent .subagent { margin-left: 14px; margin-right: 6px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Activity của coding agent</h1>
+      <p class="sub" id="meta">Đang tải…</p>
+    </div>
+    <div class="legend">
+      <label><input type="checkbox" id="live"> Tự cập nhật mỗi 3 giây</label>
+      <button type="button" onclick="location.reload()">Tải lại</button>
+    </div>
+  </div>
+  <div id="app"></div>
+</main>
+<div id="tip"></div>
+
+<script>
+(function () {
+  const app = document.getElementById("app");
+  const meta = document.getElementById("meta");
+  const tip = document.getElementById("tip");
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ms = (iso) => (iso ? Date.parse(iso) : NaN);
+
+  function fmtDur(v) {
+    if (v == null || isNaN(v)) return "–";
+    if (v < 1000) return v + "ms";
+    const s = v / 1000;
+    if (s < 60) return s.toFixed(1) + "s";
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + "m " + String(Math.round(s % 60)).padStart(2, "0") + "s";
+    return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m";
+  }
+  function fmtTok(n) {
+    if (n == null) return "–";
+    if (n < 1000) return String(n);
+    if (n < 1e6) return (n / 1000).toFixed(n < 10000 ? 1 : 0) + "K";
+    return (n / 1e6).toFixed(2) + "M";
+  }
+  const fmtFull = (n) => (n ?? 0).toLocaleString("vi-VN");
+  function fmtTime(iso) {
+    if (!iso) return "–";
+    return new Date(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+  const promptCount = (s) => s.turns.filter((t) => t.prompt != null).length;
+
+  // state do serve_metrics.py tính từ ~/.claude/sessions/<pid>.json + tiến trình còn sống hay không.
+  const STATES = {
+    running: "Đang chạy",
+    waiting: "Chờ người dùng",
+    idle: "Đang mở, chờ prompt",
+    stopped: "Đã dừng",
+  };
+  const stateOf = (s) => (STATES[s.state] ? s.state : "stopped");
+
+  function fmtAgo(iso) {
+    const sec = Math.max(0, Math.round((Date.now() - ms(iso)) / 1000));
+    if (sec < 60) return "vừa xong";
+    if (sec < 3600) return Math.floor(sec / 60) + " phút trước";
+    if (sec < 86400) return Math.floor(sec / 3600) + " giờ trước";
+    return Math.floor(sec / 86400) + " ngày trước";
+  }
+  // "x phút trước" phải tự trôi kể cả khi dữ liệu không đổi.
+  setInterval(() => document.querySelectorAll("[data-ago]").forEach((el) => (el.textContent = fmtAgo(el.dataset.ago))), 15000);
+
+  function showTip(e, html) {
+    tip.innerHTML = html;
+    tip.style.display = "block";
+    const pad = 14;
+    let x = e.clientX + pad, y = e.clientY + pad;
+    const r = tip.getBoundingClientRect();
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - pad;
+    if (y + r.height > innerHeight - 8) y = e.clientY - r.height - pad;
+    tip.style.left = x + "px";
+    tip.style.top = y + "px";
+  }
+  const hideTip = () => (tip.style.display = "none");
+
+  // Trạng thái người xem, giữ lại qua mỗi lần vẽ lại khi dữ liệu mới về.
+  // Session, prompt, và activity trong prompt đều xếp từ mới đến cũ.
+  // Khối nào người xem chưa bấm thì theo mặc định: session mới nhất mở, prompt mới nhất trong nó mở.
+  let lastTag = null;
+  const sessionOpen = new Map(); // sessionId -> true/false
+  const turnOpen = new Map();    // sessionId|turn.start -> true/false
+  const rowOpen = new Set();     // key của dòng activity đang mở chi tiết
+  const subOpen = new Map();     // agentId -> true/false
+
+  // Dữ liệu lấy từ serve_metrics.py. Mỗi lần hỏi gửi kèm ETag lần trước; server trả 304 khi không có gì mới,
+  // nên trang chỉ tải và vẽ lại khi có file session đổi hay session đổi trạng thái.
+  const live = document.getElementById("live");
+  try { live.checked = localStorage.getItem("metrics.live") !== "0"; } catch (_) { live.checked = true; }
+  live.addEventListener("change", () => { try { localStorage.setItem("metrics.live", live.checked ? "1" : "0"); } catch (_) {} });
+  setInterval(() => { if (live.checked && !document.hidden) update(); }, 3000);
+
+  update();
+
+  async function update() {
+    let res;
+    try {
+      res = await fetch("api/metrics", { cache: "no-store", headers: lastTag ? { "If-None-Match": lastTag } : {} });
+    } catch (_) {
+      // Mở bằng file:// hay server đã tắt: fetch lỗi.
+      if (lastTag === null) renderEmpty();
+      return;
+    }
+    if (res.status === 304 || !res.ok) return;
+    const data = await res.json();
+    lastTag = res.headers.get("ETag");
+    render(data);
+  }
+
+  function renderEmpty() {
+    meta.textContent = "Chưa kết nối được server metrics.";
+    app.innerHTML = `<div class="card empty">
+      <p>Chạy <code>python3 .metrics/serve_metrics.py</code> ở gốc project. Lệnh in ra địa chỉ trang và tự mở trình duyệt.</p></div>`;
+  }
+
+  function render(data) {
+    hideTip();
+    const sessions = [...data.sessions].sort((a, b) => ms(b.start) - ms(a.start));
+    const count = (st) => sessions.filter((s) => stateOf(s) === st).length;
+    meta.textContent = [
+      data.project,
+      `${sessions.length} session`,
+      ...["running", "waiting", "idle", "stopped"].filter(count).map((st) => `${count(st)} ${STATES[st].toLowerCase()}`),
+      `cập nhật lúc ${fmtTime(data.generatedAt)}`,
+    ].join(" · ");
+    if (!sessions.length) {
+      app.innerHTML = `<div class="card empty">Chưa có session nào trong ${esc(data.sessionDir)}.</div>`;
+      return;
+    }
+
+    const all = sessions.reduce((a, s) => {
+      const { main, sub } = splitOf(s);
+      a.active += s.activeMs || 0; a.prompts += promptCount(s); a.model += s.modelCalls; a.tool += s.toolCalls;
+      a.tok += s.usage.all; a.input += s.usage.input; a.out += s.usage.output; a.cr += s.usage.cacheRead; a.cc += s.usage.cacheCreate;
+      a.mainTok += main.usage.all; a.subTok += sub.usage.all; a.subCount += sub.count; a.subModel += sub.modelCalls; a.subTool += sub.toolCalls;
+      return a;
+    }, { active: 0, prompts: 0, model: 0, tool: 0, tok: 0, input: 0, out: 0, cr: 0, cc: 0, mainTok: 0, subTok: 0, subCount: 0, subModel: 0, subTool: 0 });
+    const allTurns = sessions.flatMap((s) => s.turns);
+
+    app.innerHTML = `
+      <h2>Tổng ${sessions.length} session</h2>
+      <div class="tiles">
+        <div class="card tile"><div class="k">Thời gian chạy</div><div class="v">${fmtDur(all.active)}</div>
+          <div class="d">Cộng thời gian các prompt, không tính lúc chờ người gõ</div></div>
+        <div class="card tile"><div class="k">Prompt</div><div class="v">${all.prompts}</div>
+          <div class="d">${all.model} lần gọi model</div></div>
+        <div class="card tile"><div class="k">Gọi tool</div><div class="v">${all.tool}</div>
+          <div class="d">${toolMix(allTurns)}</div></div>
+        <div class="card tile"><div class="k">Token tổng</div><div class="v">${fmtTok(all.tok)}</div>
+          <div class="d">agent chính ${fmtTok(all.mainTok)} · subagent ${fmtTok(all.subTok)}</div></div>
+        <div class="card tile"><div class="k">Subagent</div><div class="v">${all.subCount}</div>
+          <div class="d">model ${all.subModel} · tool ${all.subTool}</div></div>
+        <div class="card tile"><div class="k">Cache</div><div class="v">${fmtTok(all.cr)}</div>
+          <div class="d">đọc lại · ghi mới ${fmtTok(all.cc)}</div></div>
+      </div>
+
+      <h2>Session → prompt → activity</h2>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--series-model)"></span>Model: từ lúc có đủ đầu vào tới lúc trả xong</span>
+        <span><span class="sw" style="background:var(--series-tool)"></span>Tool: từ lúc gọi tới lúc có kết quả</span>
+        <span>Thanh đặt trên trục thời gian của từng prompt</span>
+        <span>Khối thụt vào có viền màu là subagent (Sub 1, Sub 2…); các dòng còn lại là agent chính</span>
+        <span class="toggles"><button type="button" data-all="1">Mở hết</button><button type="button" data-all="0">Gập hết</button></span>
+      </div>
+      ${sessions.map(renderSession).join("")}`;
+
+    bind(sessions);
+  }
+
+  function bind(sessions) {
+    const sessionEls = [...app.querySelectorAll(".session")];
+    // Mặc định mở các session đang chạy hoặc chờ người dùng; nếu không có thì mở session mới nhất.
+    const busy = sessions.filter((s) => ["running", "waiting"].includes(stateOf(s))).map((s) => s.sessionId);
+    const openByDefault = busy.length ? busy : [sessions[0].sessionId];
+    sessionEls.forEach((sEl) => {
+      const sid = sEl.dataset.id;
+      sEl.classList.toggle("open", sessionOpen.has(sid) ? sessionOpen.get(sid) : openByDefault.includes(sid));
+      sEl.querySelector(".session-head").addEventListener("click", () => sessionOpen.set(sid, sEl.classList.toggle("open")));
+
+      const turnEls = [...sEl.querySelectorAll(".turn")];
+      turnEls.forEach((tEl, ti) => {
+        const key = sid + "|" + tEl.dataset.start;
+        tEl.classList.toggle("open", turnOpen.has(key) ? turnOpen.get(key) : ti === 0);
+        tEl.querySelector(".turn-head").addEventListener("click", () => turnOpen.set(key, tEl.classList.toggle("open")));
+      });
+    });
+
+    app.querySelectorAll("[data-all]").forEach((b) => b.addEventListener("click", () => {
+      const open = b.dataset.all === "1";
+      sessionEls.forEach((sEl) => {
+        sEl.classList.toggle("open", open);
+        sessionOpen.set(sEl.dataset.id, open);
+        sEl.querySelectorAll(".turn").forEach((tEl) => {
+          tEl.classList.toggle("open", open);
+          turnOpen.set(sEl.dataset.id + "|" + tEl.dataset.start, open);
+        });
+      });
+    }));
+
+    app.querySelectorAll(".subagent").forEach((sa) => {
+      const id = sa.dataset.agent;
+      if (subOpen.get(id)) sa.classList.add("open");
+      sa.querySelector(".sub-head").addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        subOpen.set(id, sa.classList.toggle("open"));
+      });
+    });
+
+    app.querySelectorAll(".row").forEach((row) => {
+      const detail = row.nextElementSibling;
+      if (rowOpen.has(row.dataset.key)) detail.classList.add("open");
+      row.addEventListener("click", () => {
+        detail.classList.toggle("open") ? rowOpen.add(row.dataset.key) : rowOpen.delete(row.dataset.key);
+      });
+    });
+
+    app.querySelectorAll(".bar, .tick").forEach((b) => {
+      b.addEventListener("mousemove", (e) => showTip(e, b.dataset.tip));
+      b.addEventListener("mouseleave", hideTip);
+    });
+  }
+
+  function toolMix(turns) {
+    const c = {};
+    const walk = (events) => events.forEach((e) => {
+      if (e.kind === "tool") c[e.name] = (c[e.name] || 0) + 1;
+      if (e.subagent) walk(e.subagent.events);
+    });
+    turns.forEach((t) => { walk(t.events); (t.looseSubagents || []).forEach((sa) => walk(sa.events)); });
+    return Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "–";
+  }
+
+  function renderSession(s) {
+    const u = s.usage;
+    const st = stateOf(s);
+    return `<section class="card session ${st}" data-id="${esc(s.sessionId)}">
+      <div class="session-head">
+        <div class="session-title"><span class="caret"></span>${esc(s.title || "(chưa có tiêu đề)")}<span class="state ${st}"><span class="dot"></span>${STATES[st]}</span></div>
+        <div class="session-id num">${esc(s.sessionId)}${s.pid ? ` · pid ${s.pid}` : ""} · ${fmtTime(s.start)} → ${fmtTime(s.end)} · hoạt động cuối <span data-ago="${esc(s.end)}">${fmtAgo(s.end)}</span></div>
+        <div class="stats num">
+          <span>Prompt <b>${promptCount(s)}</b></span>
+          <span>Thời gian chạy <b>${fmtDur(s.activeMs)}</b></span>
+          <span>Token <b>${fmtTok(u.all)}</b> (output ${fmtTok(u.output)} · cache đọc ${fmtTok(u.cacheRead)})</span>
+        </div>
+        ${splitHtml(s)}
+      </div>
+      <div class="session-body">${skillTableHtml(s)}${s.turns.map((t, i) => renderTurn(t, i)).reverse().join("")}</div>
+    </section>`;
+  }
+
+  function renderTurn(t, i) {
+    const t0 = ms(t.start);
+    const span = Math.max(t.durationMs || 0, 1);
+    const head = t.prompt != null
+      ? `<div class="idx"><span class="caret"></span>Prompt ${i + 1} · ${fmtTime(t.start)}</div>
+         <div class="prompt${hasTags(t.prompt) ? " has-rich" : ""}">${richHtml(t.prompt) || '<span class="muted">(chỉ có ngữ cảnh IDE)</span>'}</div>
+         ${chipsHtml(t.attachments)}`
+      : `<div class="idx"><span class="caret"></span>Trước prompt đầu tiên</div>`;
+    return `<div class="card turn" data-start="${esc(t.start)}">
+      <div class="turn-head">${head}
+        <div class="stats num">
+          <span>Thời gian <b>${fmtDur(t.durationMs)}</b></span>
+          <span>Token <b>${fmtTok(t.usage.all)}</b> (output ${fmtTok(t.usage.output)})</span>
+        </div>
+        ${splitHtml(t)}
+      </div>
+      <div class="turn-body">
+        ${t.events.map((e) => renderEvent(e, t0, span)).reverse().join("")}
+        ${(t.looseSubagents || []).map((sa) => renderSubagent(sa, "không tìm được dòng Agent sinh ra")).join("")}
+      </div>
+    </div>`;
+  }
+
+  function renderEvent(e, t0, span) {
+    const off = ms(e.start) - t0;
+    const left = Math.min(Math.max(off / span, 0), 1) * 100;
+    const width = e.durationMs != null ? Math.max((e.durationMs / span) * 100, 0.3) : 0;
+    let badge, label, mark, tipHtml, detail;
+
+    if (e.kind === "prompt") {
+      // Trong subagent, tin đầu tiên không phải người dùng gõ mà là việc agent cha giao.
+      const what = e.queued ? "Gõ giữa lượt" : e.meta ? "Nạp vào" : e.agent ? "Giao việc" : e.fromUser === false ? "Thông báo" : "Prompt";
+      const atts = e.attachments || [];
+      badge = `<span class="badge prompt">${what}</span>`;
+      label = promptHtml(plainSummary(e.text)) + (atts.length ? `<small>+${atts.length} ngữ cảnh IDE</small>` : "");
+      tipHtml = `<b>${what}</b><br>${esc(fmtTime(e.start))}`;
+      mark = `<span class="tick" style="left:${left}%" data-tip="${esc(tipHtml)}"></span>`;
+      // Nội dung nạp vào (skill, tài liệu) giữ nguyên dạng thô; tin người dùng thì hiện như prompt.
+      detail = `<h4>Nội dung</h4>${e.meta ? `<pre>${esc(e.text)}</pre>` : `<div class="prompt-detail">${richHtml(e.text)}</div>`}
+        ${atts.length ? `<h4>Ngữ cảnh IDE</h4>${chipsHtml(atts)}` : ""}`;
+    } else if (e.kind === "model") {
+      const u = e.usage;
+      badge = `<span class="badge model">Model</span>`;
+      const summary = e.text ? firstLine(e.text) : [e.thinking ? "suy nghĩ" : "", e.toolCount ? `gọi ${e.toolCount} tool` : ""].filter(Boolean).join(", ");
+      label = `${esc(summary || "(không có chữ)")}<small class="num">out ${fmtTok(u.output)} · cache đọc ${fmtTok(u.cacheRead)}</small>`;
+      tipHtml = `<b>${esc(e.model || "model")}</b><br>${fmtDur(e.durationMs)} · bắt đầu +${fmtDur(off)}<br>input ${fmtFull(u.input)} · output ${fmtFull(u.output)}<br>cache ghi ${fmtFull(u.cacheCreate)} · cache đọc ${fmtFull(u.cacheRead)}`;
+      mark = `<span class="bar model" style="left:${left}%;width:${Math.min(width, 100 - left)}%" data-tip="${esc(tipHtml)}"></span>`;
+      detail = `<h4>Token</h4><div class="kv num">
+          <span>input</span><span>${fmtFull(u.input)}</span>
+          <span>output</span><span>${fmtFull(u.output)}</span>
+          <span class="muted">trong đó suy nghĩ</span><span class="muted">${fmtFull(u.thinking)}</span>
+          <span>cache ghi mới</span><span>${fmtFull(u.cacheCreate)}</span>
+          <span>cache đọc lại</span><span>${fmtFull(u.cacheRead)}</span>
+        </div>
+        <h4>Model</h4><div class="muted">${esc(e.model || "–")} · ${esc(e.id)}</div>
+        ${e.text ? `<h4>Trả lời</h4><pre>${esc(e.text)}</pre>` : ""}`;
+    } else {
+      badge = `<span class="badge tool${e.isError ? " err" : ""}">${e.isError ? "✕ " : ""}${esc(e.name)}</span>`;
+      label = esc(e.label || "") + (e.isError ? ` <small style="color:var(--critical)">lỗi</small>` : "")
+        + (e.subagent ? `<span class="row-sub">→ <span class="sub-tag" style="--sub:${subColor(e.subagent)}">Sub ${e.subagent.index}</span></span>` : "");
+      tipHtml = `<b>${esc(e.name)}</b>${e.isError ? " · lỗi" : ""}<br>${e.durationMs != null ? fmtDur(e.durationMs) : "chưa có kết quả"} · bắt đầu +${fmtDur(off)}<br>${esc(e.label || "")}`;
+      mark = `<span class="bar tool" style="left:${left}%;width:${Math.min(width, 100 - left)}%" data-tip="${esc(tipHtml)}"></span>`;
+      detail = `<h4>Input</h4><pre>${esc(JSON.stringify(e.input, null, 2))}</pre>
+        <h4>Kết quả${e.isError ? " (lỗi)" : ""}</h4><pre>${esc(e.result ?? "(chưa có)")}</pre>`;
+    }
+
+    return `<div class="row" data-key="${esc(e.kind + ":" + (e.id || e.start + ":" + e.seq))}">
+        <span class="t num">+${fmtDur(off)}</span>
+        ${badge}
+        <span class="label">${label}</span>
+        <span class="track">${mark}</span>
+        <span class="dur num">${e.kind === "prompt" ? "" : fmtDur(e.durationMs)}</span>
+      </div>
+      <div class="detail">${detail}</div>
+      ${e.subagent ? renderSubagent(e.subagent) : ""}`;
+  }
+
+  // Màu riêng cho Sub 1…5. Từ Sub 6 trở đi dùng màu trung tính; tên "Sub N" vẫn phân biệt được.
+  function subColor(sa) {
+    return sa.index >= 1 && sa.index <= 5 ? `var(--sub-${sa.index})` : "var(--axis)";
+  }
+
+  // Khối subagent nằm ngay dưới dòng Agent sinh ra nó. Trục thời gian của khối tính từ lúc subagent bắt đầu.
+  function renderSubagent(sa, note) {
+    const t0 = ms(sa.start);
+    const span = Math.max(sa.durationMs || 0, 1);
+    const { main, sub } = splitOf(sa);
+    const nested = sub.count ? ` · tự sinh thêm ${sub.count} subagent` : "";
+    return `<div class="subagent" data-agent="${esc(sa.agentId)}" style="--sub:${subColor(sa)}">
+      <div class="sub-head">
+        <div class="sub-title">
+          <span class="caret"></span>
+          <span class="sub-tag">Sub ${sa.index ?? "?"}</span>
+          <span class="sub-desc">${esc(sa.description || "(không có mô tả)")}</span>
+          <span class="sub-meta">${esc(sa.agentType || "subagent")}${sa.background ? " · chạy nền" : ""} · ${esc(sa.agentId)}${note ? " · " + esc(note) : ""}</span>
+        </div>
+        <div class="stats num">
+          <span>Thời gian <b>${fmtDur(sa.durationMs)}</b></span>
+          <span>Model <b>${main.modelCalls}</b></span>
+          <span>Tool <b>${main.toolCalls}</b></span>
+          <span>Token <b>${fmtTok(sa.usage.all)}</b> (output ${fmtTok(sa.usage.output)})${nested}</span>
+        </div>
+      </div>
+      <div class="sub-body">${sa.events.map((e) => renderEvent(e, t0, span)).reverse().join("")}</div>
+    </div>`;
+  }
+
+  // Bảng skill của session, theo thứ tự thời gian. sync_metrics.py đã dựng sẵn cây skillRuns:
+  // skill điều phối mang các bước con; dòng chạy trong subagent mang "Sub N".
+  function skillTableHtml(s) {
+    const runs = s.skillRuns || [];
+    if (!runs.length) return "";
+    const flat = [];
+    (function walk(list, depth) {
+      list.forEach((r) => { flat.push([r, depth]); walk(r.children || [], depth + 1); });
+    })(runs, 0);
+    const maxDur = Math.max(1, ...flat.map(([r]) => r.durationMs || 0));
+    const where = (r) => r.where === "main"
+      ? '<span class="muted">agent chính</span>'
+      : `<span class="sub-tag" style="--sub:${subColor({ index: r.subIndex ?? parseInt(r.where.replace("Sub ", ""), 10) })}">${esc(r.where)}</span>`;
+    const rows = flat.map(([r, depth]) => `<tr class="lv${Math.min(depth, 1)}">
+        <td><span class="tree">${depth ? "&nbsp;&nbsp;".repeat(depth * 2 - 1) + "↳ " : ""}</span><span class="sk">/${esc(r.name)}</span></td>
+        <td class="args" title="${esc(r.args)}">${esc(r.args)}</td>
+        <td>${where(r)}</td>
+        <td class="num">${fmtTime(r.start)}</td>
+        <td class="r num">${fmtDur(r.durationMs)}</td>
+        <td class="dbar"><span style="width:${((r.durationMs || 0) / maxDur) * 100}%"></span></td>
+        <td class="r num">${fmtTok(r.tokens)}</td>
+      </tr>`).join("");
+    const topDur = runs.reduce((a, r) => a + (r.durationMs || 0), 0);
+    const topTok = runs.reduce((a, r) => a + (r.tokens || 0), 0);
+    return `<div class="skills">
+      <h3>Skill trong session</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Skill</th><th>Đối số / việc giao</th><th>Chạy ở</th><th>Bắt đầu</th><th class="r">Thời gian</th><th></th><th class="r">Token</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="4">Cộng ${runs.length} skill cấp ngoài cùng</td><td class="r num">${fmtDur(topDur)}</td><td></td><td class="r num">${fmtTok(topTok)}</td></tr></tfoot>
+      </table></div>
+    </div>`;
+  }
+
+  // File session cũ (ghi trước khi có field main/sub) thì coi mọi thứ là của agent chính.
+  function splitOf(x) {
+    return {
+      main: x.main || { usage: x.usage, modelCalls: x.modelCalls, toolCalls: x.toolCalls },
+      sub: x.sub || { usage: { all: 0, output: 0 }, modelCalls: 0, toolCalls: 0, count: 0 },
+    };
+  }
+
+  function splitHtml(x) {
+    const { main, sub } = splitOf(x);
+    const part = (who, cls, p) => `<span><span class="who ${cls}">${who}</span>model <b>${p.modelCalls}</b> · tool <b>${p.toolCalls}</b> · token <b>${fmtTok(p.usage.all)}</b></span>`;
+    return `<div class="split num">${part("Agent chính", "main", main)}${sub.count ? part(`${sub.count} subagent`, "sub", sub) : ""}</div>`;
+  }
+
+  function baseName(p) {
+    return p.replace(/\/+$/, "").split("/").pop() || p;
+  }
+
+  // Chữ prompt, trong đó mỗi @mention (vd @.claude/templates/prd.md#L25-28) thu gọn thành tên file + dòng.
+  // Đường dẫn đầy đủ nằm trong title, rê chuột vào là thấy.
+  function promptHtml(text) {
+    return esc(text).replace(/(^|\s)@([^\s#]+)(?:#L(\d+)(?:-(\d+))?)?(?=\s|$|[,.;:!?)])/g, (_, pre, path, a, b) => {
+      const lines = a ? (b ? `L${a}-${b}` : `L${a}`) : "";
+      const title = path + (lines ? "#" + lines : "");
+      return `${pre}<span class="mention" title="${title}">@${baseName(path)}${lines ? ` <span class="ln">${lines}</span>` : ""}</span>`;
+    });
+  }
+
+  // Ngữ cảnh IDE tự chèn vào prompt (file đang mở, đoạn đang chọn), hiện như file đính kèm.
+  function chipsHtml(atts) {
+    if (!atts || !atts.length) return "";
+    return `<div class="chips">${atts.map((a) => {
+      if (a.kind === "opened") {
+        return `<span class="chip" title="${esc("IDE đang mở: " + a.path)}"><span class="k">đang mở</span>${esc(baseName(a.path))}</span>`;
+      }
+      if (a.kind === "selection") {
+        return `<span class="chip" title="${esc(`IDE đang chọn: ${a.path} dòng ${a.lines}\n\n${a.content || ""}`)}"><span class="k">đang chọn</span>${esc(baseName(a.path))} <span class="k">L${esc(a.lines)}</span></span>`;
+      }
+      return `<span class="chip" title="${esc(a.content || "")}"><span class="k">IDE</span>${esc(a.kind)}</span>`;
+    }).join("")}</div>`;
+  }
+
+  // Đọc chữ có thẻ dạng <tên>…</tên> thành cây. Chỉ cặp mở/đóng khớp tên mới là thẻ;
+  // "<task-notification>" đứng một mình trong câu vẫn là chữ thường.
+  function parseTags(text) {
+    const nodes = [];
+    const open = /<([a-z][a-z0-9_-]*)>/g;
+    let i = 0;
+    while (i < text.length) {
+      open.lastIndex = i;
+      let m, close = -1;
+      while ((m = open.exec(text))) {
+        close = text.indexOf(`</${m[1]}>`, m.index + m[0].length);
+        if (close !== -1) break;
+      }
+      if (!m) { nodes.push({ text: text.slice(i) }); break; }
+      if (m.index > i) nodes.push({ text: text.slice(i, m.index) });
+      nodes.push({ tag: m[1], children: parseTags(text.slice(m.index + m[0].length, close)) });
+      i = close + m[1].length + 3;
+    }
+    return nodes.filter((n) => n.tag || n.text.trim());
+  }
+  // Khai bằng function (không dùng const) vì update() đầu tiên chạy trước khi tới các dòng này.
+  function isLeaf(n) { return n.children.every((c) => !c.tag); }
+  function leafText(n) { return n.children.map((c) => c.text).join("").trim(); }
+  function hasTags(text) { return parseTags(String(text || "")).some((n) => n.tag); }
+
+  function rowHtml(n) {
+    const v = leafText(n);
+    return `<span class="xk">${esc(n.tag)}</span><span class="xv">${v ? promptHtml(v) : '<span class="muted">—</span>'}</span>`;
+  }
+  function blockHtml(n) {
+    const rows = n.children.map((c) => {
+      if (!c.tag) return `<div class="xv xfree">${promptHtml(c.text.trim())}</div>`;
+      return isLeaf(c) ? rowHtml(c) : `<div class="xnest">${blockHtml(c)}</div>`;
+    }).join("");
+    return `<div class="xblock"><div class="xblock-head">${esc(n.tag)}</div><div class="xrows">${rows}</div></div>`;
+  }
+  // Prompt có thẻ thì hiện thành khung; không có thẻ thì như chữ thường.
+  // Thẻ lá đứng liền nhau ở ngoài cùng (vd <command-name>, <command-args>) gom chung một bảng khoá → giá trị.
+  function richHtml(text) {
+    text = String(text || "");
+    const nodes = parseTags(text);
+    if (!nodes.some((n) => n.tag)) return promptHtml(text);
+    let html = "", run = [];
+    const flush = () => { if (run.length) { html += `<div class="xrows">${run.join("")}</div>`; run = []; } };
+    for (const n of nodes) {
+      if (!n.tag) { flush(); html += `<div class="xtext">${promptHtml(n.text.trim())}</div>`; }
+      else if (isLeaf(n)) run.push(rowHtml(n));
+      else { flush(); html += blockHtml(n); }
+    }
+    flush();
+    return `<div class="rich">${html}</div>`;
+  }
+  // Một dòng tóm tắt: chữ thường thì lấy dòng đầu; khối thẻ thì "tên-thẻ: giá trị", ưu tiên thẻ con kiểu summary.
+  function plainSummary(text) {
+    const nodes = parseTags(String(text || ""));
+    const first = nodes[0];
+    if (!first || !first.tag) return firstLine(text);
+    if (isLeaf(first)) return `${first.tag}: ${firstLine(leafText(first))}`;
+    const leaves = [];
+    (function walk(n) { n.children.forEach((c) => c.tag && (isLeaf(c) ? leaves.push(c) : walk(c))); })(first);
+    const pick = leaves.find((l) => /summary|description|title|message|name/.test(l.tag)) || leaves[0];
+    return first.tag + (pick ? ": " + firstLine(leafText(pick)) : "");
+  }
+
+  // Bỏ các khối ngữ cảnh IDE tự chèn (<ide_opened_file>…</ide_opened_file>) để dòng tóm tắt là chữ người dùng gõ.
+  function firstLine(s) {
+    const text = String(s || "").replace(/<(ide_[a-z_]+|system-reminder)>[\s\S]*?<\/\1>/g, "");
+    return text.trim().split("\n").find((l) => l.trim()) || "";
+  }
+})();
+</script>
+</body>
+</html>
