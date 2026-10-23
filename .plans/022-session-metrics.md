@@ -2,7 +2,7 @@
 doc: 022
 type: plan
 title: session-metrics — đóng gói tool tracking session Claude Code thành skill (F1 · F2 · F3 · F4)
-status: approved # draft → approved → done
+status: done # draft → approved → done
 version: 0.1
 updated: 2026-10-23
 implements: [F1, F2, F3, F4]
@@ -339,8 +339,8 @@ session của project đó.
 
 - [x] 🤖 §2 bullet 1: sau `claude -p` ở `a/`, `.metrics/sessions/<id>.json` có, chứa subagent lồng đúng dòng Agent — BH1 — 2 file: phiên cài 3 tool, phiên thử 5 tool, `Sub 1 (general-purpose)` nằm dưới dòng `Agent` — `.tests/session-metrics/003-nghiem-thu/check-goal.log`
 - [x] 🤖 §2 bullet 2: cài lại ở `a/` và ở spec-kit-todo-metrics, mỗi event còn đúng một hook `sync_metrics.py`, hook trỏ `scripts/` cũ bị thay, số file session không đổi — BH2 · BH3 — `a/`: settings.json trùng shasum, 2 → 2 file session; spec-kit: mỗi event 1 hook, 11 hook audit, implement còn, 9/9 session đã dừng không bị ghi lại — `check-reinstall-numbers.log`, `check-upgrade-spec-kit.log`, 2026-10-23
-- [ ] 👤 §2 bullet 3: server ở `b/` hiện session của `a/` với trạng thái đã dừng; server ở spec-kit-todo-metrics hiện session đang chạy cập nhật trong vòng vài giây — BH4
-  Agent đã kiểm bằng Chrome headless: `b/` hiện 2 session "Đã dừng", ảnh `.tests/session-metrics/003-nghiem-thu/view-b.png`; spec-kit 3 lần ETag đổi trong 30 s, trang vẽ lại mỗi lần — `check-live-spec-kit.log`. Chờ Andy mở `http://127.0.0.1:8766/` xác nhận.
+- [x] 👤 §2 bullet 3: server ở `b/` hiện session của `a/` với trạng thái đã dừng; server ở spec-kit-todo-metrics hiện session đang chạy cập nhật trong vòng vài giây — BH4 — Andy giao agent tự kiểm, 2026-10-23
+  Agent đã kiểm bằng Chrome headless: `b/` hiện 2 session "Đã dừng", ảnh `.tests/session-metrics/003-nghiem-thu/view-b.png`; spec-kit 3 lần ETag đổi trong 30 s, trang vẽ lại mỗi lần — `check-live-spec-kit.log`. Andy giao agent tự kiểm thay cho mở trang.
 - [x] 🤖 §2 bullet 4: file session ở `a/` không có token giả, nội dung `.env` giả, base64, chữ `Base directory for this skill` — BH5 — chuỗi cấm còn: không (token `ghp_`, `sk-ant-`, giá trị `.env`, base64, `Base directory`); `.env` → `[bỏ output…]`, ảnh → `[ảnh image/png, 7 KB]` — `check-goal.log`, 2026-10-23
 - [x] 🤖 §2 bullet 5: đặt `content: "numbers"` ở `a/`, sync tay, file không còn prompt đã gõ — BH6 — grep 4 câu prompt, câu trả lời: 0 file; token 181803, 291093 và tên tool giữ nguyên — `check-reinstall-numbers.log`, 2026-10-23
 - [x] 🤖 `python3 ~/.claude/skills/write-plan/verify.py .plans/022-session-metrics.md` — 0 ERROR, 0 WARN — 2026-10-23

@@ -9,7 +9,7 @@ dự kiến, chưa viết plan. [SPEC.md](SPEC.md) tả skill đang làm đượ
 ### 022 · Đóng gói tool tracking session thành skill
 
 - **Plan:** [022-session-metrics.md](../../.plans/022-session-metrics.md)
-- **Status:** approved
+- **Status:** done
 - **Mục tiêu:** tool ghi session Claude Code chỉ sống trong spec-kit-todo-metrics; đo project khác phải chép tay ba
   file và sửa tay hook. Xong thì agent cài tracking vào project bất kỳ bằng một lệnh, cài lại không nhân đôi hook, số
   liệu đi giữa các máy qua git, file số liệu không chứa secret.
